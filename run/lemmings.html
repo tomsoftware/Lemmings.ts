@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Lemmings Remake</title>
+
+    <script type="text/javascript" src="lemmings.js"></script>
+
+
+    <style> 
+      .PixelatedRendering {
+        image-rendering: optimizeSpeed;             /* Older versions of FF          */
+        image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+        image-rendering: -webkit-optimize-contrast; /* Safari                        */
+        image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+        image-rendering: pixelated;                 /* Awesome future-browsers       */
+        -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+        border: 5px solid #ddd;
+    }
+    </style>
+
+    <script type="text/javascript" >
+   
+    var debugView = new Lemmings.DebugView();
+
+    function init() {
+        debugView.elementSoundNumber = document.getElementById("soundno");
+        debugView.elementTrackNumber = document.getElementById("trackno");
+        debugView.elementLevelNumber = document.getElementById("levelno");   
+        debugView.elementSelectedGame = document.getElementById("selectgame");
+        debugView.elementSelectLevelGroup = document.getElementById("selectlevelgroup");
+        debugView.elementLevelName = document.getElementById("levelName");
+        debugView.gameCanvas = document.getElementById("gameCanvas");
+
+        debugView.selectGame();
+    }
+
+    </script>
+
+  </head>
+  <body onload="init();">
+
+    <select onChange="debugView.selectGame(this.value)" id="selectgame">
+      <option value="LEMMINGS">Lemming</option>
+      <option value="OHNO">Oh no! More Lemmings</option>
+      <option value="XMAS91">X-Mas 91</option>
+      <option value="XMAS92">X-Mas 92</option>
+      <option value="HOLIDAY93">Holiday 93</option>
+      <option value="HOLIDAY94">Holiday 94</option>
+    </select>
+
+    <select onChange="debugView.selectLevelGroup(this.value)" id="selectlevelgroup">
+      
+    </select>
+
+    Level: <input type="button" onclick="debugView.moveToLevel(-1)" value=" &#10073;&#9664;" /><span id="levelno" >0</span>
+    <input type="button" onclick="debugView.moveToLevel(1)" value=" &#9658;&#10073;" />
+
+    <br />
+
+    <!-- https://stackoverflow.com/questions/22885702/html-for-the-pause-symbol-in-a-video-control -->
+    Music: <input type="button" onclick="debugView.playMusic()" value=" &#9658;" />
+    <input type="button" onclick="debugView.stopMusic()" value=" &#9724; " />
+
+    <input type="button" onclick="debugView.playMusic(-1)" value=" &#10073;&#9664;" /><span id="trackno" >0</span>
+    <input type="button" onclick="debugView.playMusic(1)" value=" &#9658;&#10073;" />
+
+    <br />
+
+    Sound: <input type="button" onclick="debugView.playSound()" value=" &#9658;" />
+    <input type="button" onclick="debugView.playSound()" value=" &#9724; " />
+
+    <input type="button" onclick="debugView.playSound(-1)" value=" &#10073;&#9664;" /><span id="soundno" >0</span>
+    <input type="button" onclick="debugView.playSound(1)" value=" &#9658;&#10073;" />
+
+    <br />
+    <span id="levelName" ></span>
+    <br />
+
+    <div style="overflow-x: scroll; width:99%">
+    <canvas width="800" height="480" id="gameCanvas" class="PixelatedRendering">
+      Sorry! Your browser does not support HTML5 Canvas and can not run this Application.
+    </canvas>
+    </div>
+  </body>
+</html>

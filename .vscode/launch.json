@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+      {
+          "name": "Launch localhost",
+          "type": "chrome",
+          "request": "launch",
+          "url": "http://localhost/lemmings.ts/run/lemmings.html",
+          "webRoot": "${workspaceRoot}/run/"
+      },
+      {
+            "name": "Launch index.html (disable sourcemaps)",
+            "type": "chrome",
+            "request": "launch",
+            "sourceMaps": false,
+          "url": "http://localhost/lemmings.ts/run/lemmings.html"
+        }
+  ]
+}

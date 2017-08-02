@@ -1,0 +1,165 @@
+[
+  {
+    "name" : "lemmings",
+    "path" : "lemmings",
+    "gametype" : "LEMMINGS",
+
+    "audio.version" : 1,
+    "audio.adlibChannelConfigPosition" : 1452,
+    "audio.DATA_START"         : 2215,
+    "audio.sub_306_Param"      : 2343,
+    "audio.sub_306_POS1"       : 2727,
+    "audio.sub_306_POS2"       : 2823,
+    "audio.INIT_MUSIK_START"   : 2924,
+    "audio.DATA_CMD"           : 2926,
+    "audio.soundIndexTablePosition"  : 21989,
+    "audio.DATA_START_SOUND"   : 21731,
+    "audio.trackCount"         : 20,
+
+    "level.filePrefix"         : "LEVEL",
+    "level.groups"             : ["Fun", "Tricky", "Taxing", "Mayhem"],
+    "level.useOddTable"        : true,
+    "level.order":  [
+      [91,95,96,92,93,94,97,-6,-12,-32,-42,-7,16,-17,-22,-24,-27,-43,-51,-63,-84,13,-41,-57,-60,-71,-46,-61,-65,-82],
+      [0,-16,-21,-30,-31,-33,-34,-47,-62,-73,-77,-80,-83,2,-91,-93,-94,-95,-97,3,5,6,7,10,11,12,14,15,20,17],
+      [22,23,24,25,26,27,30,31,32,33,34,35,36,37,1,40,41,42,43,44,45,46,47,50,51,52,53,54,21,67],
+      [55,56,57,60,61,62,63,64,65,66,-67,70,71,72,73,74,75,76,77,-92,80,4,81,82,83,84,85,86,87,90]
+    ]
+  },
+  {
+    "name" : "Oh No",
+    "path" : "lemmings_ohNo",
+    "gametype" : "OHNO",
+
+    "audio.version" : 2,
+    "audio.adlibChannelConfigPosition" : 1334,
+    "audio.DATA_START"         : 1973,
+    "audio.sub_306_Param"      : 2101,
+    "audio.sub_306_POS1"       : 2485,
+    "audio.sub_306_POS2"       : 2581,
+    "audio.INIT_MUSIK_START"   : 2682,
+    "audio.DATA_CMD"           : 2684,
+    
+    "audio.soundIndexTablePosition"  : 10918,
+    "audio.DATA_START_SOUND"   : 10660,
+    
+    "audio.trackCount"        : 6,
+
+    "level.filePrefix"         : "DLVEL",
+    "level.groups"             : ["Tame", "Crazy", "Wild", "Wicked", "Havoc"],
+    "level.useOddTable"        : false,
+    "level.order":  [
+      [100,101,102,103,104,105,106,107,110,111,112,113,114,115,116,117,120,121,122,123],
+      [1,10,14,20,21,30,31,35,51,54,57,67,4,15,16,26,34,37,43,64],
+      [92,70,71,72,73,75,86,7,22,25,33,36,40,42,44,50,63,65,66,47],
+      [96,46,90,91,5,94,61,6,12,87,41,55,60,62,77,81,97,93,80,76],
+      [74,53,32,27,24,23,52,17,11,3,2,0,45,85,13,82,83,56,84,95]
+    ]
+  },
+  {
+    "name" : "Xmas Lemmings 1991",
+    "path" : "lemmings_X-Mas91",
+    "gametype" : "XMAS91",
+
+    "audio_version" : 2,
+    "audio.adlibChannelConfigPosition" : 1332,
+    "audio.DATA_START"         : 1516,
+    "audio.sub_306_Param"      : 1644,
+    "audio.sub_306_POS1"       : 2028,
+    "audio.sub_306_POS2"       : 2124,
+    "audio.INIT_MUSIK_START"   : 2224,
+    "audio.DATA_CMD"           : 2226,
+    "audio.soundIndexTablePosition"  : 5358,
+    "audio.DATA_START_SOUND"   : 5100,
+    "audio.trackCount"        : 3,
+
+    "level.filePrefix"         : "LEVEL",
+    "level.groups"             : ["xmas"],
+    "level.useOddTable"        : false,
+    "level.order":  [
+      [0,1,2,3,4]
+    ]
+  },
+
+ {
+    "name" : "Xmas Lemmings 1992",
+    "path" : "lemmings_X-Mas92",
+    "gametype" : "XMAS92",
+
+    "audio_version" : 2,
+    "audio.adlibChannelConfigPosition" : 1332,
+    "audio.DATA_START"         : 1516,
+    "audio.sub_306_Param"      : 1644,
+    "audio.sub_306_POS1"       : 2028,
+    "audio.sub_306_POS2"       : 2124,
+    "audio.INIT_MUSIK_START"   : 2224,
+    "audio.DATA_CMD"           : 2226,
+    "audio.soundIndexTablePosition"  : 5358,
+    "audio.DATA_START_SOUND"   : 5100,
+    "audio.trackCount"        : 3,
+
+    "level.filePrefix"         : "LEVEL",
+    "level.groups"             : ["xmas"],
+    "level.useOddTable"        : false,
+    "level.order":  [
+      [0,1,2,3,4]
+    ]
+  },
+
+  {
+    "name" : "Holiday Lemmings 1993",
+    "path" : "lemmings_Holiday93",
+    "gametype" : "HOLIDAY93",
+
+    "audio.version" : 2,
+    "audio.adlibChannelConfigPosition" : 1334,
+    "audio.DATA_START"         : 1973,
+    "audio.sub_306_Param"      : 2101,
+    "audio.sub_306_POS1"       : 2485,
+    "audio.sub_306_POS2"       : 2581,
+    "audio.INIT_MUSIK_START"   : 2682,
+    "audio.DATA_CMD"           : 2684,
+    
+    "audio.soundIndexTablePosition"  : 10918,
+    "audio.DATA_START_SOUND"   : 10660,
+    
+    "audio.trackCount"        : 6,
+
+    "level.filePrefix"         : "LEVEL",
+    "level.groups"             : ["Flurry", "Blizzard"],
+    "level.useOddTable"        : false,
+    "level.order":  [
+      [0,1,2,3,4,5,6,7,10,11,12,13,14,15,16,17],
+      [20,21,22,23,24,25,26,27,30,31,32,33,34,35,36,37]
+    ]
+  },
+  {
+    "name" : "Holiday Lemmings 1994",
+    "path" : "lemmings_Holiday94",
+    "gametype" : "HOLIDAY94",
+
+    "audio.version" : 2,
+    "audio.adlibChannelConfigPosition" : 1334,
+    "audio.DATA_START"         : 1973,
+    "audio.sub_306_Param"      : 2101,
+    "audio.sub_306_POS1"       : 2485,
+    "audio.sub_306_POS2"       : 2581,
+    "audio.INIT_MUSIK_START"   : 2682,
+    "audio.DATA_CMD"           : 2684,
+    
+    "audio.soundIndexTablePosition"  : 10918,
+    "audio.DATA_START_SOUND"   : 10660,
+    
+    "audio.trackCount"        : 6,
+
+    "level.filePrefix"         : "LEVEL",
+    "level.groups"             : ["Frost", "Hail", "Flurry", "Blizzard"],
+    "level.useOddTable"        : false,
+    "level.order":  [
+      [0,1,2,3,4,5,6,7,10,11,12,13,14,15,16,17],
+      [20,21,22,23,24,25,26,27,30,31,32,33,34,35,36,37],      
+      [40,41,42,43,44,45,46,47,50,51,52,53,54,55,56,57],
+      [60,61,62,63,64,65,66,67,70,71,72,73,74,75,76,77]
+    ]
+  }
+]
