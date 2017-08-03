@@ -19,3 +19,13 @@ A Web Lemmings Clone/Remake in TypeScript
 ## How to compile
 * you need Typescript to compile the code to JavaScript
 
+
+## State
+![demo1](docu/examples/demo_01.png "Demo 01")
+![demo2](docu/examples/demo_02.png "Demo 02")
+
+## Standing on the shoulders of giants
+Special thanks goes to:
+- DMA for the original game
+- Volker Oth, ccexplore and Mindless for there work on reverse engineering the Lemmings Level and Grafic Formats
+- Robson Cozendey for his Java OPL3 emulator
