@@ -10,10 +10,11 @@ A Web Lemmings Clone/Remake in TypeScript
 
 ## ToDo
 * You can not yet play the game. Only viewing the Levels
+* Replace Adlib Emulator by DosBox version
 
 ## How to run
 * download run folder
-* copy the original *Lemmings*, *OhNo* and *Holiday* binarys in to the directory in **run**
+* copy the original *Lemmings*, *OhNo* and *Holiday* binarys in to the directory **run/{version}/**
 * start *lemmings.html*
 
 ## How to compile

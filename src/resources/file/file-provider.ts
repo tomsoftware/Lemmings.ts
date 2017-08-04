@@ -18,8 +18,7 @@ module Lemmings {
     /** load binary data from URL: rootPath + [path] + filename */
     public loadBinary(path:string, filename: string=null): Promise<BinaryReader> {
 
-
-      let url = this.rootPath +"/"+ path + ((filename==null)? "" : "/"+ filename);
+      let url = this.rootPath + path + ((filename==null)? "" : "/"+ filename);
 
       this._errorHandler.debug("loading:"+ url);
 

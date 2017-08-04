@@ -13,6 +13,9 @@ module Lemmings {
 
         private gameFactory = new GameFactory("./");
 
+        private display:GameDisplay = null;
+        private controller:GameController = null;
+
 
         public elementSoundNumber: HTMLElement = null;
         public elementTrackNumber: HTMLElement = null;
@@ -20,7 +23,23 @@ module Lemmings {
         public elementSelectedGame: HTMLSelectElement = null;
         public elementSelectLevelGroup: HTMLSelectElement = null;
         public elementLevelName: HTMLElement = null;
-        public gameCanvas: HTMLCanvasElement = null;
+
+        private _gameCanvas: HTMLCanvasElement = null;
+
+
+        public set gameCanvas(el:HTMLCanvasElement){
+            this._gameCanvas = el;
+
+            this.controller = new GameController(el);
+
+            this.display = new GameDisplay(el);
+
+            
+            this.controller.onViewPointChanged = (x:number, y:number, scale:number) => {
+                this.display.setViewPoint(x,y,scale);
+            };
+        }
+            
 
 
 
@@ -156,20 +175,11 @@ module Lemmings {
                         this.elementLevelName.innerHTML = level.name;
                     }
 
+                    if (this.display != null){
+                        this.display.render(level);
+                    }
 
-                    var cav: HTMLCanvasElement = this.gameCanvas;
-                    cav.width = 1600;
-                    cav.height = 200;
-                    cav.className = "PixelatedRendering";
-                    var ctx = cav.getContext("2d");
-
-                    /// create image
-                    var imgData = ctx.createImageData(level.width, level.height);
-                    /// set pixels
-                    imgData.data.set(level.groundImage);
-                    /// write image to context
-                    ctx.putImageData(imgData, 0, 0);
-
+                    this.controller.SetViewRange(0, 0, level.width, level.height);
 
                     console.dir(level);
                 });

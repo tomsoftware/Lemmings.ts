@@ -819,7 +819,7 @@ var Lemmings;
         }
         /** load binary data from URL: rootPath + [path] + filename */
         loadBinary(path, filename = null) {
-            let url = this.rootPath + "/" + path + ((filename == null) ? "" : "/" + filename);
+            let url = this.rootPath + path + ((filename == null) ? "" : "/" + filename);
             this._errorHandler.debug("loading:" + url);
             return new Promise((resolve, reject) => {
                 var xhr = new XMLHttpRequest();
@@ -3740,13 +3740,23 @@ var Lemmings;
             this.musicPlayer = null;
             this.soundPlayer = null;
             this.gameFactory = new Lemmings.GameFactory("./");
+            this.display = null;
+            this.controller = null;
             this.elementSoundNumber = null;
             this.elementTrackNumber = null;
             this.elementLevelNumber = null;
             this.elementSelectedGame = null;
             this.elementSelectLevelGroup = null;
             this.elementLevelName = null;
-            this.gameCanvas = null;
+            this._gameCanvas = null;
+        }
+        set gameCanvas(el) {
+            this._gameCanvas = el;
+            this.controller = new Lemmings.GameController(el);
+            this.display = new Lemmings.GameDisplay(el);
+            this.controller.onViewPointChanged = (x, y, scale) => {
+                this.display.setViewPoint(x, y, scale);
+            };
         }
         playMusic(moveInterval) {
             this.stopMusic();
@@ -3843,21 +3853,180 @@ var Lemmings;
                 if (this.elementLevelName) {
                     this.elementLevelName.innerHTML = level.name;
                 }
-                var cav = this.gameCanvas;
-                cav.width = 1600;
-                cav.height = 200;
-                cav.className = "PixelatedRendering";
-                var ctx = cav.getContext("2d");
-                /// create image
-                var imgData = ctx.createImageData(level.width, level.height);
-                /// set pixels
-                imgData.data.set(level.groundImage);
-                /// write image to context
-                ctx.putImageData(imgData, 0, 0);
+                if (this.display != null) {
+                    this.display.render(level);
+                }
+                this.controller.SetViewRange(0, 0, level.width, level.height);
                 console.dir(level);
             });
         }
     }
     Lemmings.DebugView = DebugView;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    /** handel the display of the game */
+    class GameController {
+        constructor(listenElement) {
+            this.listenElement = listenElement;
+            this.mouseDownX = -1;
+            this.mouseDownY = -1;
+            this.mouseDownButton = -1;
+            this.viewX = 0;
+            this.viewY = 0;
+            this.viewScale = 1;
+            this.mouseDownViewX = 0;
+            this.mouseDownViewY = 0;
+            this.minX = 0;
+            this.minY = 0;
+            this.maxX = 0;
+            this.maxY = 0;
+            listenElement.addEventListener("mousemove", (e) => {
+                this.HandelMouseMove(e.clientX, e.clientY);
+            });
+            listenElement.addEventListener("touchmove", (e) => {
+                this.HandelMouseMove(e.touches[0].clientX, e.touches[0].clientY);
+            });
+            listenElement.addEventListener("touchstart", (e) => {
+                this.HandelMouseDown(e.touches[0].clientX, e.touches[0].clientY, 0, e.currentTarget);
+            });
+            listenElement.addEventListener("mousedown", (e) => {
+                this.HandelMouseDown(e.clientX, e.clientY, e.button, e.currentTarget);
+            });
+            listenElement.addEventListener("mouseup", (e) => {
+                this.HandelMouseUp();
+            });
+            listenElement.addEventListener("mouseleave", (e) => {
+                this.HandelMouseUp();
+            });
+            listenElement.addEventListener("touchend", (e) => {
+                this.HandelMouseUp();
+            });
+            listenElement.addEventListener("touchleave", (e) => {
+                this.HandelMouseUp();
+            });
+            listenElement.addEventListener("touchcancel", (e) => {
+                this.HandelMouseUp();
+            });
+            listenElement.addEventListener("wheel", (e) => {
+                this.HandeWheel(e);
+            });
+        }
+        SetViewRange(minX, minY, maxX, maxY) {
+            this.minX = minX;
+            this.minY = minY;
+            this.maxX = maxX;
+            this.maxY = maxY;
+        }
+        HandelMouseMove(x, y) {
+            //- Move Point of View
+            if (this.mouseDownButton == 0) {
+                this.viewX = this.mouseDownViewX + (this.mouseDownX - x) / this.viewScale;
+                this.viewY = this.mouseDownViewY + (this.mouseDownY - y) / this.viewScale;
+                this.viewX = Math.min(this.viewX, this.maxX);
+                this.viewX = Math.max(this.viewX, this.minX);
+                this.viewY = Math.min(this.viewY, this.maxY);
+                this.viewY = Math.max(this.viewY, this.minY);
+                this.onViewPointChanged(new Lemmings.ViewPoint(this.viewX, this.viewY, this.viewScale));
+            }
+        }
+        HandelMouseDown(x, y, button, currentTarget) {
+            //- save start of Mousedown
+            this.mouseDownViewX = this.viewX;
+            this.mouseDownViewY = this.viewY;
+            this.mouseDownX = x;
+            this.mouseDownY = y;
+            this.mouseDownButton = button;
+        }
+        HandelMouseUp() {
+            this.mouseDownX = -1;
+            this.mouseDownY = -1;
+            this.mouseDownButton = -1;
+        }
+        HandeWheel(e) {
+            //- Zoom view?
+            if (e.deltaY > 0) {
+                this.viewScale += 0.5;
+                if (this.viewScale > 10)
+                    this.viewScale = 10;
+            }
+            if (e.deltaY < 0) {
+                this.viewScale -= 0.5;
+                if (this.viewScale < 0.5)
+                    this.viewScale = 0.5;
+            }
+            this.onViewPointChanged(new Lemmings.ViewPoint(this.viewX, this.viewY, this.viewScale));
+        }
+    }
+    Lemmings.GameController = GameController;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    /** handel the display of the game */
+    class GameDisplay {
+        constructor(canvasForOutput) {
+            this.viewPoint = new Lemmings.ViewPoint(0, 0, 1);
+            this.contentWidth = 0;
+            this.contentHeight = 0;
+            this.outputCav = canvasForOutput;
+            this.processCav = document.createElement('canvas');
+        }
+        setViewPoint(viewPoint) {
+            this.viewPoint = viewPoint;
+            this.redraw();
+        }
+        render(level) {
+            this.contentWidth = level.width;
+            this.contentHeight = level.height;
+            this.processCav.width = level.width;
+            this.processCav.height = level.height;
+            var backCtx = this.processCav.getContext("2d");
+            /// create image
+            var imgData = backCtx.createImageData(level.width, level.height);
+            /// set pixels
+            imgData.data.set(level.groundImage);
+            /// write image to context
+            backCtx.putImageData(imgData, 0, 0);
+            this.redraw();
+        }
+        redraw() {
+            var cav = this.outputCav;
+            var ctx = cav.getContext("2d");
+            ctx.mozImageSmoothingEnabled = false;
+            ctx.webkitImageSmoothingEnabled = false;
+            ctx.imageSmoothingEnabled = false;
+            let outGameH = cav.height;
+            let outW = cav.width;
+            let viewScale = this.viewPoint.scale;
+            let viewX = this.viewPoint.x;
+            let viewY = this.viewPoint.y;
+            //- Display Layers
+            var dW = this.contentWidth - viewX; //- display width
+            if ((dW * viewScale) > outW) {
+                dW = outW / viewScale;
+                //game.viewScale = outW / dW;
+            }
+            var dH = this.contentHeight - viewY; //- display height
+            if ((dH * viewScale) > outGameH) {
+                dH = outGameH / viewScale;
+                //game.viewScale = outH / dH;
+            }
+            //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
+            ctx.drawImage(this.processCav, viewX, viewY, dW, dH, 0, 0, dW * viewScale, dH * viewScale);
+        }
+    }
+    Lemmings.GameDisplay = GameDisplay;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    /** View Point to display the game */
+    class ViewPoint {
+        constructor(x, y, scale) {
+            this.x = x;
+            this.y = y;
+            this.scale = scale;
+        }
+    }
+    Lemmings.ViewPoint = ViewPoint;
 })(Lemmings || (Lemmings = {}));
 //# sourceMappingURL=lemmings.js.map
