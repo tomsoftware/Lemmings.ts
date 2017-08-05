@@ -52,7 +52,7 @@ module Lemmings {
 
         let bitBuf = 0;
         let bitBufLen = 0;
-        let pixCount = img.width * img.height;
+        
 
         img.frames = [];
 
@@ -60,50 +60,16 @@ module Lemmings {
 
 
         for (let f = 0; f < img.frameCount; f++) {
-            /// read image
-            vga.setOffset(filePos);
 
-            var pixBuf = new Uint8Array(pixCount);
+          var bitImage = new BitPlainImage(vga, img.width, img.height);
 
-            //-  3 bit per Pixel - bits of byte are stored separately
-            for (var i = 0; i < 3; i++) {
+          bitImage.processImage(filePos);
+          bitImage.processTransparentData(img.maskLoc);
 
-                for (var p = 0; p < pixCount; p++) {
+          img.frames.push(bitImage.getImageBuffer());
 
-                    if (bitBufLen <= 0) {
-                        bitBuf = vga.readByte();
-                        bitBufLen = 8;
-                    }
-
-                    pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
-                    bitBuf = (bitBuf << 1);
-                    bitBufLen--;
-                }
-            }
-
-            /// read image mask
-            vga.setOffset(img.maskLoc);
-
-            for (var p = 0; p < pixCount; p++) {
-
-                if (bitBufLen <= 0) {
-                    bitBuf = vga.readByte();
-                    bitBufLen = 8;
-                }
-
-                if ((bitBuf & 0x80) == 0) {
-                  /// Sets the highest bit to indicate the transparency.
-                  pixBuf[p] = 0x80 | pixBuf[p];
-                }
-                bitBuf = (bitBuf << 1);
-                bitBufLen--;
-            }
-
-
-            img.frames.push(pixBuf);
-
-            /// move to the next frame data
-            filePos += img.frameDataSize;
+          /// move to the next frame data
+          filePos += img.frameDataSize;
         }
 
       })

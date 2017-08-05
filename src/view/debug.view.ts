@@ -35,8 +35,8 @@ module Lemmings {
             this.display = new GameDisplay(el);
 
             
-            this.controller.onViewPointChanged = (x:number, y:number, scale:number) => {
-                this.display.setViewPoint(x,y,scale);
+            this.controller.onViewPointChanged = (viewPoint: ViewPoint) => {
+                this.display.setViewPoint(viewPoint);
             };
         }
             

@@ -11,9 +11,7 @@ module Lemmings {
         }
 
         public readVgaspecMap(lr: LevelReader, vr: VgaspecReader)  {
-
             this.img = vr.img;
-
         }
 
         
@@ -66,6 +64,7 @@ module Lemmings {
 
                     /// ignore transparent pixels
                     if ((colorIndex & 0x80) != 0) continue;
+
 
                     if (isErase) {
                         this.img.clearPixel(x + destX, y + destY);    

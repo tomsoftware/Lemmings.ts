@@ -4,12 +4,14 @@
 
 module Lemmings {
 
-    /** The Odd Table has a list fo LevelProperties to describe the levels...???  */
+    /** The Odd Table has a list of LevelProperties to describe alternative starting conditions for a level  */
     export class OddTableReader {
         private levelProperties: LevelProperties[] = []
         private error = new ErrorHandler("OddTableReader");
 
-        /** return the Level for a given levelNumber - LevelNumber is counting all levels from first to last of the game  */
+        /** return the Level for a given levelNumber - LevelNumber is counting all levels from first to last of the game 
+         *  Odd-Tables are only used for the "Original Lemmings" Game 
+         */
         public getLevelProperties(levelNumber):LevelProperties{
             if ((levelNumber >= this.levelProperties.length) && (levelNumber < 0)) return null;
 
@@ -21,6 +23,7 @@ module Lemmings {
         }
 
 
+        /** read the odd fine */
         private read(fr: BinaryReader) {
             fr.setOffset(0);
 

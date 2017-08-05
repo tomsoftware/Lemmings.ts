@@ -27,6 +27,9 @@ module Lemmings {
             while(len--)
                 /// set r,g,b = 0 and alpha=FF
                 buffer32[len] = 0xFF000000;
+
+                /// for debugging
+                //buffer32[len] = 0xFFCBC0FF;
         }
 
         
@@ -39,7 +42,7 @@ module Lemmings {
                     let colorIndex = srcImg[pixIndex];
                     pixIndex++;
 
-                    if ((colorIndex & 0x80) > 0){
+                    if ((colorIndex & 0x80) > 0) {
                         //this.setPixel(x+left, y+top, pallet.data[2]);
                         this.clearPixel(x+left, y+top);
                     }else {
@@ -61,7 +64,7 @@ module Lemmings {
             var destPixelPos = y * this.width + x;
 
             if (noOverwrite) {
-                    /// if some data have been drawn here before
+                /// if some data have been drawn here before
                 if (this.imgMask[destPixelPos] != 0) return;
             }
 

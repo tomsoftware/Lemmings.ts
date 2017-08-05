@@ -9,12 +9,6 @@
 
     <style> 
       .PixelatedRendering {
-        image-rendering: optimizeSpeed;             /* Older versions of FF          */
-        image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
-        image-rendering: -webkit-optimize-contrast; /* Safari                        */
-        image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
-        image-rendering: pixelated;                 /* Awesome future-browsers       */
-        -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
         border: 5px solid #ddd;
     }
     </style>
@@ -78,7 +72,7 @@
     <br />
 
     <div style="overflow-x: scroll; width:99%">
-    <canvas width="800" height="480" id="gameCanvas" class="PixelatedRendering">
+    <canvas height="480" width="800" id="gameCanvas" class="PixelatedRendering">
       Sorry! Your browser does not support HTML5 Canvas and can not run this Application.
     </canvas>
     </div>

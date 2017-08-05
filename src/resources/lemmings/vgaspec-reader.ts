@@ -50,8 +50,14 @@ module Lemmings {
             this.img.clearImageArray();
 
             let startScanLine = 0;
-            
-            let bitImage = new VgaSpecBitImage(width, chunkHeight);
+
+
+            let pixelCount = width * chunkHeight;
+            let bitBuffer = new Uint8Array(pixelCount);
+            let bitBufferPos:number = 0;
+
+
+
 
             while(!fr.eof()) {
                 let curByte = fr.readByte();
@@ -59,21 +65,28 @@ module Lemmings {
                 if (curByte == 128){
                     /// end of chunk
 
-                    this.img.drawPalettImage(bitImage.getImages(), width, chunkHeight, this.groundPallet, 0, startScanLine);
+                    /// unpack image data to image-buffer
+                    var bitImage = new BitPlainImage(new BinaryReader(bitBuffer), width, chunkHeight);
+                    bitImage.processImage(0);
+                    bitImage.processTransparentByColorIndex(0);
+
+                    this.img.drawPalettImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPallet, 0, startScanLine);
 
                     startScanLine +=40;
                     if (startScanLine >= this.img.height) return;
 
-                    bitImage.reset();
+                    bitBufferPos = 0;
                 }
                 else if (curByte <= 127) {
                     let copyByteCount = curByte + 1;
 
                     /// copy copyByteCount to the bitImage
                     while(!fr.eof()) {
-                        let curByte = fr.readByte();
 
-                        bitImage.writeNextByte(curByte);
+                        /// write the next Byte
+                        if (bitBufferPos >= bitBuffer.length) return;
+                        bitBuffer[bitBufferPos] = fr.readByte();
+                        bitBufferPos++;
 
                         copyByteCount--;
                         if (copyByteCount <= 0) break;
@@ -84,7 +97,12 @@ module Lemmings {
                     /// copy n times the same value
                     let repeatByte = fr.readByte();
                     for(let repeatByteCount = 257 - curByte; repeatByteCount>0; repeatByteCount--){
-                        bitImage.writeNextByte(repeatByte);
+
+                        /// write the next Byte
+                        if (bitBufferPos >= bitBuffer.length) return;
+                        bitBuffer[bitBufferPos] = repeatByte;
+                        bitBufferPos++;
+
                     } 
                 }
             }
