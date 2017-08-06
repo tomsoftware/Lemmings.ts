@@ -1,5 +1,5 @@
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="sound-image-reader.ts"/>
+/// <reference path="sound-image-manager.ts"/>
 
 module Lemmings {
 
@@ -8,7 +8,7 @@ module Lemmings {
 
 
   /**
-   * Handles the read of the SoundImage File for one track that needs to be 
+   * Player for the SoundImage File for one track that needs to be 
    * played. 
   */
   export class SoundImagePlayer {

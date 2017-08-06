@@ -3,7 +3,7 @@
 module Lemmings {
 
   /** Class to read the Lemmings Sound Image File */
-  export class SoundImageReader {
+  export class SoundImageManager {
 
     private data: BinaryReader;
     private fileConfig: AudioConfig;

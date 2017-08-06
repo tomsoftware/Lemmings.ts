@@ -7,7 +7,7 @@ module Lemmings {
 
         private musicPlayer:AudioPlayer;
         private soundPlayer:AudioPlayer;
-        private soundImage:Promise<SoundImageReader>;
+        private soundImage:Promise<SoundImageManager>;
 
 
         constructor(private fileProvider: FileProvider, private config: GameConfig) {
@@ -38,7 +38,7 @@ module Lemmings {
         private initSoundImage() {
             if (this.soundImage) return this.soundImage;
 
-            this.soundImage = new Promise<SoundImageReader>((resolve, reject) => {
+            this.soundImage = new Promise<SoundImageManager>((resolve, reject) => {
 
                 /// load the adlib file
                 this.fileProvider.loadBinary(this.config.path , "ADLIB.DAT")
@@ -48,7 +48,7 @@ module Lemmings {
                         var container = new FileContainer(data);
 
                         /// create Sound Image
-                        var soundImage = new SoundImageReader(container.getPart(0), this.config.audioConfig);
+                        var soundImage = new SoundImageManager(container.getPart(0), this.config.audioConfig);
 
                         resolve(soundImage);
                     });

@@ -3,3 +3,5 @@ This is a Typescript Version of the "OPL3.java" original written by "Robson Coze
 
 
 
+## todo:
+* use Emscripten to compile DosBox OPL3 emulator

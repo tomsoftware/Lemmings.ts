@@ -57,7 +57,7 @@ var Lemmings;
                     /// unpack the file
                     var container = new Lemmings.FileContainer(data);
                     /// create Sound Image
-                    var soundImage = new Lemmings.SoundImageReader(container.getPart(0), this.config.audioConfig);
+                    var soundImage = new Lemmings.SoundImageManager(container.getPart(0), this.config.audioConfig);
                     resolve(soundImage);
                 });
             });
@@ -1692,7 +1692,7 @@ var Lemmings;
 var Lemmings;
 (function (Lemmings) {
     /** Class to read the Lemmings Sound Image File */
-    class SoundImageReader {
+    class SoundImageManager {
         constructor(data, audioConfig) {
             this.data = data;
             this.fileConfig = audioConfig;
@@ -1710,21 +1710,21 @@ var Lemmings;
             return player;
         }
     }
-    Lemmings.SoundImageReader = SoundImageReader;
+    Lemmings.SoundImageManager = SoundImageManager;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="sound-image-reader.ts"/>
+/// <reference path="sound-image-manager.ts"/>
 var Lemmings;
 (function (Lemmings) {
-    var AdliChannelsPlayingType;
-    (function (AdliChannelsPlayingType) {
-        AdliChannelsPlayingType[AdliChannelsPlayingType["NONE"] = 0] = "NONE";
-        AdliChannelsPlayingType[AdliChannelsPlayingType["SOUND"] = 1] = "SOUND";
-        AdliChannelsPlayingType[AdliChannelsPlayingType["MUSIC"] = 2] = "MUSIC";
-    })(AdliChannelsPlayingType || (AdliChannelsPlayingType = {}));
-    /** statemachine for a channel of the sound image file
+    var SoundImagChannelState;
+    (function (SoundImagChannelState) {
+        SoundImagChannelState[SoundImagChannelState["NONE"] = 0] = "NONE";
+        SoundImagChannelState[SoundImagChannelState["SOUND"] = 1] = "SOUND";
+        SoundImagChannelState[SoundImagChannelState["MUSIC"] = 2] = "MUSIC";
+    })(SoundImagChannelState || (SoundImagChannelState = {}));
+    /** interpreter for a channel of a song from a sound image file
      *  by calling 'read' its state is changes by procesing commands
-     *  and OPL3 command are returned */
+     *  and as result OPL3 command are returned */
     class SoundImageChannels {
         constructor(reader, audioConfig) {
             this.waitTime = 0;
@@ -1744,14 +1744,14 @@ var Lemmings;
             this.di13h = 0;
             this.unused = 0;
             /** only play if this is true */
-            this.playingState = AdliChannelsPlayingType.NONE;
+            this.playingState = SoundImagChannelState.NONE;
             this.error = new Lemmings.ErrorHandler("AdliChannels");
             this.fileConfig = audioConfig;
             this.reader = new Lemmings.BinaryReader(reader);
         }
         /** read the channel data and write it to the callback */
         read(commandCallback) {
-            if (this.playingState == AdliChannelsPlayingType.NONE)
+            if (this.playingState == SoundImagChannelState.NONE)
                 return;
             this.waitTime--;
             let saveChannelPosition = this.channelPosition;
@@ -1856,7 +1856,7 @@ var Lemmings;
             var value;
             this.di04h = cmd;
             var pos = this.instrumentPos;
-            if (this.playingState == AdliChannelsPlayingType.SOUND) {
+            if (this.playingState == SoundImagChannelState.SOUND) {
                 pos = this.fileConfig.soundDataOffset;
             }
             pos = pos + ((cmd - 1) << 4);
@@ -1928,7 +1928,7 @@ var Lemmings;
                       
                       this.playingState = AdliChannelsPlayingType.NONE;
                     }
-                    
+          
                     */
                     return -1;
                 case 4:
@@ -1937,7 +1937,7 @@ var Lemmings;
                     break;
                 case 5:
                     commandCallback(this.di08h_l, this.di08h_h);
-                    this.playingState = AdliChannelsPlayingType.NONE;
+                    this.playingState = SoundImagChannelState.NONE;
                     return -1;
                 case 6:
                     this.di13h = 1;
@@ -1974,11 +1974,11 @@ var Lemmings;
             this.channelPosition = this.reader.readWordBE(this.programPointer) + this.fileConfig.instructionsOffset;
             /// move the programm pointer
             this.programPointer += 2;
-            this.playingState = AdliChannelsPlayingType.MUSIC;
+            this.playingState = SoundImagChannelState.MUSIC;
         }
         /** init this channel for sound */
         initSound() {
-            this.playingState = AdliChannelsPlayingType.SOUND;
+            this.playingState = SoundImagChannelState.SOUND;
         }
         /** read the adlib config for this channel from the giffen offset */
         initChannel(offset, index) {
@@ -2008,23 +2008,23 @@ var Lemmings;
         intToPlayingState(stateVal) {
             switch (stateVal) {
                 case 1:
-                    return AdliChannelsPlayingType.MUSIC;
+                    return SoundImagChannelState.MUSIC;
                 case 2:
-                    return AdliChannelsPlayingType.SOUND;
+                    return SoundImagChannelState.SOUND;
                 default:
-                    return AdliChannelsPlayingType.NONE;
+                    return SoundImagChannelState.NONE;
             }
         }
     }
     Lemmings.SoundImageChannels = SoundImageChannels;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="sound-image-reader.ts"/>
+/// <reference path="sound-image-manager.ts"/>
 var Lemmings;
 (function (Lemmings) {
     ;
     /**
-     * Handles the read of the SoundImage File for one track that needs to be
+     * Player for the SoundImage File for one track that needs to be
      * played.
     */
     class SoundImagePlayer {

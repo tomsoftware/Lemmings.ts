@@ -1,17 +1,17 @@
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="sound-image-reader.ts"/>
+/// <reference path="sound-image-manager.ts"/>
 
 module Lemmings {
 
-  enum AdliChannelsPlayingType {
+  enum SoundImagChannelState {
     NONE,
     SOUND,
     MUSIC,
   }
 
-  /** statemachine for a channel of the sound image file 
+  /** interpreter for a channel of a song from a sound image file 
    *  by calling 'read' its state is changes by procesing commands 
-   *  and OPL3 command are returned */
+   *  and as result OPL3 command are returned */
   export class SoundImageChannels {
 
     public waitTime: number = 0;
@@ -33,7 +33,7 @@ module Lemmings {
     public unused: number = 0;
 
     /** only play if this is true */
-    public playingState: AdliChannelsPlayingType = AdliChannelsPlayingType.NONE;
+    public playingState: SoundImagChannelState = SoundImagChannelState.NONE;
 
     /** some constants */
     public soundImageVersion: number;
@@ -57,7 +57,7 @@ module Lemmings {
 
     /** read the channel data and write it to the callback */
     public read(commandCallback: AdlibCommandCallback) {
-      if (this.playingState == AdliChannelsPlayingType.NONE) return;
+      if (this.playingState == SoundImagChannelState.NONE) return;
 
       this.waitTime--;
 
@@ -208,7 +208,7 @@ module Lemmings {
 
       var pos = this.instrumentPos;
 
-      if (this.playingState == AdliChannelsPlayingType.SOUND) {
+      if (this.playingState == SoundImagChannelState.SOUND) {
         pos = this.fileConfig.soundDataOffset;
       }
 
@@ -315,7 +315,7 @@ module Lemmings {
             
             this.playingState = AdliChannelsPlayingType.NONE;
           }
-          
+
           */
           return -1;
 
@@ -326,7 +326,7 @@ module Lemmings {
 
         case 5:
           commandCallback(this.di08h_l, this.di08h_h);
-          this.playingState = AdliChannelsPlayingType.NONE;
+          this.playingState = SoundImagChannelState.NONE;
 
           return -1;
 
@@ -388,13 +388,13 @@ module Lemmings {
       /// move the programm pointer
       this.programPointer += 2;
 
-      this.playingState = AdliChannelsPlayingType.MUSIC;
+      this.playingState = SoundImagChannelState.MUSIC;
     }
 
     /** init this channel for sound */
     public initSound() {
 
-      this.playingState = AdliChannelsPlayingType.SOUND;
+      this.playingState = SoundImagChannelState.SOUND;
     }
 
 
@@ -427,14 +427,14 @@ module Lemmings {
 
 
     /** convert a number to a playState */
-    private intToPlayingState(stateVal: number): AdliChannelsPlayingType {
+    private intToPlayingState(stateVal: number): SoundImagChannelState {
       switch (stateVal) {
         case 1:
-          return AdliChannelsPlayingType.MUSIC;
+          return SoundImagChannelState.MUSIC;
         case 2:
-          return AdliChannelsPlayingType.SOUND;
+          return SoundImagChannelState.SOUND;
         default:
-          return AdliChannelsPlayingType.NONE;
+          return SoundImagChannelState.NONE;
       }
     }
 
