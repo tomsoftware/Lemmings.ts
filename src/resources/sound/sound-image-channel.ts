@@ -9,10 +9,8 @@ module Lemmings {
       MUSIC,
   }
 
-  /** a adlib channel of the sound image file */
+  /** a channel of the sound image file */
   export class SoundImageChannels {
-
-    private index : number;
 
     public di00h : number = 0;
     public Wait: number = 0;
@@ -23,12 +21,13 @@ module Lemmings {
     public di07h : number = 0;
     public di08h_l : number = 0;
     public di08h_h : number = 0;
-    public ProgramPosition : number = 0; /// -> todo: better name: programmPointer
+    public programPointer : number = 0;
     public channelPosition: number = 0;
     public di0Fh : number = 0;
     public WaitSum : number = 0;
     public di12h : number = 0;
     public di13h: number = 0;
+    public unknown01 : number = 0;
 
     /** only play if this is true */
     public playingState : AdliChannelsPlayingType = AdliChannelsPlayingType.NONE;
@@ -49,11 +48,9 @@ module Lemmings {
     private fileConfig: AudioConfig
 
     constructor(reader: BinaryReader, 
-                index : number,
                 audioConfig:AudioConfig) {
 
       this.fileConfig = audioConfig;
-      this.index = index;
       this.reader = new BinaryReader(reader);
     }
 
@@ -185,9 +182,9 @@ module Lemmings {
     private setFrequency(commandCallback: AdlibCommandCallback) {
 
       var mainPos = ((this.di00h + this.di12h) & 0xFF) + 4;
-      var octave = this.reader.readByte(mainPos + this.fileConfig.sub_306_POS1)
-      var pos = this.reader.readByte(mainPos + this.fileConfig.sub_306_POS2)
-      var frequenze = this.reader.readWordBE(this.fileConfig.sub_306_Param + pos * 32)
+      var octave = this.reader.readByte(mainPos + this.fileConfig.octavesOffset)
+      var frequenciesCount = this.reader.readByte(mainPos + this.fileConfig.frequenciesCountOffset)
+      var frequenze = this.reader.readWordBE(this.fileConfig.frequenciesOffset + frequenciesCount * 32)
 
       if ((frequenze & 0x8000) == 0) {
         octave--;
@@ -219,7 +216,7 @@ module Lemmings {
       var pos = this.instrumentPos;
 
       if (this.playingState == AdliChannelsPlayingType.SOUND) {
-        pos = this.fileConfig.DATA_START_SOUND;
+        pos = this.fileConfig.soundDataOffset;
       }
 
       pos = pos + ((cmd - 1) << 4);
@@ -271,27 +268,25 @@ module Lemmings {
 
     private part3(commandCallback: AdlibCommandCallback, cmd:number, cmdPos: number): number { 
 
-      /// für case brauchen wir nicht
-      
       switch (cmd & 0xF) {
         case 0:
 
-          var tmpPos = this.ProgramPosition;
+          var tmpPos = this.programPointer;
 
           var cx = this.reader.readWordBE(tmpPos);
           tmpPos +=  2;
           
           if (cx == 0) {
 
-              tmpPos = this.reader.readWordBE(tmpPos) + this.fileConfig.DATA_CMD;
-              cmdPos = this.reader.readWordBE(tmpPos) + this.fileConfig.DATA_CMD;
+              tmpPos = this.reader.readWordBE(tmpPos) + this.fileConfig.instructionsOffset;
+              cmdPos = this.reader.readWordBE(tmpPos) + this.fileConfig.instructionsOffset;
 
               tmpPos += 2;
           } else {
-              cmdPos = cx + this.fileConfig.DATA_CMD;
+              cmdPos = cx + this.fileConfig.instructionsOffset;
           }
 
-          this.ProgramPosition = tmpPos;
+          this.programPointer = tmpPos;
           this.channelPosition = cmdPos;
 
           break;
@@ -373,7 +368,7 @@ module Lemmings {
 
       var pos = this.reader.readByte(cmdPos);
 
-      var ah = this.reader.readByte((pos & 0x7F) + this.fileConfig.DATA_START);
+      var ah = this.reader.readByte((pos & 0x7F) + this.fileConfig.dataOffset);
       var al = this.reader.readByte(this.di02h + 0xC);
 
       al = (al << 2) & 0xC0;
@@ -384,7 +379,7 @@ module Lemmings {
 
       pos = this.di0Fh + this.reader.readByte(this.di02h + 0xA) & 0x7F;
 
-      ah = this.reader.readByte(pos + this.fileConfig.DATA_START);
+      ah = this.reader.readByte(pos + this.fileConfig.dataOffset);
       al = this.reader.readByte(this.di02h + 0xC);
       
       al = (al >> 2) & 0xC0;
@@ -399,10 +394,10 @@ module Lemmings {
     /** init this channel for music */
     public initMusic() {
  
-        this.channelPosition = this.reader.readWordBE(this.ProgramPosition) + this.fileConfig.DATA_CMD;
+        this.channelPosition = this.reader.readWordBE(this.programPointer) + this.fileConfig.instructionsOffset;
 
         /// move the programm pointer
-        this.ProgramPosition += 2;
+        this.programPointer += 2;
 
         this.playingState = AdliChannelsPlayingType.MUSIC;
     }
@@ -415,9 +410,9 @@ module Lemmings {
 
 
     /** read the adlib config for this channel from the giffen offset */
-    public initChannel(offset : number) {
+    public initChannel(offset : number, index:number) {
  
-      offset = offset + this.index * 20; /// 20: Channel-Init-Data-Size
+      offset = offset + index * 20; /// 20: sizeof(Channel-Init-Data)
 
       this.reader.setOffset (offset);
 
@@ -426,16 +421,14 @@ module Lemmings {
       this.Wait = this.reader.readByte();
       this.di02h = this.reader.readWordBE();
       this.di04h = this.reader.readByte();
-      this.di05h_l = this.reader.readByte(); // todo : l / h?
+      this.di05h_l = this.reader.readByte();
       this.di05h_h = this.reader.readByte();
       this.di07h = this.reader.readByte();;
-      this.di08h_h = this.reader.readByte(); // todo : l / h?
+      this.di08h_h = this.reader.readByte();
       this.di08h_l = this.reader.readByte();
-      this.ProgramPosition = this.reader.readWordBE();
+      this.programPointer = this.reader.readWordBE();
       this.channelPosition = this.reader.readWordBE();
-      
-      this.reader.readByte(); //- unused
-
+      this.unknown01 = this.reader.readByte();
       this.di0Fh = this.reader.readByte();
       this.playingState = this.IntToPlayingState(this.reader.readByte());
       this.WaitSum = this.reader.readByte();

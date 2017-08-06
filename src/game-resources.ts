@@ -75,7 +75,7 @@ module Lemmings {
                 this.initSoundImage().then(soundImage =>{
 
                     /// get track
-                    var adlibSrc: AdlibPlayer = soundImage.getMusicTrack(songIndex);
+                    var adlibSrc: SoundImagePlayer = soundImage.getMusicTrack(songIndex);
                     
                     /// play
                     this.musicPlayer = new AudioPlayer(adlibSrc);
@@ -105,7 +105,7 @@ module Lemmings {
                 this.initSoundImage().then(soundImage =>{
 
                     /// get track
-                    var adlibSrc: AdlibPlayer = soundImage.getSoundTrack(sondIndex);
+                    var adlibSrc: SoundImagePlayer = soundImage.getSoundTrack(sondIndex);
                     
                     /// play
                     this.soundPlayer = new AudioPlayer(adlibSrc);

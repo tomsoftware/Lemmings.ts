@@ -79,15 +79,15 @@
 
                 newConfig.audioConfig.version = <any>configData["audio.version"];
                 newConfig.audioConfig.adlibChannelConfigPosition = <any>configData["audio.adlibChannelConfigPosition"];
-                newConfig.audioConfig.DATA_START = <any>configData["audio.DATA_START"];
-                newConfig.audioConfig.sub_306_Param = <any>configData["audio.sub_306_Param"];
-                newConfig.audioConfig.sub_306_POS1 = <any>configData["audio.sub_306_POS1"];
-                newConfig.audioConfig.sub_306_POS2 = <any>configData["audio.sub_306_POS2"];
-                newConfig.audioConfig.INIT_MUSIK_START = <any>configData["audio.INIT_MUSIK_START"];
+                newConfig.audioConfig.dataOffset = <any>configData["audio.dataOffset"];
+                newConfig.audioConfig.frequenciesOffset = <any>configData["audio.frequenciesOffset"];
+                newConfig.audioConfig.octavesOffset = <any>configData["audio.octavesOffset"];
+                newConfig.audioConfig.frequenciesCountOffset = <any>configData["audio.frequenciesCountOffset"];
+                newConfig.audioConfig.musicInitOffset = <any>configData["audio.musicInitOffset"];
 
-                newConfig.audioConfig.DATA_CMD = <any>configData["audio.DATA_CMD"];
+                newConfig.audioConfig.instructionsOffset = <any>configData["audio.instructionsOffset"];
                 newConfig.audioConfig.soundIndexTablePosition = <any>configData["audio.soundIndexTablePosition"];
-                newConfig.audioConfig.DATA_START_SOUND = <any>configData["audio.DATA_START_SOUND"];
+                newConfig.audioConfig.soundDataOffset = <any>configData["audio.soundDataOffset"];
                 newConfig.audioConfig.trackCount = <any>configData["audio.trackCount"];
 
                 gameConfigs.push(newConfig);

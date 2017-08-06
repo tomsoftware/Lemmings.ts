@@ -1,5 +1,5 @@
 /// <reference path="opl3.ts"/>
-/// <reference path="./../adlib-player.ts"/>
+/// <reference path="./../sound-image-player.ts"/>
 
 
 module Lemmings {
@@ -14,7 +14,7 @@ module Lemmings {
 
         private opl : OPL3;
         
-        private srcOplPlayer :AdlibPlayer;
+        private srcOplPlayer: SoundImagePlayer;
 
         private queue:  Float32Array[] = []; //Float32Array[] = [];
 
@@ -28,7 +28,7 @@ module Lemmings {
         private isPlaying : boolean = false;
 
 
-        constructor(src: AdlibPlayer) {
+        constructor(src: SoundImagePlayer) {
             this.opl = new OPL3();
             this.srcOplPlayer = src;
 
@@ -69,7 +69,7 @@ module Lemmings {
                 this.queue.push(this.opl.readMonoLemmings(this.PCM_FRAME_SIZE));
             }
 
-            this.error.debug("Elapsed Time for sampling opl "+ (window.performance.now() - startTime));
+            //this.error.debug("Elapsed Time for sampling opl "+ (window.performance.now() - startTime));
 
             /// periodically process new data 
             window.setTimeout(() => {

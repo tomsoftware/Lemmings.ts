@@ -13,22 +13,23 @@ module Lemmings {
    * Handles the read of the SoundImage File for one track that needs to be 
    * played. 
   */
-  export class AdlibPlayer {
-
-    //// http://www.shipbrook.net/jeff/sb.html
+  export class SoundImagePlayer {
 
     private reader: BinaryReader
+
+    /** every track is composed of several channel. */
     private channels: SoundImageChannels[] = [];
 
-    /** Config of the soundimage file */
+    /** Config for this soundimage file */
     private fileConfig : AudioConfig;
 
     /** how many channels does the current track uese */
-    private channelCount : number; ///word_8B0
+    private channelCount : number;
 
     /** variables for the song */
     public songHeaderPosition : number;
-    public word_530 : number;
+    public unknownWord : number;
+
     /** cycles to wait between data sending */
     public waitCycles : number;
     public currentCycle : number = 0;
@@ -82,19 +83,13 @@ module Lemmings {
       if (musicIndex < 0) return;
       musicIndex = musicIndex % this.fileConfig.trackCount;
 
-      /// todo: reduce INIT_MUSIK_START by 2!!
-      musicIndex++;
-
-
-      this.songHeaderPosition = this.reader.readWordBE(this.fileConfig.INIT_MUSIK_START + musicIndex * 2);
+      this.songHeaderPosition = this.reader.readWordBE(this.fileConfig.musicInitOffset + musicIndex * 2);
 
       this.reader.setOffset(this.songHeaderPosition);
 
-
-      this.word_530 = this.reader.readWordBE();
-      this.instrumentPos = this.reader.readWordBE() + this.fileConfig.DATA_CMD; 
+      this.unknownWord = this.reader.readWordBE();
+      this.instrumentPos = this.reader.readWordBE() + this.fileConfig.instructionsOffset; 
       this.waitCycles = this.reader.readByte(); 
-
 
       this.channelCount = this.reader.readByte(); 
 
@@ -106,22 +101,24 @@ module Lemmings {
         var ch:SoundImageChannels = this.createChannel(i);
 
         /// config channel
-        ch.ProgramPosition =  this.reader.readWordBE() + this.fileConfig.DATA_CMD;
+        ch.programPointer =  this.reader.readWordBE() + this.fileConfig.instructionsOffset;
         ch.instrumentPos = this.instrumentPos;
 
         ch.initMusic();
 
         this.channels.push(ch);
       }
+
+      this.debug();
     }
 
 
-    /** create an Adlib Channel and init it */
+    /** create an SoundImage Channel and init it */
     private createChannel(chIndex) : SoundImageChannels {
 
-      var ch = new SoundImageChannels(this.reader, chIndex, this.fileConfig);
+      var ch = new SoundImageChannels(this.reader, this.fileConfig);
 
-      ch.initChannel(this.fileConfig.adlibChannelConfigPosition);
+      ch.initChannel(this.fileConfig.adlibChannelConfigPosition, chIndex);
 
       ch.Wait = 1;
       ch.soundImageVersion = this.fileConfig.version;
@@ -133,7 +130,8 @@ module Lemmings {
     /// are the init Commands send?
     private initCommandsDone = false;
 
-    /** read the next block of data */
+
+    /** reads the next block of data: call this to process the next data of this channel */
     public read(commandCallback: AdlibCommandCallback) {
 
       if (this.currentCycle > 0) {
@@ -205,6 +203,21 @@ module Lemmings {
       /// Masks Timer 2
       /// the value from byte 02 is loaded into Timer 1, and incrementation begins. 
       commandCallback(0x04, 0x21);
+    }
+
+
+    /** write debug info to console */
+    public debug() {
+  
+      console.dir(this.fileConfig);
+      console.log("channelCount: " + this.channelCount);
+
+      console.log("songHeaderPosition: " + this.songHeaderPosition);
+      console.log("unknownWord: " + this.unknownWord);
+
+      console.log("waitCycles: " + this.waitCycles);
+      console.log("currentCycle: " + this.currentCycle);
+      console.log("instrumentPos: " + this.instrumentPos);
     }
 
   }

@@ -271,14 +271,14 @@ var Lemmings;
                 newConfig.level.groups = configData["level.groups"];
                 newConfig.audioConfig.version = configData["audio.version"];
                 newConfig.audioConfig.adlibChannelConfigPosition = configData["audio.adlibChannelConfigPosition"];
-                newConfig.audioConfig.DATA_START = configData["audio.DATA_START"];
-                newConfig.audioConfig.sub_306_Param = configData["audio.sub_306_Param"];
-                newConfig.audioConfig.sub_306_POS1 = configData["audio.sub_306_POS1"];
-                newConfig.audioConfig.sub_306_POS2 = configData["audio.sub_306_POS2"];
-                newConfig.audioConfig.INIT_MUSIK_START = configData["audio.INIT_MUSIK_START"];
-                newConfig.audioConfig.DATA_CMD = configData["audio.DATA_CMD"];
+                newConfig.audioConfig.dataOffset = configData["audio.dataOffset"];
+                newConfig.audioConfig.frequenciesOffset = configData["audio.frequenciesOffset"];
+                newConfig.audioConfig.octavesOffset = configData["audio.octavesOffset"];
+                newConfig.audioConfig.frequenciesCountOffset = configData["audio.frequenciesCountOffset"];
+                newConfig.audioConfig.musicInitOffset = configData["audio.musicInitOffset"];
+                newConfig.audioConfig.instructionsOffset = configData["audio.instructionsOffset"];
                 newConfig.audioConfig.soundIndexTablePosition = configData["audio.soundIndexTablePosition"];
-                newConfig.audioConfig.DATA_START_SOUND = configData["audio.DATA_START_SOUND"];
+                newConfig.audioConfig.soundDataOffset = configData["audio.soundDataOffset"];
                 newConfig.audioConfig.trackCount = configData["audio.trackCount"];
                 gameConfigs.push(newConfig);
             }
@@ -1033,6 +1033,84 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    /** convert the lemmings bit plain image format to real image data.
+     * The lemmings file format uses multiple plains for every bit of color.
+     * E.g. Save all lowest bits of the image in a chunk then all second bits... */
+    class BitPlainImage {
+        constructor(reader, width, height) {
+            this.reader = reader;
+            this.width = width;
+            this.height = height;
+            let pixCount = this.width * this.height;
+            this.pixBuf = new Uint8Array(pixCount);
+        }
+        /** return the image buffer */
+        getImageBuffer() {
+            return this.pixBuf;
+        }
+        /** convert the multi-bit-plain image to image */
+        processImage(startPos = 0) {
+            let src = this.reader;
+            let pixBuf = this.pixBuf;
+            let pixCount = pixBuf.length;
+            let bitBufLen = 0;
+            let bitBuf = 0;
+            /// read image
+            src.setOffset(startPos);
+            //-  3 bit per Pixel - bits of byte are stored separately
+            for (var i = 0; i < 3; i++) {
+                for (var p = 0; p < pixCount; p++) {
+                    if (bitBufLen <= 0) {
+                        bitBuf = src.readByte();
+                        bitBufLen = 8;
+                    }
+                    pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
+                    bitBuf = (bitBuf << 1);
+                    bitBufLen--;
+                }
+            }
+            this.pixBuf = pixBuf;
+        }
+        /** use a color-index for the transparency in the image */
+        processTransparentByColorIndex(transparentColorIndex) {
+            let pixBuf = this.pixBuf;
+            let pixCount = pixBuf.length;
+            for (let i = 0; i < pixCount; i++) {
+                if (pixBuf[i] == transparentColorIndex) {
+                    /// Sets the highest bit to indicate the transparency.
+                    pixBuf[i] = 0x80 | pixBuf[i];
+                }
+            }
+            this.pixBuf = pixBuf;
+        }
+        /** use a bit plain for the transparency in the image */
+        processTransparentData(startPos = 0) {
+            let src = this.reader;
+            let pixBuf = this.pixBuf;
+            let pixCount = pixBuf.length;
+            let bitBufLen = 0;
+            let bitBuf = 0;
+            /// read image mask
+            src.setOffset(startPos);
+            for (var p = 0; p < pixCount; p++) {
+                if (bitBufLen <= 0) {
+                    bitBuf = src.readByte();
+                    bitBufLen = 8;
+                }
+                if ((bitBuf & 0x80) == 0) {
+                    /// Sets the highest bit to indicate the transparency.
+                    pixBuf[p] = 0x80 | pixBuf[p];
+                }
+                bitBuf = (bitBuf << 1);
+                bitBufLen--;
+            }
+            this.pixBuf = pixBuf;
+        }
+    }
+    Lemmings.BitPlainImage = BitPlainImage;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     /** store a ground image */
     class GroundImage {
         constructor(width, height) {
@@ -1048,6 +1126,8 @@ var Lemmings;
             while (len--)
                 /// set r,g,b = 0 and alpha=FF
                 buffer32[len] = 0xFF000000;
+            /// for debugging
+            //buffer32[len] = 0xFFCBC0FF;
         }
         drawPalettImage(srcImg, srcWidth, srcHeight, pallet, left, top) {
             let pixIndex = 0;
@@ -1189,40 +1269,13 @@ var Lemmings;
             imgList.map((img) => {
                 let bitBuf = 0;
                 let bitBufLen = 0;
-                let pixCount = img.width * img.height;
                 img.frames = [];
                 let filePos = img.imageLoc;
                 for (let f = 0; f < img.frameCount; f++) {
-                    /// read image
-                    vga.setOffset(filePos);
-                    var pixBuf = new Uint8Array(pixCount);
-                    //-  3 bit per Pixel - bits of byte are stored separately
-                    for (var i = 0; i < 3; i++) {
-                        for (var p = 0; p < pixCount; p++) {
-                            if (bitBufLen <= 0) {
-                                bitBuf = vga.readByte();
-                                bitBufLen = 8;
-                            }
-                            pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
-                            bitBuf = (bitBuf << 1);
-                            bitBufLen--;
-                        }
-                    }
-                    /// read image mask
-                    vga.setOffset(img.maskLoc);
-                    for (var p = 0; p < pixCount; p++) {
-                        if (bitBufLen <= 0) {
-                            bitBuf = vga.readByte();
-                            bitBufLen = 8;
-                        }
-                        if ((bitBuf & 0x80) == 0) {
-                            /// Sets the highest bit to indicate the transparency.
-                            pixBuf[p] = 0x80 | pixBuf[p];
-                        }
-                        bitBuf = (bitBuf << 1);
-                        bitBufLen--;
-                    }
-                    img.frames.push(pixBuf);
+                    var bitImage = new Lemmings.BitPlainImage(vga, img.width, img.height);
+                    bitImage.processImage(filePos);
+                    bitImage.processTransparentData(img.maskLoc);
+                    img.frames.push(bitImage.getImageBuffer());
                     /// move to the next frame data
                     filePos += img.frameDataSize;
                 }
@@ -1495,19 +1548,22 @@ var Lemmings;
 /// <reference path="../../skill-types.ts"/>
 var Lemmings;
 (function (Lemmings) {
-    /** The Odd Table has a list fo LevelProperties to describe the levels...???  */
+    /** The Odd Table has a list of LevelProperties to describe alternative starting conditions for a level  */
     class OddTableReader {
         constructor(oddfile) {
             this.levelProperties = [];
             this.error = new Lemmings.ErrorHandler("OddTableReader");
             this.read(oddfile);
         }
-        /** return the Level for a given levelNumber - LevelNumber is counting all levels from first to last of the game  */
+        /** return the Level for a given levelNumber - LevelNumber is counting all levels from first to last of the game
+         *  Odd-Tables are only used for the "Original Lemmings" Game
+         */
         getLevelProperties(levelNumber) {
             if ((levelNumber >= this.levelProperties.length) && (levelNumber < 0))
                 return null;
             return this.levelProperties[levelNumber];
         }
+        /** read the odd fine */
         read(fr) {
             fr.setOffset(0);
             let count = Math.floor(fr.length / 56);
@@ -1534,73 +1590,6 @@ var Lemmings;
         }
     }
     Lemmings.OddTableReader = OddTableReader;
-})(Lemmings || (Lemmings = {}));
-var Lemmings;
-(function (Lemmings) {
-    /** manage the lemmings bit image format */
-    class VgaSpecBitImage {
-        constructor(width, height) {
-            this.err = new Lemmings.ErrorHandler("VgaSpecBitImage");
-            this.pixelCount = (width * height);
-            this.bitBuffer = new Uint8Array(this.pixelCount);
-            this.bitBufferPos = 0;
-        }
-        writeNextByte(value) {
-            if (this.bitBufferPos >= this.bitBuffer.length)
-                return;
-            this.bitBuffer[this.bitBufferPos] = value;
-            this.bitBufferPos++;
-        }
-        reset() {
-            this.bitBufferPos = 0;
-        }
-        getImages() {
-            if (this.bitBufferPos != this.bitBuffer.length) {
-                this.err.log("getImages() byte count for image mismatch: " + this.bitBufferPos + " != " + this.bitBuffer.length);
-            }
-            let pixelCount = this.pixelCount;
-            let pixBuf = new Uint8Array(pixelCount);
-            let inBuf = this.bitBuffer;
-            let inBufPos = 0;
-            let bitBuf = 0;
-            let bitBufLen = 0;
-            //-  3 bit per Pixel - bits of byte are stored separately
-            for (var i = 0; i < 3; i++) {
-                for (var p = 0; p < pixelCount; p++) {
-                    if (bitBufLen <= 0) {
-                        bitBuf = inBuf[inBufPos];
-                        inBufPos++;
-                        bitBufLen = 8;
-                    }
-                    pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
-                    bitBuf = (bitBuf << 1);
-                    bitBufLen--;
-                }
-            }
-            /*
-             /// read image mask
-            vga.setOffset(img.maskLoc);
-
-            for (var p = 0; p < pixCount; p++) {
-
-                if (bitBufLen <= 0) {
-                    bitBuf = vga.readByte();
-                    bitBufLen = 8;
-                }
-
-                if ((bitBuf & 0x80) == 0) {
-                  /// Sets the highest bit to indicate the transparency.
-                  pixBuf[p] = 0x80 | pixBuf[p];
-                }
-                bitBuf = (bitBuf << 1);
-                bitBufLen--;
-            }
-
-            */
-            return pixBuf;
-        }
-    }
-    Lemmings.VgaSpecBitImage = VgaSpecBitImage;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts" />
 /// <reference path="../file/file-container.ts" />
@@ -1637,23 +1626,32 @@ var Lemmings;
             this.img = new Lemmings.GroundImage(width, chunkHeight * chunkCount);
             this.img.clearImageArray();
             let startScanLine = 0;
-            let bitImage = new Lemmings.VgaSpecBitImage(width, chunkHeight);
+            let pixelCount = width * chunkHeight;
+            let bitBuffer = new Uint8Array(pixelCount);
+            let bitBufferPos = 0;
             while (!fr.eof()) {
                 let curByte = fr.readByte();
                 if (curByte == 128) {
                     /// end of chunk
-                    this.img.drawPalettImage(bitImage.getImages(), width, chunkHeight, this.groundPallet, 0, startScanLine);
+                    /// unpack image data to image-buffer
+                    var bitImage = new Lemmings.BitPlainImage(new Lemmings.BinaryReader(bitBuffer), width, chunkHeight);
+                    bitImage.processImage(0);
+                    bitImage.processTransparentByColorIndex(0);
+                    this.img.drawPalettImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPallet, 0, startScanLine);
                     startScanLine += 40;
                     if (startScanLine >= this.img.height)
                         return;
-                    bitImage.reset();
+                    bitBufferPos = 0;
                 }
                 else if (curByte <= 127) {
                     let copyByteCount = curByte + 1;
                     /// copy copyByteCount to the bitImage
                     while (!fr.eof()) {
-                        let curByte = fr.readByte();
-                        bitImage.writeNextByte(curByte);
+                        /// write the next Byte
+                        if (bitBufferPos >= bitBuffer.length)
+                            return;
+                        bitBuffer[bitBufferPos] = fr.readByte();
+                        bitBufferPos++;
                         copyByteCount--;
                         if (copyByteCount <= 0)
                             break;
@@ -1663,7 +1661,11 @@ var Lemmings;
                     /// copy n times the same value
                     let repeatByte = fr.readByte();
                     for (let repeatByteCount = 257 - curByte; repeatByteCount > 0; repeatByteCount--) {
-                        bitImage.writeNextByte(repeatByte);
+                        /// write the next Byte
+                        if (bitBufferPos >= bitBuffer.length)
+                            return;
+                        bitBuffer[bitBufferPos] = repeatByte;
+                        bitBufferPos++;
                     }
                 }
             }
@@ -1696,148 +1698,18 @@ var Lemmings;
         }
         /** create a AdlibPlyer for a given music track number/index [0..N] */
         getMusicTrack(trackIndex) {
-            var player = new Lemmings.AdlibPlayer(this.data, this.fileConfig);
+            var player = new Lemmings.SoundImagePlayer(this.data, this.fileConfig);
             player.initMusic(trackIndex);
             return player;
         }
         /** create a AdlibPlyer for a given sound index [0..N] */
         getSoundTrack(soundIndex) {
-            var player = new Lemmings.AdlibPlayer(this.data, this.fileConfig);
+            var player = new Lemmings.SoundImagePlayer(this.data, this.fileConfig);
             player.initSound(soundIndex);
             return player;
         }
     }
     Lemmings.SoundImageReader = SoundImageReader;
-})(Lemmings || (Lemmings = {}));
-/// <reference path="../file/binary-reader.ts"/>
-/// <reference path="sound-image-reader.ts"/>
-var Lemmings;
-(function (Lemmings) {
-    ;
-    /**
-     * Handles the read of the SoundImage File for one track that needs to be
-     * played.
-    */
-    class AdlibPlayer {
-        constructor(reader, audioConfig) {
-            this.audioConfig = audioConfig;
-            this.channels = [];
-            this.currentCycle = 0;
-            /// are the init Commands send?
-            this.initCommandsDone = false;
-            /// create a new reader for the data
-            this.reader = new Lemmings.BinaryReader(reader);
-            this.fileConfig = audioConfig;
-        }
-        /** init for a sound */
-        initSound(soundIndex) {
-            ///- reset
-            this.channels = [];
-            this.channelCount = 0;
-            /// check if valid
-            if ((soundIndex < 0) || (soundIndex > 17))
-                return;
-            /// create channel : the original DOS Soundimage format player use channels >= 8 for sounds...but this shouldn't matter
-            var ch = this.createChannel(8);
-            ch.channelPosition = this.reader.readWordBE(this.fileConfig.soundIndexTablePosition + soundIndex * 2);
-            ch.Wait = 1;
-            ch.di13h = 0;
-            ch.initSound();
-            /// add channel
-            this.channels.push(ch);
-            this.channelCount = 1;
-        }
-        /** init for a song */
-        initMusic(musicIndex) {
-            ///- reset
-            this.channels = [];
-            this.channelCount = 0;
-            /// check if valid
-            if (musicIndex < 0)
-                return;
-            musicIndex = musicIndex % this.fileConfig.trackCount;
-            /// todo: reduce INIT_MUSIK_START by 2!!
-            musicIndex++;
-            this.songHeaderPosition = this.reader.readWordBE(this.fileConfig.INIT_MUSIK_START + musicIndex * 2);
-            this.reader.setOffset(this.songHeaderPosition);
-            this.word_530 = this.reader.readWordBE();
-            this.instrumentPos = this.reader.readWordBE() + this.fileConfig.DATA_CMD;
-            this.waitCycles = this.reader.readByte();
-            this.channelCount = this.reader.readByte();
-            /// create channels and set there programm position
-            for (var i = 0; i < this.channelCount; i++) {
-                /// create channels
-                var ch = this.createChannel(i);
-                /// config channel
-                ch.ProgramPosition = this.reader.readWordBE() + this.fileConfig.DATA_CMD;
-                ch.instrumentPos = this.instrumentPos;
-                ch.initMusic();
-                this.channels.push(ch);
-            }
-        }
-        /** create an Adlib Channel and init it */
-        createChannel(chIndex) {
-            var ch = new Lemmings.SoundImageChannels(this.reader, chIndex, this.fileConfig);
-            ch.initChannel(this.fileConfig.adlibChannelConfigPosition);
-            ch.Wait = 1;
-            ch.soundImageVersion = this.fileConfig.version;
-            return ch;
-        }
-        /** read the next block of data */
-        read(commandCallback) {
-            if (this.currentCycle > 0) {
-                /// wait some time
-                this.currentCycle--;
-                return;
-            }
-            this.currentCycle = this.waitCycles;
-            if (!this.initCommandsDone) {
-                /// write the init adlib commands if this is the first call
-                this.initCommandsDone = true;
-                this.doInitTimer(commandCallback);
-                this.doInitCommands(commandCallback);
-            }
-            /// read every channel
-            for (var i = 0; i < this.channelCount; i++) {
-                this.channels[i].read(commandCallback);
-            }
-        }
-        /** Init the adlib timer */
-        doInitTimer(commandCallback) {
-            //- Masks Timer 1 and Masks Timer 2
-            commandCallback(0x4, 0x60);
-            //- Resets the flags for timers 1 & 2. If set, all other bits are ignored
-            commandCallback(0x4, 0x80);
-            //- Set Value of Timer 1.  The value for this timer is incremented every eighty (80) microseconds
-            commandCallback(0x2, 0xFF);
-            //- Masks Timer 2 and
-            //- The value from byte 02 is loaded into Timer 1, and incrementation begins
-            commandCallback(0x4, 0x21);
-            //- Masks Timer 1 and Masks Timer 2
-            commandCallback(0x4, 0x60);
-            //- Resets the flags for timers 1 & 2. If set, all other bits are ignored
-            commandCallback(0x4, 0x80);
-        }
-        /** Return the commands to init the adlib driver */
-        doInitCommands(commandCallback) {
-            for (var i = 0; i < this.channelCount; i++) {
-                let ch = this.channels[i];
-                commandCallback(ch.di08h_l, ch.di08h_h);
-            }
-            // enabled the FM chips to control the waveform of each operator
-            commandCallback(0x01, 0x20);
-            /// Set: AM depth is 4.8 dB
-            /// Set: Vibrato depth is 14 cent
-            commandCallback(0xBD, 0xC0);
-            /// selects FM music mode
-            ///  keyboard split off
-            commandCallback(0x08, 0x00);
-            /// Masks Timer 2
-            /// the value from byte 02 is loaded into Timer 1, and incrementation begins. 
-            commandCallback(0x04, 0x21);
-        }
-    }
-    Lemmings.AdlibPlayer = AdlibPlayer;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts"/>
 /// <reference path="sound-image-reader.ts"/>
@@ -1849,9 +1721,9 @@ var Lemmings;
         AdliChannelsPlayingType[AdliChannelsPlayingType["SOUND"] = 1] = "SOUND";
         AdliChannelsPlayingType[AdliChannelsPlayingType["MUSIC"] = 2] = "MUSIC";
     })(AdliChannelsPlayingType || (AdliChannelsPlayingType = {}));
-    /** a adlib channel of the sound image file */
+    /** a channel of the sound image file */
     class SoundImageChannels {
-        constructor(reader, index, audioConfig) {
+        constructor(reader, audioConfig) {
             this.di00h = 0;
             this.Wait = 0;
             this.di02h = 0;
@@ -1861,17 +1733,17 @@ var Lemmings;
             this.di07h = 0;
             this.di08h_l = 0;
             this.di08h_h = 0;
-            this.ProgramPosition = 0; /// -> todo: better name: programmPointer
+            this.programPointer = 0;
             this.channelPosition = 0;
             this.di0Fh = 0;
             this.WaitSum = 0;
             this.di12h = 0;
             this.di13h = 0;
+            this.unknown01 = 0;
             /** only play if this is true */
             this.playingState = AdliChannelsPlayingType.NONE;
             this.error = new Lemmings.ErrorHandler("AdliChannels");
             this.fileConfig = audioConfig;
-            this.index = index;
             this.reader = new Lemmings.BinaryReader(reader);
         }
         /** read the channel data and write it to the callback */
@@ -1961,9 +1833,9 @@ var Lemmings;
         }
         setFrequency(commandCallback) {
             var mainPos = ((this.di00h + this.di12h) & 0xFF) + 4;
-            var octave = this.reader.readByte(mainPos + this.fileConfig.sub_306_POS1);
-            var pos = this.reader.readByte(mainPos + this.fileConfig.sub_306_POS2);
-            var frequenze = this.reader.readWordBE(this.fileConfig.sub_306_Param + pos * 32);
+            var octave = this.reader.readByte(mainPos + this.fileConfig.octavesOffset);
+            var frequenciesCount = this.reader.readByte(mainPos + this.fileConfig.frequenciesCountOffset);
+            var frequenze = this.reader.readWordBE(this.fileConfig.frequenciesOffset + frequenciesCount * 32);
             if ((frequenze & 0x8000) == 0) {
                 octave--;
             }
@@ -1985,7 +1857,7 @@ var Lemmings;
             this.di04h = cmd;
             var pos = this.instrumentPos;
             if (this.playingState == AdliChannelsPlayingType.SOUND) {
-                pos = this.fileConfig.DATA_START_SOUND;
+                pos = this.fileConfig.soundDataOffset;
             }
             pos = pos + ((cmd - 1) << 4);
             /// Attack Rate / Decay Rate
@@ -2018,21 +1890,20 @@ var Lemmings;
             this.setLevel(commandCallback, pos + 10);
         }
         part3(commandCallback, cmd, cmdPos) {
-            /// für case brauchen wir nicht
             switch (cmd & 0xF) {
                 case 0:
-                    var tmpPos = this.ProgramPosition;
+                    var tmpPos = this.programPointer;
                     var cx = this.reader.readWordBE(tmpPos);
                     tmpPos += 2;
                     if (cx == 0) {
-                        tmpPos = this.reader.readWordBE(tmpPos) + this.fileConfig.DATA_CMD;
-                        cmdPos = this.reader.readWordBE(tmpPos) + this.fileConfig.DATA_CMD;
+                        tmpPos = this.reader.readWordBE(tmpPos) + this.fileConfig.instructionsOffset;
+                        cmdPos = this.reader.readWordBE(tmpPos) + this.fileConfig.instructionsOffset;
                         tmpPos += 2;
                     }
                     else {
-                        cmdPos = cx + this.fileConfig.DATA_CMD;
+                        cmdPos = cx + this.fileConfig.instructionsOffset;
                     }
-                    this.ProgramPosition = tmpPos;
+                    this.programPointer = tmpPos;
                     this.channelPosition = cmdPos;
                     break;
                 case 1:
@@ -2089,13 +1960,13 @@ var Lemmings;
         }
         setLevel(commandCallback, cmdPos) {
             var pos = this.reader.readByte(cmdPos);
-            var ah = this.reader.readByte((pos & 0x7F) + this.fileConfig.DATA_START);
+            var ah = this.reader.readByte((pos & 0x7F) + this.fileConfig.dataOffset);
             var al = this.reader.readByte(this.di02h + 0xC);
             al = (al << 2) & 0xC0;
             ah = ah | al;
             commandCallback(this.di05h_l + 0x40, ah);
             pos = this.di0Fh + this.reader.readByte(this.di02h + 0xA) & 0x7F;
-            ah = this.reader.readByte(pos + this.fileConfig.DATA_START);
+            ah = this.reader.readByte(pos + this.fileConfig.dataOffset);
             al = this.reader.readByte(this.di02h + 0xC);
             al = (al >> 2) & 0xC0;
             al = al & 0xC0;
@@ -2104,9 +1975,9 @@ var Lemmings;
         }
         /** init this channel for music */
         initMusic() {
-            this.channelPosition = this.reader.readWordBE(this.ProgramPosition) + this.fileConfig.DATA_CMD;
+            this.channelPosition = this.reader.readWordBE(this.programPointer) + this.fileConfig.instructionsOffset;
             /// move the programm pointer
-            this.ProgramPosition += 2;
+            this.programPointer += 2;
             this.playingState = AdliChannelsPlayingType.MUSIC;
         }
         /** init this channel for sound */
@@ -2114,23 +1985,23 @@ var Lemmings;
             this.playingState = AdliChannelsPlayingType.SOUND;
         }
         /** read the adlib config for this channel from the giffen offset */
-        initChannel(offset) {
-            offset = offset + this.index * 20; /// 20: Channel-Init-Data-Size
+        initChannel(offset, index) {
+            offset = offset + index * 20; /// 20: sizeof(Channel-Init-Data)
             this.reader.setOffset(offset);
             /// read Cahnnel-Init-Data
             this.di00h = this.reader.readByte();
             this.Wait = this.reader.readByte();
             this.di02h = this.reader.readWordBE();
             this.di04h = this.reader.readByte();
-            this.di05h_l = this.reader.readByte(); // todo : l / h?
+            this.di05h_l = this.reader.readByte();
             this.di05h_h = this.reader.readByte();
             this.di07h = this.reader.readByte();
             ;
-            this.di08h_h = this.reader.readByte(); // todo : l / h?
+            this.di08h_h = this.reader.readByte();
             this.di08h_l = this.reader.readByte();
-            this.ProgramPosition = this.reader.readWordBE();
+            this.programPointer = this.reader.readWordBE();
             this.channelPosition = this.reader.readWordBE();
-            this.reader.readByte(); //- unused
+            this.unknown01 = this.reader.readByte();
             this.di0Fh = this.reader.readByte();
             this.playingState = this.IntToPlayingState(this.reader.readByte());
             this.WaitSum = this.reader.readByte();
@@ -2150,6 +2021,146 @@ var Lemmings;
         }
     }
     Lemmings.SoundImageChannels = SoundImageChannels;
+})(Lemmings || (Lemmings = {}));
+/// <reference path="../file/binary-reader.ts"/>
+/// <reference path="sound-image-reader.ts"/>
+var Lemmings;
+(function (Lemmings) {
+    ;
+    /**
+     * Handles the read of the SoundImage File for one track that needs to be
+     * played.
+    */
+    class SoundImagePlayer {
+        constructor(reader, audioConfig) {
+            this.audioConfig = audioConfig;
+            /** every track is composed of several channel. */
+            this.channels = [];
+            this.currentCycle = 0;
+            /// are the init Commands send?
+            this.initCommandsDone = false;
+            /// create a new reader for the data
+            this.reader = new Lemmings.BinaryReader(reader);
+            this.fileConfig = audioConfig;
+        }
+        /** init for a sound */
+        initSound(soundIndex) {
+            ///- reset
+            this.channels = [];
+            this.channelCount = 0;
+            /// check if valid
+            if ((soundIndex < 0) || (soundIndex > 17))
+                return;
+            /// create channel : the original DOS Soundimage format player use channels >= 8 for sounds...but this shouldn't matter
+            var ch = this.createChannel(8);
+            ch.channelPosition = this.reader.readWordBE(this.fileConfig.soundIndexTablePosition + soundIndex * 2);
+            ch.Wait = 1;
+            ch.di13h = 0;
+            ch.initSound();
+            /// add channel
+            this.channels.push(ch);
+            this.channelCount = 1;
+        }
+        /** init for a song */
+        initMusic(musicIndex) {
+            ///- reset
+            this.channels = [];
+            this.channelCount = 0;
+            /// check if valid
+            if (musicIndex < 0)
+                return;
+            musicIndex = musicIndex % this.fileConfig.trackCount;
+            this.songHeaderPosition = this.reader.readWordBE(this.fileConfig.musicInitOffset + musicIndex * 2);
+            this.reader.setOffset(this.songHeaderPosition);
+            this.unknownWord = this.reader.readWordBE();
+            this.instrumentPos = this.reader.readWordBE() + this.fileConfig.instructionsOffset;
+            this.waitCycles = this.reader.readByte();
+            this.channelCount = this.reader.readByte();
+            /// create channels and set there programm position
+            for (var i = 0; i < this.channelCount; i++) {
+                /// create channels
+                var ch = this.createChannel(i);
+                /// config channel
+                ch.programPointer = this.reader.readWordBE() + this.fileConfig.instructionsOffset;
+                ch.instrumentPos = this.instrumentPos;
+                ch.initMusic();
+                this.channels.push(ch);
+            }
+            this.debug();
+        }
+        /** create an SoundImage Channel and init it */
+        createChannel(chIndex) {
+            var ch = new Lemmings.SoundImageChannels(this.reader, this.fileConfig);
+            ch.initChannel(this.fileConfig.adlibChannelConfigPosition, chIndex);
+            ch.Wait = 1;
+            ch.soundImageVersion = this.fileConfig.version;
+            return ch;
+        }
+        /** reads the next block of data: call this to process the next data of this channel */
+        read(commandCallback) {
+            if (this.currentCycle > 0) {
+                /// wait some time
+                this.currentCycle--;
+                return;
+            }
+            this.currentCycle = this.waitCycles;
+            if (!this.initCommandsDone) {
+                /// write the init adlib commands if this is the first call
+                this.initCommandsDone = true;
+                this.doInitTimer(commandCallback);
+                this.doInitCommands(commandCallback);
+            }
+            /// read every channel
+            for (var i = 0; i < this.channelCount; i++) {
+                this.channels[i].read(commandCallback);
+            }
+        }
+        /** Init the adlib timer */
+        doInitTimer(commandCallback) {
+            //- Masks Timer 1 and Masks Timer 2
+            commandCallback(0x4, 0x60);
+            //- Resets the flags for timers 1 & 2. If set, all other bits are ignored
+            commandCallback(0x4, 0x80);
+            //- Set Value of Timer 1.  The value for this timer is incremented every eighty (80) microseconds
+            commandCallback(0x2, 0xFF);
+            //- Masks Timer 2 and
+            //- The value from byte 02 is loaded into Timer 1, and incrementation begins
+            commandCallback(0x4, 0x21);
+            //- Masks Timer 1 and Masks Timer 2
+            commandCallback(0x4, 0x60);
+            //- Resets the flags for timers 1 & 2. If set, all other bits are ignored
+            commandCallback(0x4, 0x80);
+        }
+        /** Return the commands to init the adlib driver */
+        doInitCommands(commandCallback) {
+            for (var i = 0; i < this.channelCount; i++) {
+                let ch = this.channels[i];
+                commandCallback(ch.di08h_l, ch.di08h_h);
+            }
+            // enabled the FM chips to control the waveform of each operator
+            commandCallback(0x01, 0x20);
+            /// Set: AM depth is 4.8 dB
+            /// Set: Vibrato depth is 14 cent
+            commandCallback(0xBD, 0xC0);
+            /// selects FM music mode
+            ///  keyboard split off
+            commandCallback(0x08, 0x00);
+            /// Masks Timer 2
+            /// the value from byte 02 is loaded into Timer 1, and incrementation begins. 
+            commandCallback(0x04, 0x21);
+        }
+        /** write debug info to console */
+        debug() {
+            console.dir(this.fileConfig);
+            console.log("channelCount: " + this.channelCount);
+            console.log("songHeaderPosition: " + this.songHeaderPosition);
+            console.log("unknownWord: " + this.unknownWord);
+            console.log("waitCycles: " + this.waitCycles);
+            console.log("currentCycle: " + this.currentCycle);
+            console.log("instrumentPos: " + this.instrumentPos);
+        }
+    }
+    Lemmings.SoundImagePlayer = SoundImagePlayer;
 })(Lemmings || (Lemmings = {}));
 /*
  * File: OPL3.java
@@ -3609,7 +3620,7 @@ var Lemmings;
     ];
 })(Lemmings || (Lemmings = {}));
 /// <reference path="opl3.ts"/>
-/// <reference path="./../adlib-player.ts"/>
+/// <reference path="./../sound-image-player.ts"/>
 var Lemmings;
 (function (Lemmings) {
     class AudioPlayer {
@@ -3647,7 +3658,7 @@ var Lemmings;
                 this.queue.push(this.opl.readMonoLemmings(this.PCM_FRAME_SIZE));
                 this.queue.push(this.opl.readMonoLemmings(this.PCM_FRAME_SIZE));
             }
-            this.error.debug("Elapsed Time for sampling opl " + (window.performance.now() - startTime));
+            //this.error.debug("Elapsed Time for sampling opl "+ (window.performance.now() - startTime));
             /// periodically process new data 
             window.setTimeout(() => {
                 this.readAdlib();
@@ -3754,8 +3765,8 @@ var Lemmings;
             this._gameCanvas = el;
             this.controller = new Lemmings.GameController(el);
             this.display = new Lemmings.GameDisplay(el);
-            this.controller.onViewPointChanged = (x, y, scale) => {
-                this.display.setViewPoint(x, y, scale);
+            this.controller.onViewPointChanged = (viewPoint) => {
+                this.display.setViewPoint(viewPoint);
             };
         }
         playMusic(moveInterval) {

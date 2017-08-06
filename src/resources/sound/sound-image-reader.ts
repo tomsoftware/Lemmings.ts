@@ -16,9 +16,9 @@ module Lemmings {
     }
 
     /** create a AdlibPlyer for a given music track number/index [0..N] */
-    public getMusicTrack(trackIndex : number) : AdlibPlayer {
+    public getMusicTrack(trackIndex : number) : SoundImagePlayer {
 
-      var player = new AdlibPlayer(this.data, this.fileConfig);
+      var player = new SoundImagePlayer(this.data, this.fileConfig);
 
       player.initMusic(trackIndex);
 
@@ -28,9 +28,9 @@ module Lemmings {
 
 
     /** create a AdlibPlyer for a given sound index [0..N] */
-    public getSoundTrack(soundIndex : number) : AdlibPlayer {
+    public getSoundTrack(soundIndex : number) : SoundImagePlayer {
 
-      var player = new AdlibPlayer(this.data, this.fileConfig);
+      var player = new SoundImagePlayer(this.data, this.fileConfig);
 
       player.initSound(soundIndex);
 
