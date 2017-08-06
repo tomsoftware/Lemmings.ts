@@ -263,23 +263,24 @@ var Lemmings;
                 newConfig.name = configData["name"];
                 newConfig.path = configData["path"];
                 newConfig.gametype = Lemmings.GameTypes.fromString(configData["gametype"]);
-                if (configData["useoddtable"] != null) {
-                    newConfig.level.useOddTable = (!!configData["useoddtable"]);
+                /// read level config
+                if (configData["level.useoddtable"] != null) {
+                    newConfig.level.useOddTable = (!!configData["level.useoddtable"]);
                 }
                 newConfig.level.order = configData["level.order"];
                 newConfig.level.filePrefix = configData["level.filePrefix"];
                 newConfig.level.groups = configData["level.groups"];
+                /// read audio config
                 newConfig.audioConfig.version = configData["audio.version"];
                 newConfig.audioConfig.adlibChannelConfigPosition = configData["audio.adlibChannelConfigPosition"];
                 newConfig.audioConfig.dataOffset = configData["audio.dataOffset"];
                 newConfig.audioConfig.frequenciesOffset = configData["audio.frequenciesOffset"];
                 newConfig.audioConfig.octavesOffset = configData["audio.octavesOffset"];
                 newConfig.audioConfig.frequenciesCountOffset = configData["audio.frequenciesCountOffset"];
-                newConfig.audioConfig.musicInitOffset = configData["audio.musicInitOffset"];
                 newConfig.audioConfig.instructionsOffset = configData["audio.instructionsOffset"];
                 newConfig.audioConfig.soundIndexTablePosition = configData["audio.soundIndexTablePosition"];
                 newConfig.audioConfig.soundDataOffset = configData["audio.soundDataOffset"];
-                newConfig.audioConfig.trackCount = configData["audio.trackCount"];
+                newConfig.audioConfig.numberOfTracks = configData["audio.numberOfTracks"];
                 gameConfigs.push(newConfig);
             }
             return gameConfigs;
@@ -1721,11 +1722,16 @@ var Lemmings;
         AdliChannelsPlayingType[AdliChannelsPlayingType["SOUND"] = 1] = "SOUND";
         AdliChannelsPlayingType[AdliChannelsPlayingType["MUSIC"] = 2] = "MUSIC";
     })(AdliChannelsPlayingType || (AdliChannelsPlayingType = {}));
-    /** a channel of the sound image file */
+    /** statemachine for a channel of the sound image file
+     *  by calling 'read' its state is changes by procesing commands
+     *  and OPL3 command are returned */
     class SoundImageChannels {
         constructor(reader, audioConfig) {
+            this.waitTime = 0;
+            this.waitSum = 0;
+            this.programPointer = 0;
+            this.channelPosition = 0;
             this.di00h = 0;
-            this.Wait = 0;
             this.di02h = 0;
             this.di04h = 0;
             this.di05h_h = 0;
@@ -1733,13 +1739,10 @@ var Lemmings;
             this.di07h = 0;
             this.di08h_l = 0;
             this.di08h_h = 0;
-            this.programPointer = 0;
-            this.channelPosition = 0;
             this.di0Fh = 0;
-            this.WaitSum = 0;
             this.di12h = 0;
             this.di13h = 0;
-            this.unknown01 = 0;
+            this.unused = 0;
             /** only play if this is true */
             this.playingState = AdliChannelsPlayingType.NONE;
             this.error = new Lemmings.ErrorHandler("AdliChannels");
@@ -1750,9 +1753,9 @@ var Lemmings;
         read(commandCallback) {
             if (this.playingState == AdliChannelsPlayingType.NONE)
                 return;
-            this.Wait--;
+            this.waitTime--;
             let saveChannelPosition = this.channelPosition;
-            if (this.Wait <= 0) {
+            if (this.waitTime <= 0) {
                 if (this.soundImageVersion == 1) {
                     this.readBarVersion1(commandCallback);
                 }
@@ -1766,7 +1769,7 @@ var Lemmings;
                 this.setFrequency(commandCallback);
             }
             if (this.reader.readByte(saveChannelPosition) != 0x82) {
-                if (this.reader.readByte(this.di02h + 0xE) == this.Wait) {
+                if (this.reader.readByte(this.di02h + 0xE) == this.waitTime) {
                     commandCallback(this.di08h_l, this.di08h_h);
                     this.di13h = 0;
                 }
@@ -1783,7 +1786,7 @@ var Lemmings;
                     return;
                 }
                 else if ((cmd >= 0xE0)) {
-                    this.setWaitSum(cmd - 0xDF);
+                    this.waitSum = (cmd - 0xDF);
                 }
                 else if ((cmd >= 0xC0)) {
                     this.setEnvelope(commandCallback, cmd - 0xC0);
@@ -1810,7 +1813,7 @@ var Lemmings;
                     return;
                 }
                 else if ((cmd >= 0xE0)) {
-                    this.setWaitSum(cmd - 0xDF);
+                    this.waitSum = (cmd - 0xDF);
                 }
                 else if ((cmd <= 0xA0)) {
                     cmdPos = this.part3(commandCallback, cmd, cmdPos);
@@ -1826,29 +1829,26 @@ var Lemmings;
             this.di00h = cmd;
             commandCallback(this.di08h_l, this.di08h_h);
             this.setFrequency(commandCallback);
-            this.Wait = this.WaitSum;
-        }
-        setWaitSum(cmd) {
-            this.WaitSum = (cmd);
+            this.waitTime = this.waitSum;
         }
         setFrequency(commandCallback) {
             var mainPos = ((this.di00h + this.di12h) & 0xFF) + 4;
             var octave = this.reader.readByte(mainPos + this.fileConfig.octavesOffset);
             var frequenciesCount = this.reader.readByte(mainPos + this.fileConfig.frequenciesCountOffset);
-            var frequenze = this.reader.readWordBE(this.fileConfig.frequenciesOffset + frequenciesCount * 32);
-            if ((frequenze & 0x8000) == 0) {
+            var frequency = this.reader.readWordBE(this.fileConfig.frequenciesOffset + frequenciesCount * 32);
+            if ((frequency & 0x8000) == 0) {
                 octave--;
             }
             if ((octave & 0x80) > 0) {
                 octave++;
-                frequenze = frequenze << 1; // * 2
+                frequency = frequency << 1; // * 2
             }
-            /// write low part of frequenz
-            commandCallback(this.di07h + 0xA0, frequenze & 0xFF);
+            /// write low part of frequency
+            commandCallback(this.di07h + 0xA0, frequency & 0xFF);
             /// 0x3 : mask F-Number most sig.
-            this.di08h_h = ((frequenze >> 8) & 0x3) | ((octave << 2) & 0xFF);
+            this.di08h_h = ((frequency >> 8) & 0x3) | ((octave << 2) & 0xFF);
             this.di08h_l = this.di07h + 0xB0;
-            /// write high part of frequenz
+            /// write high part of frequency
             /// 0x20 = set Key On
             commandCallback(this.di08h_l, this.di08h_h | 0x20);
         }
@@ -1907,32 +1907,28 @@ var Lemmings;
                     this.channelPosition = cmdPos;
                     break;
                 case 1:
-                    /// set frequenze hight
+                    /// Set frequency
                     commandCallback(this.di08h_l, this.di08h_h);
                     this.di13h = 0;
                     this.channelPosition = cmdPos;
-                    this.Wait = this.WaitSum;
+                    this.waitTime = this.waitSum;
                     return -1;
                 case 2:
                     this.channelPosition = cmdPos;
-                    this.Wait = this.WaitSum;
+                    this.waitTime = this.waitSum;
                     return -1;
                 case 3:
                     this.error.log("not implemented - end of song");
                     // Todo: 
                     ///-- reset all chanels ----
                     /*
-                    for (var i:number = 0; i< this.word_8B0; i++) {
-            
-                      var ah = this.di08h_h;
-                      var al = this.di08h_l;
+                    for (var i:number = 0; i< this.channelCount; i++) {
           
-                      commandCallback(al, ah);
+                      commandCallback(this.di08h_l, this.di08h_h);
                       
                       this.playingState = AdliChannelsPlayingType.NONE;
                     }
-          
-                    this.word_E7 = 0;
+                    
                     */
                     return -1;
                 case 4:
@@ -1990,7 +1986,7 @@ var Lemmings;
             this.reader.setOffset(offset);
             /// read Cahnnel-Init-Data
             this.di00h = this.reader.readByte();
-            this.Wait = this.reader.readByte();
+            this.waitTime = this.reader.readByte();
             this.di02h = this.reader.readWordBE();
             this.di04h = this.reader.readByte();
             this.di05h_l = this.reader.readByte();
@@ -2001,15 +1997,15 @@ var Lemmings;
             this.di08h_l = this.reader.readByte();
             this.programPointer = this.reader.readWordBE();
             this.channelPosition = this.reader.readWordBE();
-            this.unknown01 = this.reader.readByte();
+            this.unused = this.reader.readByte();
             this.di0Fh = this.reader.readByte();
-            this.playingState = this.IntToPlayingState(this.reader.readByte());
-            this.WaitSum = this.reader.readByte();
+            this.playingState = this.intToPlayingState(this.reader.readByte());
+            this.waitSum = this.reader.readByte();
             this.di12h = this.reader.readByte();
             this.di13h = this.reader.readByte();
         }
         /** convert a number to a playState */
-        IntToPlayingState(stateVal) {
+        intToPlayingState(stateVal) {
             switch (stateVal) {
                 case 1:
                     return AdliChannelsPlayingType.MUSIC;
@@ -2054,7 +2050,7 @@ var Lemmings;
             /// create channel : the original DOS Soundimage format player use channels >= 8 for sounds...but this shouldn't matter
             var ch = this.createChannel(8);
             ch.channelPosition = this.reader.readWordBE(this.fileConfig.soundIndexTablePosition + soundIndex * 2);
-            ch.Wait = 1;
+            ch.waitTime = 1;
             ch.di13h = 0;
             ch.initSound();
             /// add channel
@@ -2069,8 +2065,8 @@ var Lemmings;
             /// check if valid
             if (musicIndex < 0)
                 return;
-            musicIndex = musicIndex % this.fileConfig.trackCount;
-            this.songHeaderPosition = this.reader.readWordBE(this.fileConfig.musicInitOffset + musicIndex * 2);
+            musicIndex = musicIndex % this.fileConfig.numberOfTracks;
+            this.songHeaderPosition = this.reader.readWordBE(this.fileConfig.instructionsOffset + musicIndex * 2);
             this.reader.setOffset(this.songHeaderPosition);
             this.unknownWord = this.reader.readWordBE();
             this.instrumentPos = this.reader.readWordBE() + this.fileConfig.instructionsOffset;
@@ -2092,7 +2088,7 @@ var Lemmings;
         createChannel(chIndex) {
             var ch = new Lemmings.SoundImageChannels(this.reader, this.fileConfig);
             ch.initChannel(this.fileConfig.adlibChannelConfigPosition, chIndex);
-            ch.Wait = 1;
+            ch.waitTime = 1;
             ch.soundImageVersion = this.fileConfig.version;
             return ch;
         }
@@ -2151,13 +2147,14 @@ var Lemmings;
         }
         /** write debug info to console */
         debug() {
-            console.dir(this.fileConfig);
-            console.log("channelCount: " + this.channelCount);
-            console.log("songHeaderPosition: " + this.songHeaderPosition);
-            console.log("unknownWord: " + this.unknownWord);
-            console.log("waitCycles: " + this.waitCycles);
-            console.log("currentCycle: " + this.currentCycle);
-            console.log("instrumentPos: " + this.instrumentPos);
+            let error = new Lemmings.ErrorHandler("SoundImagePlayer");
+            error.debug(this.fileConfig);
+            error.debug("channelCount: " + this.channelCount);
+            error.debug("songHeaderPosition: " + this.songHeaderPosition);
+            error.debug("unknownWord: " + this.unknownWord);
+            error.debug("waitCycles: " + this.waitCycles);
+            error.debug("currentCycle: " + this.currentCycle);
+            error.debug("instrumentPos: " + this.instrumentPos);
         }
     }
     Lemmings.SoundImagePlayer = SoundImagePlayer;

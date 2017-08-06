@@ -13,9 +13,8 @@ module Lemmings {
         public frequenciesCountOffset: number;
         public instructionsOffset: number;
         public soundDataOffset: number;
-        public musicInitOffset: number;
 
-        public trackCount: number;
+        public numberOfTracks: number;
 
     }
 

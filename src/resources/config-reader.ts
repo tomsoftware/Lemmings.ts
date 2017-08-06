@@ -70,25 +70,26 @@
                 newConfig.path = configData["path"];
                 newConfig.gametype = GameTypes.fromString(configData["gametype"]);
 
-                if (configData["useoddtable"] != null){
-                    newConfig.level.useOddTable = (!!(<any>configData["useoddtable"]));
+                /// read level config
+                if (configData["level.useoddtable"] != null){
+                    newConfig.level.useOddTable = (!!(<any>configData["level.useoddtable"]));
                 }
                 newConfig.level.order = <any>configData["level.order"];
                 newConfig.level.filePrefix = <any>configData["level.filePrefix"];
                 newConfig.level.groups = <any>configData["level.groups"];
 
+                /// read audio config
                 newConfig.audioConfig.version = <any>configData["audio.version"];
                 newConfig.audioConfig.adlibChannelConfigPosition = <any>configData["audio.adlibChannelConfigPosition"];
                 newConfig.audioConfig.dataOffset = <any>configData["audio.dataOffset"];
                 newConfig.audioConfig.frequenciesOffset = <any>configData["audio.frequenciesOffset"];
                 newConfig.audioConfig.octavesOffset = <any>configData["audio.octavesOffset"];
                 newConfig.audioConfig.frequenciesCountOffset = <any>configData["audio.frequenciesCountOffset"];
-                newConfig.audioConfig.musicInitOffset = <any>configData["audio.musicInitOffset"];
 
                 newConfig.audioConfig.instructionsOffset = <any>configData["audio.instructionsOffset"];
                 newConfig.audioConfig.soundIndexTablePosition = <any>configData["audio.soundIndexTablePosition"];
                 newConfig.audioConfig.soundDataOffset = <any>configData["audio.soundDataOffset"];
-                newConfig.audioConfig.trackCount = <any>configData["audio.trackCount"];
+                newConfig.audioConfig.numberOfTracks = <any>configData["audio.numberOfTracks"];
 
                 gameConfigs.push(newConfig);
             }
