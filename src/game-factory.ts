@@ -10,14 +10,24 @@ module Lemmings {
         constructor(private rootPath: string) {
             this.fileProvider = new FileProvider(rootPath);
             
-            
             let configFileReader = this.fileProvider.loadString("config.json");
             this.configReader = new ConfigReader(configFileReader);
         }
 
 
-       
+        /** return a game object to controle/run the game */
+        public getGame(gameType : GameTypes) : Promise<Game> {
 
+            return new Promise<Game>((resolve, reject)=> {
+
+                /// load resources
+                this.getGameResources(gameType)
+                    .then(res => resolve(new Game(res)));
+            });
+
+        }
+       
+        /** return a Game Resources that gaves access to images, maps, sounds  */
         public getGameResources(gameType : GameTypes) : Promise<GameResources> {
 
             return new Promise<GameResources>((resolve, reject)=> {

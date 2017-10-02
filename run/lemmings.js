@@ -10,6 +10,15 @@ var Lemmings;
             let configFileReader = this.fileProvider.loadString("config.json");
             this.configReader = new Lemmings.ConfigReader(configFileReader);
         }
+        /** return a game object to controle/run the game */
+        getGame(gameType) {
+            return new Promise((resolve, reject) => {
+                /// load resources
+                this.getGameResources(gameType)
+                    .then(res => resolve(new Lemmings.Game(res)));
+            });
+        }
+        /** return a Game Resources that gaves access to images, maps, sounds  */
         getGameResources(gameType) {
             return new Promise((resolve, reject) => {
                 this.configReader.getConfig(gameType).then(config => {
@@ -31,12 +40,30 @@ var Lemmings;
         constructor(fileProvider, config) {
             this.fileProvider = fileProvider;
             this.config = config;
+            this.mainDat = null;
         }
         /** free resources */
         dispose() {
             this.stopMusic();
             this.stopSound();
             this.soundImage = null;
+        }
+        /** return the main.dat file content */
+        getMainDat() {
+            if (this.mainDat != null)
+                return this.mainDat;
+            this.mainDat = this.fileProvider.loadBinary(this.config.path, "MAIN.DAT");
+            return this.mainDat;
+        }
+        /** return the Lemings animations */
+        getLemmingsSprite() {
+            return new Promise((resolve, reject) => {
+                this.getMainDat().then(data => {
+                    /// unpack the file
+                    var container = new Lemmings.FileContainer(data);
+                    resolve(new Lemmings.LemmingsSprite(container.getPart(0)));
+                });
+            });
         }
         /** return the Level Data for a given Level-Index */
         getLevel(levelMode, levelIndex) {
@@ -148,6 +175,47 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    /** provides an game object to controle the game */
+    class Game {
+        constructor(gameResources) {
+            this.error = new Lemmings.ErrorHandler("Game");
+            this.gameResources = null;
+            this.lemmingsLeft = 0;
+            this.gameResources = gameResources;
+        }
+        load(levelGroupIndex, levelIndex) {
+            this.levelGroupIndex = levelGroupIndex;
+            this.levelIndex = levelIndex;
+            return new Promise((resolve, reject) => {
+                let levelProm = this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex);
+                let lemSpriteProm = this.gameResources.getLemmingsSprite();
+                Promise.all([levelProm, lemSpriteProm]).then(result => {
+                    this.level = result[0];
+                    let lemSprite = result[1];
+                    this.lemmingManager = new Lemmings.LemmingManager(lemSprite);
+                    this.lemmingsLeft = this.level.releaseCount;
+                    resolve(this);
+                });
+            });
+        }
+        /** run the game */
+        run() {
+            let entrance = this.level.mapObjects[this.lemmingsLeft % this.level.mapObjects.length];
+            this.lemmingManager.addLemming(entrance.x, entrance.y);
+            setInterval(() => this.tick(), 200);
+        }
+        tick() {
+            if (this.level == null) {
+                this.error.log("level not loaded!");
+                return;
+            }
+            this.lemmingManager.tick(this.level);
+        }
+    }
+    Lemmings.Game = Game;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     /** the skills/behaviors a Lemming could have */
     var SkillTypes;
     (function (SkillTypes) {
@@ -218,6 +286,319 @@ var Lemmings;
         }
     }
     Lemmings.LevelConfig = LevelConfig;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class ActionFallSystem {
+        constructor(sprites) {
+            this.sprite = [];
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, false));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, true));
+        }
+        process(level, lem) {
+            lem.frame++;
+            if (lem.fall_distance > 16 && (lem.hasParachute)) {
+                lem.setAction(Lemmings.ActionType.FLOATING);
+                return 1;
+            }
+            // fall down!
+            let i;
+            for (i = 0; i < 3; i++) {
+                if (level.has_pixel_at(lem.x, lem.y + i)) {
+                    break;
+                }
+            }
+            lem.y += i;
+            if (i == 3) {
+                lem.fall_distance += i;
+                return 1;
+            }
+            else {
+                // landed
+                if (lem.fall_distance > Lemmings.Lemming.LEM_MAX_FALLING) {
+                    lem.setAction(Lemmings.ActionType.SPLATTING);
+                    return 1;
+                }
+                lem.setAction(Lemmings.ActionType.WALKING);
+                return 1;
+            }
+        }
+    }
+    Lemmings.ActionFallSystem = ActionFallSystem;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    var ActionType;
+    (function (ActionType) {
+        ActionType[ActionType["WALKING"] = 0] = "WALKING";
+        ActionType[ActionType["SPLATTING"] = 1] = "SPLATTING";
+        ActionType[ActionType["EXPLODING"] = 2] = "EXPLODING";
+        ActionType[ActionType["FALLING"] = 3] = "FALLING";
+        ActionType[ActionType["JUMPING"] = 4] = "JUMPING";
+        ActionType[ActionType["DIGGING"] = 5] = "DIGGING";
+        ActionType[ActionType["CLIMBING"] = 6] = "CLIMBING";
+        ActionType[ActionType["HOISTING"] = 7] = "HOISTING";
+        ActionType[ActionType["BUILDING"] = 8] = "BUILDING";
+        ActionType[ActionType["BLOCKING"] = 9] = "BLOCKING";
+        ActionType[ActionType["BASHING"] = 10] = "BASHING";
+        ActionType[ActionType["FLOATING"] = 11] = "FLOATING";
+        ActionType[ActionType["MINEING"] = 12] = "MINEING";
+        ActionType[ActionType["DROWNING"] = 13] = "DROWNING";
+        ActionType[ActionType["EXITING"] = 14] = "EXITING";
+        ActionType[ActionType["FRYING"] = 15] = "FRYING";
+        ActionType[ActionType["OHNO"] = 16] = "OHNO";
+        ActionType[ActionType["LEMACTION_SHRUG"] = 17] = "LEMACTION_SHRUG";
+        ActionType[ActionType["OUT_OFF_LEVEL"] = 20] = "OUT_OFF_LEVEL";
+    })(ActionType = Lemmings.ActionType || (Lemmings.ActionType = {}));
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    /** manage the in-game Lemmings animation sprite */
+    class LemmingsSprite {
+        constructor(fr) {
+            this.lemmingAnimation = []; //- Loockup table from ActionType -> this.animations(); First Element: left-move, Second: right-move
+            this.registerAnimation(Lemmings.SpriteType.WALKING, 1, fr, 2, 16, 10, 8); //- walking (r)
+            this.registerAnimation(Lemmings.SpriteType.JUMPING, 1, fr, 2, 16, 10, 1); //- jumping (r)
+            this.registerAnimation(Lemmings.SpriteType.WALKING, -1, fr, 2, 16, 10, 8); //- walking (l)
+            this.registerAnimation(Lemmings.SpriteType.JUMPING, -1, fr, 2, 16, 10, 1); //- jumping (l)
+            this.registerAnimation(Lemmings.SpriteType.DIGGING, 0, fr, 3, 16, 14, 16); //- digging
+            this.registerAnimation(Lemmings.SpriteType.CLIMBING, 1, fr, 2, 16, 12, 8); //- climbing (r)
+            this.registerAnimation(Lemmings.SpriteType.CLIMBING, -1, fr, 2, 16, 12, 8); //- climbing (l)
+            this.registerAnimation(Lemmings.SpriteType.DROWNING, 0, fr, 2, 16, 10, 16); //- drowning
+            this.registerAnimation(Lemmings.SpriteType.POSTCLIMBING, 1, fr, 2, 16, 12, 8); //- post-climb (r)
+            this.registerAnimation(Lemmings.SpriteType.POSTCLIMBING, -1, fr, 2, 16, 12, 8); //- post-climb (l)
+            this.registerAnimation(Lemmings.SpriteType.BUILDING, 1, fr, 3, 16, 13, 16); //- brick-laying (r)
+            this.registerAnimation(Lemmings.SpriteType.BUILDING, -1, fr, 3, 16, 13, 16); //- brick-laying (l)
+            this.registerAnimation(Lemmings.SpriteType.BASHING, 1, fr, 3, 16, 10, 32); //- bashing (r)
+            this.registerAnimation(Lemmings.SpriteType.BASHING, -1, fr, 3, 16, 10, 32); //- bashing (l)
+            this.registerAnimation(Lemmings.SpriteType.MINEING, 1, fr, 3, 16, 13, 24); //- mining (r)
+            this.registerAnimation(Lemmings.SpriteType.MINEING, -1, fr, 3, 16, 13, 24); //- mining (l)
+            this.registerAnimation(Lemmings.SpriteType.FALLING, 1, fr, 2, 16, 10, 4); //- falling (r)
+            this.registerAnimation(Lemmings.SpriteType.FALLING, -1, fr, 2, 16, 10, 4); //- falling (l)
+            this.registerAnimation(Lemmings.SpriteType.PREUMBRELLA, 1, fr, 3, 16, 16, 4); //- pre-umbrella (r)
+            this.registerAnimation(Lemmings.SpriteType.UMBRELLA, 1, fr, 3, 16, 16, 4, true); //- umbrella (r)
+            this.registerAnimation(Lemmings.SpriteType.PREUMBRELLA, -1, fr, 3, 16, 16, 4); //- pre-umbrella (l)
+            this.registerAnimation(Lemmings.SpriteType.UMBRELLA, -1, fr, 3, 16, 16, 4, true); //- umbrella (l)
+            this.registerAnimation(Lemmings.SpriteType.SPLATTING, 0, fr, 2, 16, 10, 16); //- splatting
+            this.registerAnimation(Lemmings.SpriteType.EXITING, 0, fr, 2, 16, 13, 8); //- exiting
+            this.registerAnimation(Lemmings.SpriteType.FRYING, 1, fr, 4, 16, 14, 14); //- fried
+            this.registerAnimation(Lemmings.SpriteType.BLOCKING, 0, fr, 2, 16, 10, 16); //- blocking
+            this.registerAnimation(Lemmings.SpriteType.SHRUGGING, 1, fr, 2, 16, 10, 8); //- shrugging (r)
+            this.registerAnimation(Lemmings.SpriteType.SHRUGGING, 0, fr, 2, 16, 10, 8); //- shrugging (l)
+            this.registerAnimation(Lemmings.SpriteType.OHNO, 0, fr, 2, 16, 10, 16); //- oh-no-ing
+            this.registerAnimation(Lemmings.SpriteType.EXPLODING, 0, fr, 3, 32, 32, 1); //- explosion
+        }
+        /** return the animation for a given animation type */
+        getAnimation(state, right) {
+            return this.lemmingAnimation[this.typeToIndex(state, (right ? 1 : 0))];
+        }
+        typeToIndex(state, dir) {
+            return state * 2 + ((dir <= 0) ? 0 : 1);
+        }
+        registerAnimation(state, dir, fr, bitsPerPixle, width, height, frames, usePingPong = false) {
+            //- load animation frames from main file (fr)
+            var animation = new Lemmings.Animation();
+            animation.loadFromFile(fr, bitsPerPixle, width, height, frames);
+            animation.isPingPong = usePingPong;
+            //- add animation to cach
+            if (dir >= 0) {
+                this.lemmingAnimation[this.typeToIndex(state, 1)] = animation;
+            }
+            if (dir <= 0) {
+                this.lemmingAnimation[this.typeToIndex(state, -1)] = animation;
+            }
+        }
+    }
+    Lemmings.LemmingsSprite = LemmingsSprite;
+})(Lemmings || (Lemmings = {}));
+/// <reference path="../resources/lemmings-sprite.ts"/>
+var Lemmings;
+(function (Lemmings) {
+    class ActionWalkSystem {
+        constructor(sprites) {
+            this.sprite = [];
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.WALKING, false));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.WALKING, true));
+        }
+        draw(lem) {
+            let ani = this.sprite[(lem.lookRight ? 1 : 0)];
+            let frame = ani.getFrame(lem.frame);
+            return frame;
+        }
+        process(level, lem) {
+            lem.frame++;
+            lem.x += (lem.lookRight ? 1 : -1);
+            if (lem.x < 0) {
+                lem.lookRight = true;
+                return 1;
+            }
+            if (level.has_pixel_at(lem.x, lem.y)) {
+                // walk, jump, climb, or turn
+                let i;
+                for (i = 1; i < 8; i++) {
+                    if (!level.has_pixel_at(lem.x, lem.y - i)) {
+                        break;
+                    }
+                }
+                // collision with obstacle
+                if (i == 8) {
+                    if (lem.canClimb) {
+                        // start climbing
+                        lem.setAction(Lemmings.ActionType.CLIMBING);
+                    }
+                    else {
+                        // turn around
+                        lem.lookRight = !lem.lookRight;
+                    }
+                    return 1;
+                }
+                if (i > 3) {
+                    // jump
+                    lem.setAction(Lemmings.ActionType.JUMPING);
+                    lem.y -= 2;
+                }
+                else {
+                    // just walk
+                    lem.y -= i - 1;
+                }
+                // test for collision with top of level
+                // todo: this.check_top_collision();
+                return 1;
+            }
+            else {
+                // walk or fall
+                let i;
+                for (i = 1; i < 4; i++) {
+                    if (level.has_pixel_at(lem.x, lem.y + i)) {
+                        break;
+                    }
+                }
+                lem.y += i;
+                if (i == 4) {
+                    lem.setAction(Lemmings.ActionType.FALLING);
+                }
+                if (level.isOutOfLevel(lem.y)) {
+                    // play sound: fall out of level
+                    this.soundSystem.play_sound(lem, 0x13);
+                    lem.removed = true;
+                    return 0;
+                }
+            }
+            return 1;
+        }
+    }
+    Lemmings.ActionWalkSystem = ActionWalkSystem;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class LemmingManager {
+        constructor(lemingsSprite) {
+            this.lemmings = [];
+            this.actions = [];
+            this.actions[Lemmings.ActionType.WALKING] = new Lemmings.ActionWalkSystem(lemingsSprite);
+            this.actions[Lemmings.ActionType.FALLING] = new Lemmings.ActionFallSystem(lemingsSprite);
+        }
+        addLemming(x, y) {
+            let l = new Lemmings.Lemming();
+            l.x = x;
+            l.y = y;
+            l.lookRight = true;
+            l.action = Lemmings.ActionType.FALLING;
+            this.lemmings.push(l);
+        }
+        tick(level) {
+            let lems = this.lemmings;
+            for (let i = 0; i < lems.length; i++) {
+                let lem = lems[i];
+                this.actions[lem.action].process(level, lem);
+                console.log(lem.x + " " + lem.y);
+            }
+        }
+    }
+    Lemmings.LemmingManager = LemmingManager;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class Lemming {
+        constructor() {
+            this.x = 0;
+            this.y = 0;
+            this.lookRight = false;
+            this.frame = 0;
+            this.canClimb = false;
+            this.hasParachute = false;
+            this.removed = false;
+            this.fall_distance = 0;
+            // public action: (lem: Lemming) => ActionType = null;
+            //  public current_action : ActionType = ActionType.LEMACTION_WALK;
+        }
+        setAction(action) {
+            this.action = action;
+            this.frame = 0;
+        }
+    }
+    Lemming.LEM_MIN_Y = -5;
+    Lemming.LEM_MAX_FALLING = 60; // MAX_FALLDISTANCECOUNT
+    Lemmings.Lemming = Lemming;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class Animation {
+        constructor() {
+            this.frames = [];
+            this.isPingPong = false;
+        }
+        getFrame(frameIndex) {
+            let frame = 0;
+            if (this.isPingPong) {
+                /// 0 1 2 3 => size: 4
+                /// 0 => 0
+                /// 1 => 1
+                /// 2 => 2
+                /// 3 => 3
+                /// 4 => 2
+                /// 5 => 1
+                /// 6 => 0
+                /// 7 => 1
+                frame = frameIndex % (frames.length * 2 - 2);
+                if (frame >= frames.length) {
+                    frame = frames.length - (frame % frames.length) - 2;
+                }
+            }
+            else {
+                frame = frameIndex % frames.length;
+            }
+            return this.frames[frame];
+        }
+        loadFromFile(fr, bitsPerPixle, width, height, frames, colorIndexOffset = 0) {
+            var bitBuf = 0;
+            var bitBufLen = 0;
+            var pixCount = width * height;
+            for (let f = 0; f < frames; f++) {
+                var pixBuf = new Uint8Array(pixCount);
+                //- read pixle data
+                for (var i = 0; i < bitsPerPixle; i++) {
+                    for (var p = 0; p < pixCount; p++) {
+                        if (bitBufLen <= 0) {
+                            bitBuf = fr.readByte();
+                            bitBufLen = 8;
+                        }
+                        pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
+                        bitBuf = (bitBuf << 1);
+                        bitBufLen--;
+                    }
+                }
+                if (colorIndexOffset != 0) {
+                    for (var p = 0; p < pixCount; p++) {
+                        if (pixBuf[p] > 0)
+                            pixBuf[p] += colorIndexOffset;
+                    }
+                }
+                this.frames.push(new Lemmings.Frame(width, height, pixBuf));
+            }
+        }
+    }
+    Lemmings.Animation = Animation;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -313,6 +694,25 @@ var Lemmings;
         }
     }
     Lemmings.ErrorHandler = ErrorHandler;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class Frame {
+        constructor(width, height, data) {
+            this.width = 0;
+            this.height = 0;
+            this.width = width;
+            this.height = height;
+            this.data = data;
+        }
+        getXPos() {
+            return Math.floor(this.width / 2);
+        }
+        getYPos() {
+            return this.height - 1;
+        }
+    }
+    Lemmings.Frame = Frame;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -463,6 +863,7 @@ var Lemmings;
                     level.needCount = levelProperties.needCount;
                     level.timeLimit = levelProperties.timeLimit;
                     level.skills = levelProperties.skills;
+                    level.setMapObjects(levelReader.objects);
                     /// load level ground
                     let vgaFilePromise = this.fileProvider.loadBinary(this.config.path, "VGAGR" + levelReader.graphicSet1 + ".DAT");
                     let goundFilePromise;
@@ -490,6 +891,7 @@ var Lemmings;
                         render.readGroundMap(levelReader, groundReader);
                     }
                     level.groundImage = render.img.imgData;
+                    level.groundMask = render.img.imgMask;
                     level.width = render.img.width;
                     level.height = render.img.height;
                     resolve(level);
@@ -504,6 +906,9 @@ var Lemmings;
     /** Level Data */
     class Level {
         constructor() {
+            /** objects on the map: entrance/exit/traps */
+            this.mapObjects = [];
+            this.entrances = [];
             this.name = "";
             this.width = 1600;
             this.height = 160;
@@ -515,8 +920,52 @@ var Lemmings;
             this.screenPositionX = 0;
             this.isSuperLemming = false;
         }
+        /** set the map objects of this level */
+        setMapObjects(objects) {
+            this.mapObjects = objects;
+            this.entrances = [];
+            for (let i = 0; i < objects.length; i++) {
+                let ob = objects[i];
+                if (ob.id == 0)
+                    this.entrances.push(ob);
+            }
+        }
+        isOutOfLevel(y) {
+            return false;
+        }
+        /** check if a point is solid */
+        has_pixel_at(x, y) {
+            return (this.groundMask[x + y * this.width] == 0);
+        }
     }
     Lemmings.Level = Level;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    var SpriteType;
+    (function (SpriteType) {
+        SpriteType[SpriteType["WALKING"] = 0] = "WALKING";
+        SpriteType[SpriteType["EXPLODING"] = 1] = "EXPLODING";
+        SpriteType[SpriteType["JUMPING"] = 2] = "JUMPING";
+        SpriteType[SpriteType["DIGGING"] = 3] = "DIGGING";
+        SpriteType[SpriteType["CLIMBING"] = 4] = "CLIMBING";
+        SpriteType[SpriteType["POSTCLIMBING"] = 5] = "POSTCLIMBING";
+        SpriteType[SpriteType["BUILDING"] = 6] = "BUILDING";
+        SpriteType[SpriteType["BLOCKING"] = 7] = "BLOCKING";
+        SpriteType[SpriteType["BASHING"] = 8] = "BASHING";
+        SpriteType[SpriteType["FALLING"] = 9] = "FALLING";
+        SpriteType[SpriteType["UMBRELLA"] = 10] = "UMBRELLA";
+        SpriteType[SpriteType["PREUMBRELLA"] = 11] = "PREUMBRELLA";
+        SpriteType[SpriteType["SPLATTING"] = 12] = "SPLATTING";
+        SpriteType[SpriteType["MINEING"] = 13] = "MINEING";
+        SpriteType[SpriteType["DROWNING"] = 14] = "DROWNING";
+        SpriteType[SpriteType["EXITING"] = 15] = "EXITING";
+        SpriteType[SpriteType["FRYING"] = 16] = "FRYING";
+        SpriteType[SpriteType["OHNO"] = 17] = "OHNO";
+        SpriteType[SpriteType["LEMACTION_SHRUG"] = 18] = "LEMACTION_SHRUG";
+        SpriteType[SpriteType["SHRUGGING"] = 19] = "SHRUGGING";
+        SpriteType[SpriteType["OUT_OFF_LEVEL"] = 20] = "OUT_OFF_LEVEL";
+    })(SpriteType = Lemmings.SpriteType || (Lemmings.SpriteType = {}));
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -3766,6 +4215,13 @@ var Lemmings;
                 this.display.setViewPoint(viewPoint);
             };
         }
+        run() {
+            if (!this.gameFactory)
+                return;
+            this.gameFactory.getGame(this.gameType)
+                .then(game => game.load(this.levelGroupIndex, this.levelIndex))
+                .then(game => game.run());
+        }
         playMusic(moveInterval) {
             this.stopMusic();
             if (!this.gameResources)
@@ -3842,8 +4298,8 @@ var Lemmings;
         selectGame(gameTypeName) {
             if (gameTypeName == null)
                 gameTypeName = "LEMMINGS";
-            let gameType = Lemmings.GameTypes.fromString(gameTypeName);
-            this.gameFactory.getGameResources(gameType)
+            this.gameType = Lemmings.GameTypes.fromString(gameTypeName);
+            this.gameFactory.getGameResources(this.gameType)
                 .then((newGameResources) => {
                 this.gameResources = newGameResources;
                 this.arrayToSelect(this.elementSelectLevelGroup, this.gameResources.getLevelGroups());
@@ -3951,14 +4407,15 @@ var Lemmings;
             this.mouseDownY = -1;
             this.mouseDownButton = -1;
         }
+        /** Zoom view
+         * todo: zoom to mouse pointer */
         HandeWheel(e) {
-            //- Zoom view?
-            if (e.deltaY > 0) {
+            if (e.deltaY < 0) {
                 this.viewScale += 0.5;
                 if (this.viewScale > 10)
                     this.viewScale = 10;
             }
-            if (e.deltaY < 0) {
+            if (e.deltaY > 0) {
                 this.viewScale -= 0.5;
                 if (this.viewScale < 0.5)
                     this.viewScale = 0.5;

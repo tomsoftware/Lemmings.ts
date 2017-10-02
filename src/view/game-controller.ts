@@ -122,15 +122,15 @@ module Lemmings {
 
 
 
-
+        /** Zoom view 
+         * todo: zoom to mouse pointer */ 
         private HandeWheel(e: WheelEvent) {
             
-            //- Zoom view?
-            if (e.deltaY > 0) {
+            if (e.deltaY < 0) {
                 this.viewScale += 0.5;
                 if (this.viewScale > 10) this.viewScale = 10;
             }
-            if (e.deltaY < 0) {
+            if (e.deltaY > 0) {
                 this.viewScale -= 0.5;
                 if (this.viewScale < 0.5) this.viewScale = 0.5;
             }

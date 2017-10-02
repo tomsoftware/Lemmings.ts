@@ -1,14 +1,14 @@
 
 
 module Lemmings {
-    
+
     /** reprecent access to the resources of a  Lemmings Game */
     export class GameResources {
 
-        private musicPlayer:AudioPlayer;
-        private soundPlayer:AudioPlayer;
-        private soundImage:Promise<SoundImageManager>;
-
+        private musicPlayer: AudioPlayer;
+        private soundPlayer: AudioPlayer;
+        private soundImage: Promise<SoundImageManager>;
+        private mainDat:Promise<BinaryReader> = null;
 
         constructor(private fileProvider: FileProvider, private config: GameConfig) {
 
@@ -21,8 +21,32 @@ module Lemmings {
             this.soundImage = null;
         }
 
+        /** return the main.dat file content */
+        public getMainDat():Promise<BinaryReader> {
+            if (this.mainDat != null) return this.mainDat;
+            this.mainDat = this.fileProvider.loadBinary(this.config.path, "MAIN.DAT")
+            return this.mainDat;
+        }
+
+
+        /** return the Lemings animations */
+        public getLemmingsSprite(): Promise<LemmingsSprite> {
+
+            return new Promise<LemmingsSprite>((resolve, reject) => {
+
+                this.getMainDat().then(data => {
+
+                    /// unpack the file
+                    var container = new FileContainer(data);
+ 
+                    resolve(new LemmingsSprite(container.getPart(0)));
+                });
+            });
+        }
+
+
         /** return the Level Data for a given Level-Index */
-        public getLevel(levelMode:number, levelIndex:number):Promise<Level> {
+        public getLevel(levelMode: number, levelIndex: number): Promise<Level> {
 
             let levelReader = new LevelLoader(this.fileProvider, this.config);
             return levelReader.getLevel(levelMode, levelIndex);
@@ -30,7 +54,7 @@ module Lemmings {
 
 
         /** return the level group names for this game */
-        public getLevelGroups():string[] {
+        public getLevelGroups(): string[] {
             return this.config.level.groups;
         }
 
@@ -41,7 +65,7 @@ module Lemmings {
             this.soundImage = new Promise<SoundImageManager>((resolve, reject) => {
 
                 /// load the adlib file
-                this.fileProvider.loadBinary(this.config.path , "ADLIB.DAT")
+                this.fileProvider.loadBinary(this.config.path, "ADLIB.DAT")
                     .then((data: BinaryReader) => {
 
                         /// unpack the file
@@ -60,23 +84,23 @@ module Lemmings {
 
         /** stop playback of the music song */
         public stopMusic() {
-           if (this.musicPlayer != null) {
-               this.musicPlayer.stop();
-               this.musicPlayer = null;
-           }
+            if (this.musicPlayer != null) {
+                this.musicPlayer.stop();
+                this.musicPlayer = null;
+            }
         }
 
         /** return a palyer to playback a music song */
-        public getMusicPlayer(songIndex: number):Promise<AudioPlayer> {
+        public getMusicPlayer(songIndex: number): Promise<AudioPlayer> {
             this.stopMusic();
- 
+
             return new Promise<AudioPlayer>((resolve, reject) => {
 
-                this.initSoundImage().then(soundImage =>{
+                this.initSoundImage().then(soundImage => {
 
                     /// get track
                     var adlibSrc: SoundImagePlayer = soundImage.getMusicTrack(songIndex);
-                    
+
                     /// play
                     this.musicPlayer = new AudioPlayer(adlibSrc);
 
@@ -89,10 +113,10 @@ module Lemmings {
 
         /** stop playback of the music song */
         public stopSound() {
-           if (this.soundPlayer != null) {
-               this.soundPlayer.stop();
-               this.soundPlayer = null;
-           }
+            if (this.soundPlayer != null) {
+                this.soundPlayer.stop();
+                this.soundPlayer = null;
+            }
         }
 
         /** return a palyer to playback a sound effect */
@@ -102,11 +126,11 @@ module Lemmings {
 
             return new Promise<AudioPlayer>((resolve, reject) => {
 
-                this.initSoundImage().then(soundImage =>{
+                this.initSoundImage().then(soundImage => {
 
                     /// get track
                     var adlibSrc: SoundImagePlayer = soundImage.getSoundTrack(sondIndex);
-                    
+
                     /// play
                     this.soundPlayer = new AudioPlayer(adlibSrc);
 
@@ -115,7 +139,7 @@ module Lemmings {
                 });
             });
         }
-        
+
 
     }
 

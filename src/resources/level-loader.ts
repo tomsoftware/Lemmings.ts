@@ -61,7 +61,7 @@
                         
                         /// default level properties
                         let levelProperties = levelReader.levelProperties
-
+                        
                         /// switch level properties to odd table config
                         if (useOddTable){
                             let oddTable = new OddTableReader(files[1]);
@@ -75,6 +75,7 @@
                         level.timeLimit = levelProperties.timeLimit;
                         level.skills = levelProperties.skills;
                   
+                        level.setMapObjects(levelReader.objects);
 
                         /// load level ground
                         let vgaFilePromise = this.fileProvider.loadBinary(this.config.path, "VGAGR"+ levelReader.graphicSet1 +".DAT");
@@ -112,6 +113,7 @@
 
 
                         level.groundImage = render.img.imgData;
+                        level.groundMask = render.img.imgMask
 
                         level.width = render.img.width;
                         level.height = render.img.height;

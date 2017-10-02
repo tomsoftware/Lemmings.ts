@@ -5,6 +5,7 @@ module Lemmings {
 
         private levelIndex = 0;
         private levelGroupIndex = 0;
+        private gameType: GameTypes;
         private musicIndex = 0;
         private soundIndex = 0;
         private gameResources: GameResources = null;
@@ -41,6 +42,13 @@ module Lemmings {
         }
             
 
+        public run() {
+            if (!this.gameFactory) return;
+
+            this.gameFactory.getGame(this.gameType)
+                .then(game => game.load(this.levelGroupIndex, this.levelIndex))
+                .then(game => game.run());
+        }
 
 
         public playMusic(moveInterval: number) {
@@ -148,9 +156,9 @@ module Lemmings {
 
             if (gameTypeName == null) gameTypeName = "LEMMINGS";
 
-            let gameType = Lemmings.GameTypes.fromString(gameTypeName);
+            this.gameType = Lemmings.GameTypes.fromString(gameTypeName);
 
-            this.gameFactory.getGameResources(gameType)
+            this.gameFactory.getGameResources(this.gameType)
                 .then((newGameResources) => {
 
                     this.gameResources = newGameResources;
