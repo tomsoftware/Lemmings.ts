@@ -34,11 +34,11 @@ module Lemmings {
             lem.frame++;
             lem.x += (lem.lookRight ? 1 : -1);
 
-            let newAction:ActionType = ActionType.NO_ACTION_TYPE;
+            let newAction:LemmingStateType = LemmingStateType.NO_STATE_TYPE;
 
             if (lem.x < 0) {
                 lem.lookRight = true;
-                return ActionType.NO_ACTION_TYPE;
+                return LemmingStateType.NO_STATE_TYPE;
             }
 
             if (level.has_pixel_at(lem.x, lem.y)) {
@@ -54,7 +54,7 @@ module Lemmings {
                 if (i == 8) {
                     if (lem.canClimb) {
                         // start climbing
-                        newAction = ActionType.CLIMBING;
+                        newAction = LemmingStateType.CLIMBING;
                     } else {
                         // turn around
                         lem.lookRight = !lem.lookRight;
@@ -63,7 +63,7 @@ module Lemmings {
                 }
                 if (i > 3) {
                     // jump
-                    newAction = ActionType.JUMPING;
+                    newAction = LemmingStateType.JUMPING;
                     lem.y -= 2;
                 } else {
                     // just walk
@@ -84,14 +84,14 @@ module Lemmings {
                 }
                 lem.y += i;
                 if (i == 4) {
-                    newAction = ActionType.FALLING;
+                    newAction = LemmingStateType.FALLING;
                 }
 
                 if (level.isOutOfLevel(lem.y)) {
                     // play sound: fall out of level
                     this.soundSystem.play_sound(lem, 0x13);
                     lem.removed = true;
-                    return ActionType.OUT_OFF_LEVEL;
+                    return LemmingStateType.OUT_OFF_LEVEL;
                 }
                 
             }

@@ -1,3 +1,5 @@
+/// <reference path="./gameplay/action-type.ts"/>
+
 module Lemmings {
 
     /** provides an game object to controle the game */
@@ -46,7 +48,7 @@ module Lemmings {
                     
                     this.tickIndex = 0;
                     this.releaseTickIndex = 99;
-                    
+
                     resolve(this);
                 });
                 
@@ -109,14 +111,17 @@ module Lemmings {
         }
 
         /** return the id of the lemming at a scene position */
-        public getLemmingIdAt(x: number, y:number):number {
-            if (this.lemmingManager == null) return 0;
-            let lem = this.lemmingManager.getLemmingAt(x, y);
-            if (lem == null) return 0;
-
-            console.log("index: "+ lem.id);
-
+        public getLemmingAt(x: number, y:number):Lemming {
+            if (this.lemmingManager == null) return null;
+            return this.lemmingManager.getLemmingAt(x, y);
         }
+
+        public setLemmingAction(lem: Lemming, action:ActionType){
+            if (this.lemmingManager == null) return null;
+
+            this.lemmingManager.setLemmingAction(lem, ActionType.DIGG);
+        }
+
 
         private addNewLemmings() {
             if (this.lemmingsLeft <= 0) return;
@@ -143,6 +148,10 @@ module Lemmings {
         /** return the maximum time in seconds to win the game  */
         public getGameTimeLimit():number {
             return this.level.timeLimit;
+        }
+
+        public getScreenPositionX():number {
+            return this.level.screenPositionX;
         }
     }
 

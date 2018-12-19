@@ -14,12 +14,21 @@ module Lemmings {
         constructor(canvasForOutput: HTMLCanvasElement) {
             this.outputCav = canvasForOutput;
             this.processCav = document.createElement('canvas');
+            this.clear();
         }
 
 
         public setViewPoint(viewPoint:ViewPoint) {
             this.viewPoint = viewPoint;
+
+            this.clear();
             this.redraw();
+        }
+
+        public clear() {
+            var ctx = this.outputCav.getContext("2d");
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
 
 
@@ -38,6 +47,7 @@ module Lemmings {
             /// set pixels
             this.imgData.data.set(level.groundImage);
         }
+
 
 
         /** copys a frame to the display */
@@ -72,8 +82,6 @@ module Lemmings {
                     destData[destIndex] = srcBuffer[srcIndex];
                     destData[destIndex + 1] = srcBuffer[srcIndex + 1];
                     destData[destIndex + 2] = srcBuffer[srcIndex + 2];
-                    destData[destIndex + 3] = 255; /// Alpha
-
                 }
             }
 
@@ -82,18 +90,11 @@ module Lemmings {
 
 
         public setDebugPixel(x:number, y:number) {
-            let i=0;
-            let j=0;
-            //for(let i=0; i<5;i++)  {
-                //for(let j=0; j<5;j++)  {
-                    let pointIndex = (this.contentWidth * (y + i) + x + j) * 4;
+            let pointIndex = (this.contentWidth * (y) + x) * 4;
 
-                    this.imgData.data[pointIndex] = 255;
-                    this.imgData.data[pointIndex + 1] = 0;
-                    this.imgData.data[pointIndex + 2] = 0;
-                    this.imgData.data[pointIndex + 3] = 255; /// Alpha
-           //     }
-           // }
+            this.imgData.data[pointIndex] = 255;
+            this.imgData.data[pointIndex + 1] = 0;
+            this.imgData.data[pointIndex + 2] = 0;
         }
 
 
@@ -105,18 +106,16 @@ module Lemmings {
             /// write image to context
             backCtx.putImageData(this.imgData, 0, 0);
 
-            var cav: HTMLCanvasElement = this.outputCav;
-            var ctx = cav.getContext("2d");
+            var ctx = this.outputCav.getContext("2d");
 
+            //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;
+            //@ts-ignore
             ctx.webkitImageSmoothingEnabled = false;
             ctx.imageSmoothingEnabled = false;
-        
 
-
-            let outGameH = cav.height;
-            let outW = cav.width;
-
+            let outGameH = ctx.canvas.height;
+            let outW = ctx.canvas.width;
 
             let viewScale = this.viewPoint.scale;
             let viewX = this.viewPoint.x;
@@ -126,16 +125,12 @@ module Lemmings {
             var dW = this.contentWidth - viewX; //- display width
             if ((dW * viewScale) > outW) {
                 dW = outW / viewScale;
-                //game.viewScale = outW / dW;
             }
 
             var dH = this.contentHeight - viewY; //- display height
             if ((dH * viewScale) > outGameH) {
                 dH = outGameH / viewScale;
-                //game.viewScale = outH / dH;
             }
-
-
 
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
             ctx.drawImage(this.processCav, viewX, viewY, dW, dH, 0, 0, dW * viewScale, dH * viewScale);

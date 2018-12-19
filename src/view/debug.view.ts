@@ -41,12 +41,17 @@ module Lemmings {
             };
 
             this.controller.onMouseMove = (x: number, y:number) => {
-                console.log("Mouse pos: "+ x +" / "+ y);
+                
             };
 
             this.controller.onMouseClick = (x: number, y:number) => {
-                console.log("Mouse click: "+ x +" / "+ y);
-                this.game.getLemmingIdAt(x,y);
+                
+                let lem = this.game.getLemmingAt(x,y);
+                if (lem != null) {
+                    console.log("Mouse click ("+ x +" / "+ y +") lem: "+ lem.id);
+
+                    this.game.setLemmingAction(lem, ActionType.DIGG);
+                }
             };
         }
             
@@ -64,6 +69,8 @@ module Lemmings {
             this.gameFactory.getGame(this.gameType)
                 .then(game => game.loadLevel(this.levelGroupIndex, this.levelIndex))
                 .then(game => {
+                    this.controller.setViewPoint(game.getScreenPositionX(), 0, 1);
+
                     game.setDispaly(this.display);
                     game.start();
 

@@ -27,11 +27,11 @@ module Lemmings {
 
 
 
-        public process(level:Level, lem: Lemming):ActionType {
+        public process(level:Level, lem: Lemming):LemmingStateType {
 
             lem.frame++;
             if (lem.state > 16 && (lem.hasParachute)) {
-                return ActionType.FLOATING;
+                return LemmingStateType.FLOATING;
             }
 
             // fall down!
@@ -46,13 +46,13 @@ module Lemmings {
             lem.y += i;
             if (i == 3) {
                 lem.state += i;
-                return ActionType.NO_ACTION_TYPE;
+                return LemmingStateType.NO_STATE_TYPE;
             } else {
                 // landed
                 if (lem.state > Lemming.LEM_MAX_FALLING) {
-                    return ActionType.SPLATTING;
+                    return LemmingStateType.SPLATTING;
                 }
-                return ActionType.WALKING;
+                return LemmingStateType.WALKING;
             }
 
         }

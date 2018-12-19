@@ -1,3 +1,5 @@
+/// <reference path="./lemming-state-type.ts"/>
+
 module Lemmings {
 
     export class LemmingManager {
@@ -10,10 +12,10 @@ module Lemmings {
 
 
         constructor(lemingsSprite:LemmingsSprite) {
-            this.actions[ActionType.WALKING] = new ActionWalkSystem(lemingsSprite);
-            this.actions[ActionType.FALLING] = new ActionFallSystem(lemingsSprite);
-            this.actions[ActionType.JUMPING] = new ActionJumpSystem(lemingsSprite);
-            this.actions[ActionType.DIGGING] = new ActionDiggSystem(lemingsSprite);
+            this.actions[LemmingStateType.WALKING] = new ActionWalkSystem(lemingsSprite);
+            this.actions[LemmingStateType.FALLING] = new ActionFallSystem(lemingsSprite);
+            this.actions[LemmingStateType.JUMPING] = new ActionJumpSystem(lemingsSprite);
+            this.actions[LemmingStateType.DIGGING] = new ActionDiggSystem(lemingsSprite);
         }
 
         /** Add a new Lemming to the manager */
@@ -26,7 +28,7 @@ module Lemmings {
             lem.lookRight = true;
             lem.id = "Lem"+ this.lemmings.length;
 
-            this.setLemAction(lem, ActionType.FALLING);
+            this.setLemmingState(lem, LemmingStateType.FALLING);
 
             this.lemmings.push(lem);
         }
@@ -42,8 +44,8 @@ module Lemmings {
                 let lem = lems[i];
 
                 let newAction = lem.action.process(level, lem);
-                if (newAction != ActionType.NO_ACTION_TYPE) {
-                   this.setLemAction(lem, newAction); 
+                if (newAction != LemmingStateType.NO_STATE_TYPE) {
+                   this.setLemmingState(lem, newAction); 
                 }
 
                 console.log(lem.id +" :: x:"+ lem.x + " y:"+ lem.y  +" Action: "+ lem.action.getActionName());
@@ -67,9 +69,7 @@ module Lemmings {
             for(let i = 0; i < lems.length; i++){
                 let lem = lems[i];
 
-                console.log("lem "+ lem.id +" ( "+ lem.x +" / "+ lem.y +")");
-
-                if (((lem.x - 2) <= x) && ((lem.x + 2) >= x) && ((lem.y - 4) <= y) && (lem.y > y)) {
+                if ((x >= (lem.x - 2)) && (x <= (lem.x + 3)) && (y >= (lem.y - 8)) && (y < lem.y)) {
                     return lem;
                 }
             }
@@ -78,14 +78,24 @@ module Lemmings {
         }
 
         /** change the action a Lemming is doing */
-        private setLemAction(lem:Lemming, actionType : ActionType ) {
-            lem.setAction(this.actions[actionType]);
+        private setLemmingState(lem:Lemming, stateType: LemmingStateType ) {
+            lem.setAction(this.actions[stateType]);
             if (lem.action == null) {
-                console.log(lem.id +" Action: no action: "+ ActionType[actionType] );
+                console.log(lem.id +" Action: no action: "+ LemmingStateType[stateType] );
                 return;
             }
 
             console.log(lem.id +" Action: "+ lem.action.getActionName());
+        }
+
+        /** change the action a Lemming is doing */
+        public setLemmingAction(lem:Lemming, actionType: ActionType) {
+            
+            switch(actionType){
+                case ActionType.DIGG:
+                    this.setLemmingState(lem, LemmingStateType.DIGGING);
+                    break;
+            }
         }
     }
 
