@@ -19,7 +19,9 @@ module Lemmings {
         private maxX = 0;
         private maxY = 0;
 
-        public SetViewRange(minX:number, minY:number, maxX:number, maxY:number){
+        private currentViewPoint: ViewPoint = null;
+
+        public setViewRange(minX:number, minY:number, maxX:number, maxY:number){
             this.minX = minX;
             this.minY = minY;
 
@@ -30,61 +32,62 @@ module Lemmings {
 
         public onViewPointChanged: (viewPoint:ViewPoint) => void;
 
+        public onMouseMove: (x:number, y:number) => void;
+        public onMouseClick: (x:number, y:number) => void;
 
 
         constructor(private listenElement: HTMLElement) {
 
             listenElement.addEventListener("mousemove", (e: MouseEvent) => {
-                this.HandelMouseMove(e.clientX, e.clientY);
+                this.handelMouseMove(e.clientX, e.clientY);
             });
 
 
             listenElement.addEventListener("touchmove", (e: TouchEvent) => {
-                this.HandelMouseMove(e.touches[0].clientX, e.touches[0].clientY);
+                this.handelMouseMove(e.touches[0].clientX, e.touches[0].clientY);
             });
 
             listenElement.addEventListener("touchstart", (e: TouchEvent) => {
-                this.HandelMouseDown(e.touches[0].clientX, e.touches[0].clientY, 0, e.currentTarget);
+                this.handelMouseDown(e.touches[0].clientX, e.touches[0].clientY, 0, e.currentTarget);
             });
 
             listenElement.addEventListener("mousedown", (e: MouseEvent) => {
-                this.HandelMouseDown(e.clientX, e.clientY, e.button, e.currentTarget);
+                this.handelMouseDown(e.clientX, e.clientY, e.button, e.currentTarget);
             });
 
             listenElement.addEventListener("mouseup", (e: MouseEvent) => {
-                this.HandelMouseUp();
+                this.handelMouseUp();
             });
 
             listenElement.addEventListener("mouseleave", (e: MouseEvent) => {
-                this.HandelMouseUp();
+                this.handelMouseUp();
             });
 
             listenElement.addEventListener("touchend", (e: TouchEvent) => {
-                this.HandelMouseUp();
+                this.handelMouseUp();
             });
 
             listenElement.addEventListener("touchleave", (e: TouchEvent) => {
-                this.HandelMouseUp();
+                this.handelMouseUp();
             });
 
             listenElement.addEventListener("touchcancel", (e: TouchEvent) => {
-                this.HandelMouseUp();
+                this.handelMouseUp();
             });
 
 
             listenElement.addEventListener("wheel", (e: WheelEvent) => {
-                this.HandeWheel(e);
+                this.handeWheel(e);
             });
 
         }
 
 
-        private HandelMouseMove(x: number, y: number) {
+        private handelMouseMove(x: number, y: number) {
 
             //- Move Point of View
             if (this.mouseDownButton == 0) {
             
-
                 this.viewX = this.mouseDownViewX + (this.mouseDownX - x) / this.viewScale;
                 this.viewY = this.mouseDownViewY + (this.mouseDownY - y) / this.viewScale;
 
@@ -94,13 +97,15 @@ module Lemmings {
                 this.viewY = Math.min(this.viewY, this.maxY);
                 this.viewY = Math.max(this.viewY, this.minY);
 
-                this.onViewPointChanged(new ViewPoint(this.viewX, this.viewY, this.viewScale));
-
+                this.raiseViewPointChanged(this.viewX, this.viewY, this.viewScale);
             }
+
+            /// raise event
+            if (this.onMouseMove) this.onMouseMove(this.currentViewPoint.getSceneX(x), this.currentViewPoint.getSceneY(y));
         }
 
 
-        private HandelMouseDown(x, y, button, currentTarget) {
+        private handelMouseDown(x:number, y:number, button:number, currentTarget) {
   
             //- save start of Mousedown
             this.mouseDownViewX = this.viewX;
@@ -108,13 +113,14 @@ module Lemmings {
             this.mouseDownX = x;
             this.mouseDownY = y;
             this.mouseDownButton = button;
+
+            /// raise event
+            if (this.onMouseClick) this.onMouseClick(this.currentViewPoint.getSceneX(x), this.currentViewPoint.getSceneY(y));
         }
 
 
 
-
-
-        private HandelMouseUp() {
+        private handelMouseUp() {
             this.mouseDownX = -1;
             this.mouseDownY = -1;
             this.mouseDownButton = -1;
@@ -124,7 +130,7 @@ module Lemmings {
 
         /** Zoom view 
          * todo: zoom to mouse pointer */ 
-        private HandeWheel(e: WheelEvent) {
+        private handeWheel(e: WheelEvent) {
             
             if (e.deltaY < 0) {
                 this.viewScale += 0.5;
@@ -135,7 +141,16 @@ module Lemmings {
                 if (this.viewScale < 0.5) this.viewScale = 0.5;
             }
 
-            this.onViewPointChanged(new ViewPoint(this.viewX, this.viewY, this.viewScale));
+            this.raiseViewPointChanged(this.viewX, this.viewY, this.viewScale);
+        }
+
+
+        private raiseViewPointChanged(x:number, y:number, scale:number) {
+            this.currentViewPoint = new ViewPoint(x, y, scale);
+            
+            if (this.onViewPointChanged) {
+                this.onViewPointChanged(this.currentViewPoint);
+            }
         }
     }
 }

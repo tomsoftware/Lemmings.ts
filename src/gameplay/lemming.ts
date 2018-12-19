@@ -11,12 +11,14 @@ module Lemmings {
         public canClimb = false;
         public hasParachute = false;
         public removed = false;
-        public action:ActionType;
-        public fall_distance=0;
+        public action:IActionSystem;
+        public state=0;
+        public id:string;
 
-        public setAction(action: ActionType){
+        public setAction(action: IActionSystem){
             this.action = action;
-	        this.frame = 0;
+            this.frame = 0;
+            this.state = 0;
         }
 
 

@@ -7,59 +7,142 @@ module Lemmings {
         private gameResources: GameResources = null;
         private levelGroupIndex: number;
         private levelIndex: number;
-        private level:Level;
-        private lemmingManager:LemmingManager;
+        private level: Level;
+        private lemmingManager: LemmingManager;
         private lemmingsLeft = 0;
+        private dispaly: GameDisplay = null;
+        private gameTimer: number = 0;
+        /** the current game time in number of steps the game has made  */
+        private tickIndex : number = 0;
+        private releaseTickIndex : number = 0;
 
         constructor(gameResources: GameResources) {
             this.gameResources = gameResources;
         }
 
+        public setDispaly(dispaly:GameDisplay){
+            this.dispaly = dispaly;
+        }
 
-        public load(levelGroupIndex, levelIndex):Promise<Game> {
+        /** load a new game/level */
+        public loadLevel(levelGroupIndex: number, levelIndex: number):Promise<Game> {
 
             this.levelGroupIndex = levelGroupIndex;
             this.levelIndex = levelIndex;
 
             return new Promise<Game>((resolve, reject) => {
 
-                let levelProm = this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex);
-                let lemSpriteProm = this.gameResources.getLemmingsSprite();
+                this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
+                .then(level => {
 
-                Promise.all([levelProm, lemSpriteProm]).then(result => {
+                    this.level = level;
+                    return this.gameResources.getLemmingsSprite(level.colorPallet);
+                })
+                .then(lemSprite => {
 
-                    this.level = result[0];
-                    let lemSprite = result[1];
                     this.lemmingManager = new LemmingManager(lemSprite);
 
                     this.lemmingsLeft =  this.level.releaseCount;
-
+                    
+                    this.tickIndex = 0;
+                    this.releaseTickIndex = 99;
+                    
                     resolve(this);
-
                 });
+                
             });
         }
 
 
         /** run the game */
-        public run() {
+        public start() {
+            this.continue();
+        }
 
-            let entrance = this.level.mapObjects[this.lemmingsLeft % this.level.mapObjects.length];
-            
-            this.lemmingManager.addLemming(entrance.x, entrance.y);
-
-            setInterval(()=>this.tick(), 200);
+        /** Pause the game */
+        public suspend() {
+            if (this.gameTimer != 0)
+            clearInterval(this.gameTimer);
+            this.gameTimer = 0;
         }
 
 
+        /** Run the game timer */
+        public continue() {
+            if (this.gameTimer != 0) return;
+
+            this.gameTimer = setInterval(()=>{
+
+                /// run game logic
+                this.tick();
+                this.render();
+            }, 200);
+        }
+
+
+        /** refresh display */ 
+        private render() {
+          
+            if (this.dispaly) {
+                this.dispaly.render(this.level);
+                
+                this.lemmingManager.render(this.dispaly);
+
+                this.dispaly.redraw();
+            }
+        }
+
+        
+        /** run the game logic one step in time */
         public tick() {
             if (this.level == null) {
                 this.error.log("level not loaded!");
                 return;
             }
 
+            this.tickIndex++;
+
+            this.addNewLemmings();
+
             this.lemmingManager.tick(this.level);
 
+        }
+
+        /** return the id of the lemming at a scene position */
+        public getLemmingIdAt(x: number, y:number):number {
+            if (this.lemmingManager == null) return 0;
+            let lem = this.lemmingManager.getLemmingAt(x, y);
+            if (lem == null) return 0;
+
+            console.log("index: "+ lem.id);
+
+        }
+
+        private addNewLemmings() {
+            if (this.lemmingsLeft <= 0) return;
+
+            this.releaseTickIndex++;
+
+            if (this.releaseTickIndex >=  (100 - this.level.releaseRate)) {
+                this.releaseTickIndex = 0;
+
+                let entrance = this.level.mapObjects[0];
+            
+                this.lemmingManager.addLemming(entrance.x, entrance.y);
+
+                this.lemmingsLeft--;
+            }
+        }
+
+
+        /** return the past game time in seconds */
+        public getGameTime():number {
+            return Math.floor(this.tickIndex / 60);
+        }
+
+        /** return the maximum time in seconds to win the game  */
+        public getGameTimeLimit():number {
+            return this.level.timeLimit;
         }
     }
 

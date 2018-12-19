@@ -2,7 +2,7 @@
 
 module Lemmings {
 
-    export class ActionWalkSystem implements ActionSystem {
+    export class ActionWalkSystem implements IActionSystem {
 
         public soundSystem;
         private sprite:Animation[] = [];
@@ -14,12 +14,17 @@ module Lemmings {
         }
 
 
-        public draw(lem: Lemming) {
+        public draw(gameDisplay:GameDisplay, lem: Lemming) {
             let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
 
             let frame = ani.getFrame(lem.frame);
 
-            return frame;
+            gameDisplay.drawImage(frame, lem.x, lem.y);
+        }
+
+
+        public getActionName() : string {
+            return "walk";
         }
 
 
@@ -29,9 +34,11 @@ module Lemmings {
             lem.frame++;
             lem.x += (lem.lookRight ? 1 : -1);
 
+            let newAction:ActionType = ActionType.NO_ACTION_TYPE;
+
             if (lem.x < 0) {
                 lem.lookRight = true;
-                return 1;
+                return ActionType.NO_ACTION_TYPE;
             }
 
             if (level.has_pixel_at(lem.x, lem.y)) {
@@ -47,7 +54,7 @@ module Lemmings {
                 if (i == 8) {
                     if (lem.canClimb) {
                         // start climbing
-                        lem.setAction(ActionType.CLIMBING);
+                        newAction = ActionType.CLIMBING;
                     } else {
                         // turn around
                         lem.lookRight = !lem.lookRight;
@@ -56,7 +63,7 @@ module Lemmings {
                 }
                 if (i > 3) {
                     // jump
-                    lem.setAction(ActionType.JUMPING);
+                    newAction = ActionType.JUMPING;
                     lem.y -= 2;
                 } else {
                     // just walk
@@ -65,7 +72,7 @@ module Lemmings {
 
                 // test for collision with top of level
                 // todo: this.check_top_collision();
-                return 1;
+                return newAction; //ActionType.OUT_OFF_LEVEL;
                 
             } else {
                 // walk or fall
@@ -77,19 +84,19 @@ module Lemmings {
                 }
                 lem.y += i;
                 if (i == 4) {
-                    lem.setAction(ActionType.FALLING);
+                    newAction = ActionType.FALLING;
                 }
 
                 if (level.isOutOfLevel(lem.y)) {
                     // play sound: fall out of level
                     this.soundSystem.play_sound(lem, 0x13);
                     lem.removed = true;
-                    return 0;
+                    return ActionType.OUT_OFF_LEVEL;
                 }
                 
             }
 
-            return 1;
+            return newAction;
         }
 
     }

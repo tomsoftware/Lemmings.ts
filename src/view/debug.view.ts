@@ -11,7 +11,7 @@ module Lemmings {
         private gameResources: GameResources = null;
         private musicPlayer: AudioPlayer = null;
         private soundPlayer: AudioPlayer = null;
-
+        private game : Game = null;
         private gameFactory = new GameFactory("./");
 
         private display:GameDisplay = null;
@@ -39,17 +39,47 @@ module Lemmings {
             this.controller.onViewPointChanged = (viewPoint: ViewPoint) => {
                 this.display.setViewPoint(viewPoint);
             };
+
+            this.controller.onMouseMove = (x: number, y:number) => {
+                console.log("Mouse pos: "+ x +" / "+ y);
+            };
+
+            this.controller.onMouseClick = (x: number, y:number) => {
+                console.log("Mouse click: "+ x +" / "+ y);
+                this.game.getLemmingIdAt(x,y);
+            };
         }
             
-
-        public run() {
+        /** start or continue the game */
+        public start() {
             if (!this.gameFactory) return;
 
+            /// is the game already running
+            if (this.game != null) {
+                this.continue();
+                return;
+            }
+
+            /// create new game
             this.gameFactory.getGame(this.gameType)
-                .then(game => game.load(this.levelGroupIndex, this.levelIndex))
-                .then(game => game.run());
+                .then(game => game.loadLevel(this.levelGroupIndex, this.levelIndex))
+                .then(game => {
+                    game.setDispaly(this.display);
+                    game.start();
+
+                    this.game = game;
+                });
         }
 
+        /** pause the game */
+        public suspend() {
+            this.game.suspend(); 
+        }
+
+        /** continue the game after pause/suspend */
+        public continue() {
+            this.game.continue(); 
+        }
 
         public playMusic(moveInterval: number) {
 
@@ -187,7 +217,7 @@ module Lemmings {
                         this.display.render(level);
                     }
 
-                    this.controller.SetViewRange(0, 0, level.width, level.height);
+                    this.controller.setViewRange(0, 0, level.width, level.height);
 
                     console.dir(level);
                 });

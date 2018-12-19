@@ -9,6 +9,8 @@ module Lemmings {
         private contentWidth = 0;
         private contentHeight = 0;
 
+        private imgData:ImageData;
+
         constructor(canvasForOutput: HTMLCanvasElement) {
             this.outputCav = canvasForOutput;
             this.processCav = document.createElement('canvas');
@@ -21,6 +23,7 @@ module Lemmings {
         }
 
 
+        /** render the level-background to an image */
         public render(level: Level) {
             this.contentWidth = level.width;
             this.contentHeight = level.height;
@@ -31,17 +34,76 @@ module Lemmings {
             var backCtx = this.processCav.getContext("2d");
 
             /// create image
-            var imgData = backCtx.createImageData(level.width, level.height);
+            this.imgData = backCtx.createImageData(level.width, level.height);
             /// set pixels
-            imgData.data.set(level.groundImage);
-            /// write image to context
-            backCtx.putImageData(imgData, 0, 0);
-
-            this.redraw();
+            this.imgData.data.set(level.groundImage);
         }
 
 
+        /** copys a frame to the display */
+        public drawImage(frame:Frame, posX:number, posY:number){
+            
+            var srcW = frame.width;
+            var srcH = frame.height;
+            var srcBuffer = frame.data;
+
+            var destW = this.contentWidth;
+            var destH = this.contentHeight;
+            var destData = this.imgData.data;
+
+
+            let destX = posX - frame.offsetX;
+            let destY = posY - frame.offsetY;
+
+            for (var y = 0; y < srcH; y++) {
+
+                var outY = y + destY;
+                if ((outY < 0) || (outY >= destH)) continue;
+
+                for (var x = 0; x < srcW; x++) {
+                    let srcIndex = ((srcW * y) + x) * 4;
+                    if (srcBuffer[srcIndex + 3] == 0) continue;
+
+                    var outX = x + destX;
+                    if ((outX < 0) || (outX >= destW)) continue;
+
+                    let destIndex = ((destW * outY) + outX) * 4;
+
+                    destData[destIndex] = srcBuffer[srcIndex];
+                    destData[destIndex + 1] = srcBuffer[srcIndex + 1];
+                    destData[destIndex + 2] = srcBuffer[srcIndex + 2];
+                    destData[destIndex + 3] = 255; /// Alpha
+
+                }
+            }
+
+            this.setDebugPixel(posX, posY);
+        }
+
+
+        public setDebugPixel(x:number, y:number) {
+            let i=0;
+            let j=0;
+            //for(let i=0; i<5;i++)  {
+                //for(let j=0; j<5;j++)  {
+                    let pointIndex = (this.contentWidth * (y + i) + x + j) * 4;
+
+                    this.imgData.data[pointIndex] = 255;
+                    this.imgData.data[pointIndex + 1] = 0;
+                    this.imgData.data[pointIndex + 2] = 0;
+                    this.imgData.data[pointIndex + 3] = 255; /// Alpha
+           //     }
+           // }
+        }
+
+
+        /** draw everything to the display */
         public redraw() {
+
+            var backCtx = this.processCav.getContext("2d");
+
+            /// write image to context
+            backCtx.putImageData(this.imgData, 0, 0);
 
             var cav: HTMLCanvasElement = this.outputCav;
             var ctx = cav.getContext("2d");

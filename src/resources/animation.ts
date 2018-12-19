@@ -1,8 +1,8 @@
 module Lemmings {
 
     export class Animation {
-        frames:Frame[] = [];
-        isPingPong:boolean = false;
+        public frames:Frame[] = [];
+        public isPingPong:boolean = false;
 
 
         public getFrame(frameIndex:number):Frame {
@@ -23,13 +23,13 @@ module Lemmings {
                 /// 6 => 0
                 /// 7 => 1
 
-                frame = frameIndex % (frames.length * 2 - 2);
+                frame = frameIndex % (this.frames.length * 2 - 2);
                 if (frame >= frames.length) {
                     frame = frames.length - (frame % frames.length) - 2;
                 }
             }
             else {
-                frame = frameIndex % frames.length;
+                frame = frameIndex % this.frames.length;
             }
 
             return this.frames[frame];
@@ -37,7 +37,7 @@ module Lemmings {
             
         }
 
-        public loadFromFile(fr: BinaryReader, bitsPerPixle: number, width: number, height: number, frames: number, colorIndexOffset: number = 0) {
+        public loadFromFile(fr: BinaryReader, bitsPerPixle: number, width: number, height: number, frames: number, pallet:ColorPallet) {
             var bitBuf = 0;
             var bitBufLen = 0;
             var pixCount = width * height;
@@ -60,13 +60,32 @@ module Lemmings {
                     }
                 }
 
-                if (colorIndexOffset != 0) {
-                    for (var p = 0; p < pixCount; p++) {
-                        if (pixBuf[p] > 0) pixBuf[p] += colorIndexOffset;
+                var imgBuf = new Uint8Array(pixCount * 4);
+                var imgBufPos = 0;
+
+                for (var i = 0; i < pixCount; i++) {
+                    let colorIndex = pixBuf[i];
+                    
+                    if (colorIndex == 0) {
+                        
+                        imgBuf[imgBufPos++] = 0;
+                        imgBuf[imgBufPos++] = 0;
+                        imgBuf[imgBufPos++] = 0;
+                        imgBuf[imgBufPos++] = 0;
+                    }
+                    else {
+                        let color = pallet.getColor(colorIndex);
+
+                        imgBuf[imgBufPos++] = color[0];
+                        imgBuf[imgBufPos++] = color[1];
+                        imgBuf[imgBufPos++] = color[2];
+                        imgBuf[imgBufPos++] = 255;
+
                     }
                 }
 
-                this.frames.push(new Frame(width, height, pixBuf));
+
+                this.frames.push(new Frame(width, height, imgBuf));
             }
 
         }

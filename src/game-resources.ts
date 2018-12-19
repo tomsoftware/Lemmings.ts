@@ -2,13 +2,13 @@
 
 module Lemmings {
 
-    /** reprecent access to the resources of a  Lemmings Game */
+    /** reprecent access to the resources of a Lemmings Game */
     export class GameResources {
 
         private musicPlayer: AudioPlayer;
         private soundPlayer: AudioPlayer;
         private soundImage: Promise<SoundImageManager>;
-        private mainDat:Promise<BinaryReader> = null;
+        private mainDat: Promise<BinaryReader> = null;
 
         constructor(private fileProvider: FileProvider, private config: GameConfig) {
 
@@ -30,7 +30,7 @@ module Lemmings {
 
 
         /** return the Lemings animations */
-        public getLemmingsSprite(): Promise<LemmingsSprite> {
+        public getLemmingsSprite(colorPallet:ColorPallet): Promise<LemmingsSprite> {
 
             return new Promise<LemmingsSprite>((resolve, reject) => {
 
@@ -39,7 +39,7 @@ module Lemmings {
                     /// unpack the file
                     var container = new FileContainer(data);
  
-                    resolve(new LemmingsSprite(container.getPart(0)));
+                    resolve(new LemmingsSprite(container.getPart(0), colorPallet));
                 });
             });
         }

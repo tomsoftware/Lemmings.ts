@@ -7,13 +7,20 @@
 
 module Lemmings {
 
-  /** access to ground file (GROUNDxO.DAT) 
-   * The Ground file 
+  /** read all image meta information from ground file (GROUNDxO.DAT)
+   *   and uses the VGAGx File to add the image-data to this images-list.
+   * The ground file contains 
+   *  - the meta data for the level-background-images (e.g mud and grass)
+   *  - the meta data for the level-object-images (e.g. Exists and Traps)
+   *  - the color pallets to use
+   * The VGAGx file contains
+   *  - the image data (color-indexed) of the level-background-images
+   *  - the image data (color-indexed) of the level-object-images (multi frame/animation)
   */
   export class GroundReader {
 
-    public imgObjects: ObjectImageInfo[] = new Array(16);
-    public imgTerrar: TerrainImageInfo[] = new Array(64);
+    private imgObjects: ObjectImageInfo[] = new Array(16);
+    private imgTerrar: TerrainImageInfo[] = new Array(64);
 
     /** the color palette stored in this file */
     public groundPallet = new ColorPallet();
@@ -24,7 +31,12 @@ module Lemmings {
     private error = new ErrorHandler("GroundReader");
 
 
-    constructor(groundFile: BinaryReader, vgaObject: BinaryReader, vgaTerrar: BinaryReader) {
+
+    /** groundFile: GROUNDxO.DAT
+     *  vgaTerrar: Part of VGAGx.DAT for the terrar-images
+     *  vgaObject: Part of VGAGx.DAT with the object-images 
+     */
+    constructor(groundFile: BinaryReader,  vgaTerrar: BinaryReader, vgaObject: BinaryReader) {
 
       if (groundFile.length != 1056) {
         this.error.log("groundFile "+ groundFile.filename +" has wrong size: "+ groundFile.length);
@@ -45,7 +57,20 @@ module Lemmings {
 
     }
 
-    /** load the images from the VGAG file to the Image Objects in the List */
+    
+    /** return the images (meta + data) used for the Background */
+    public getTerraImages():TerrainImageInfo[] {
+      return this.imgTerrar;
+    }
+
+    /** return the images (meta + data) used for the map objects*/
+    public getObjectImages():ObjectImageInfo[] {
+      return this.imgObjects;
+    }
+    
+
+
+    /** loads all images of imgList from the VGAGx file */
     private readImages(imgList: BaseImageInfo[], vga: BinaryReader) {
 
       imgList.map((img) => {
@@ -77,10 +102,10 @@ module Lemmings {
     }
 
 
-    /** loads the properties for object-images  */
+    /** loads the properties for object-images from the groundFile  */
     private readObjectImages(frO: BinaryReader, offset: number, colorPalett: ColorPallet): void {
 
-      /// read the object from 
+      /// offset to the objects
       frO.setOffset(offset);
 
       for (let i = 0; i < 16; i++) {
@@ -155,7 +180,6 @@ module Lemmings {
 
       this.colorPallet.initLockedValues();
       this.previewPallet.initLockedValues();
-      this.groundPallet;
 
       /// read the VGA palette index 8..15
       for (let i = 0; i < 8; i++) {

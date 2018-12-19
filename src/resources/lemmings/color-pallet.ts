@@ -11,6 +11,14 @@ module Lemmings {
 		public data = new Array(16); //- 16 colors
 		private isColorLock = new Int8Array(16);
 
+
+		constructor() {
+			for(let i=0; i< this.data.length; i++) {
+				this.setColorInt(i, 0);
+			}
+		}
+
+
 		//- locked colors are only changed if locked==true
 		public setColorInt(index: number, colorValue:number, locked:boolean=false) {
 
@@ -21,6 +29,9 @@ module Lemmings {
 			this.setColorRGB(index, r, g, b, locked);
 		}
 
+		public getColor(index: number) {
+			return this.data[index];
+		}
 
 		//- locked colors are only changed if locked==true
 		public setColorRGB(index: number, r: number, g: number, b: number, locked:boolean=false)	{

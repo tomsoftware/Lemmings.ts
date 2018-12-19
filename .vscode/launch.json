@@ -1,11 +1,18 @@
 {
   "version": "0.2.0",
   "configurations": [
+          {
+          "name": "Launch file",
+          "type": "chrome",
+          "request": "launch",
+          "url": "http://localhost:8888/lemmings.html",
+          "webRoot": "${workspaceRoot}\\run\\"
+      },
       {
           "name": "Launch localhost",
           "type": "chrome",
           "request": "launch",
-          "url": "http://localhost/lemmings.ts/run/lemmings.html",
+          "url": "http://localhost/lemmings.ts/run/lemmings.php",
           "webRoot": "${workspaceRoot}/run/"
       },
       {
@@ -13,7 +20,7 @@
             "type": "chrome",
             "request": "launch",
             "sourceMaps": false,
-          "url": "http://localhost/lemmings.ts/run/lemmings.html"
+          "url": "http://localhost/lemmings.ts/run/lemmings.php"
         }
   ]
 }

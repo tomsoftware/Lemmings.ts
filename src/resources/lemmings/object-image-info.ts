@@ -17,8 +17,6 @@ module Lemmings {
         public preview_image_index: number = 0;
         public unknown: number = 0;
         public trap_sound_effect_id: number = 0;
-
-
     }
 
 }

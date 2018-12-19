@@ -28,7 +28,6 @@
                     return;
                 }
 
-                let useImageMap:boolean = false;
                 let useOddTable = levelInfo.useOddTable && this.config.level.useOddTable;
 
                 let promiseList:Promise<BinaryReader>[] = [];
@@ -74,49 +73,51 @@
                         level.needCount = levelProperties.needCount;
                         level.timeLimit = levelProperties.timeLimit;
                         level.skills = levelProperties.skills;
-                  
-                        level.setMapObjects(levelReader.objects);
+
+                        let fileList:Promise<BinaryReader>[]= [];
 
                         /// load level ground
-                        let vgaFilePromise = this.fileProvider.loadBinary(this.config.path, "VGAGR"+ levelReader.graphicSet1 +".DAT");
-                        let goundFilePromise;
+                        fileList.push(this.fileProvider.loadBinary(this.config.path, "VGAGR"+ levelReader.graphicSet1 +".DAT"));
+                        fileList.push(this.fileProvider.loadBinary(this.config.path, "GROUND"+ levelReader.graphicSet1 +"O.DAT"));
 
-                        if (levelReader.graphicSet2 == 0) {
-                            /// this is an normal map
-                            goundFilePromise = this.fileProvider.loadBinary(this.config.path, "GROUND"+ levelReader.graphicSet1 +"O.DAT");
-                        }
-                        else {
+                        if (levelReader.graphicSet2 != 0) {
                             /// this is a Image Map
-                            goundFilePromise = this.fileProvider.loadBinary(this.config.path, "VGASPEC"+ (levelReader.graphicSet2 - 1) +".DAT");
-                            useImageMap = true;
+                            fileList.push(this.fileProvider.loadBinary(this.config.path, "VGASPEC"+ (levelReader.graphicSet2 - 1) +".DAT"));
                         }
 
-                        return Promise.all([vgaFilePromise, goundFilePromise]);
+                        return Promise.all(fileList);
                     })
-                    .then((res) => {
+                    .then((fileList) => {
 
-                        let goundFile = res[1];
-                        let vgaContainer = new FileContainer(res[0]);
+                        let goundFile = fileList[1];
+                        let vgaContainer = new FileContainer(fileList[0]);
+                        
+                        /// read the images used for the map and for the objects of the map
+                        let groundReader = new GroundReader(goundFile, vgaContainer.getPart(0), vgaContainer.getPart(1));
 
+                        /// render the map background image
                         let render = new GroundRenderer();
 
-                        if (useImageMap){
-                            let vgaspecReader = new VgaspecReader(goundFile);
+                        if (fileList.length > 2){
+                            /// use a image for this map background
+                            let vgaspecReader = new VgaspecReader(fileList[2]);
 
-                            render.readVgaspecMap(levelReader, vgaspecReader);
+                            render.createVgaspecMap(levelReader, vgaspecReader);
                         }
                         else {
-                            let groundReader = new GroundReader(goundFile, vgaContainer.getPart(1), vgaContainer.getPart(0));
-
-                            render.readGroundMap(levelReader, groundReader);
+                            /// this is a normal map background
+                            render.createGroundMap(levelReader, groundReader.getTerraImages());
                         }
 
-
+                        
                         level.groundImage = render.img.imgData;
                         level.groundMask = render.img.imgMask
 
                         level.width = render.img.width;
                         level.height = render.img.height;
+
+                        level.setMapObjects(levelReader.objects, groundReader.getObjectImages());
+                        level.setPalettes(groundReader.colorPallet, groundReader.groundPallet, groundReader.previewPallet);
 
                         resolve(level);
                         

@@ -1,9 +1,15 @@
 module Lemmings {
 
-    export interface ActionSystem {
+    export interface IActionSystem {
 
-        process(level:Level, lem: Lemming);
+        /** process a Lemming, if the ActionType change, the new ActionType is returned  */
+        process(level:Level, lem: Lemming):ActionType;
 
+        /** return the name of this ActionSystem */
+        getActionName() : string;
+
+        /** render a Lemmings to the GameDisplay */
+        draw(gameDisplay:GameDisplay, lem: Lemming);
     }
 
 }

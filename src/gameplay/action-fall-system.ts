@@ -1,6 +1,6 @@
 module Lemmings {
 
-    export class ActionFallSystem implements ActionSystem {
+    export class ActionFallSystem implements IActionSystem {
 
         public soundSystem;
 
@@ -11,14 +11,27 @@ module Lemmings {
             this.sprite.push(sprites.getAnimation(SpriteType.FALLING, true));
         }
 
+        public getActionName() : string {
+            return "fall";
+        }
 
 
-        public process(level:Level, lem: Lemming) {
+        /** render Leming to gamedisply */
+        public draw(gameDisplay:GameDisplay, lem: Lemming) {
+            let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
+
+            let frame = ani.getFrame(lem.frame);
+
+            gameDisplay.drawImage(frame, lem.x, lem.y);
+        }
+
+
+
+        public process(level:Level, lem: Lemming):ActionType {
 
             lem.frame++;
-            if (lem.fall_distance > 16 && (lem.hasParachute)) {
-                lem.setAction(ActionType.FLOATING);
-                return 1;
+            if (lem.state > 16 && (lem.hasParachute)) {
+                return ActionType.FLOATING;
             }
 
             // fall down!
@@ -32,17 +45,16 @@ module Lemmings {
 
             lem.y += i;
             if (i == 3) {
-                lem.fall_distance += i;
-                return 1;
+                lem.state += i;
+                return ActionType.NO_ACTION_TYPE;
             } else {
                 // landed
-                if (lem.fall_distance > Lemming.LEM_MAX_FALLING) {
-                    lem.setAction(ActionType.SPLATTING);
-                    return 1;
+                if (lem.state > Lemming.LEM_MAX_FALLING) {
+                    return ActionType.SPLATTING;
                 }
-                lem.setAction(ActionType.WALKING);
-                return 1;
+                return ActionType.WALKING;
             }
+
         }
 
     }

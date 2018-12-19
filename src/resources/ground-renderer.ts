@@ -1,7 +1,7 @@
 
 module Lemmings {
 
-    /** uses the LevelReader and GroundReader to render the games background */
+    /** uses the LevelReader and GroundReader to render/create the games background */
     export class GroundRenderer {
 
         public img: GroundImage;
@@ -10,20 +10,19 @@ module Lemmings {
 
         }
 
-        public readVgaspecMap(lr: LevelReader, vr: VgaspecReader)  {
+        public createVgaspecMap(lr: LevelReader, vr: VgaspecReader)  {
             this.img = vr.img;
         }
 
         
         /** create the ground image from the level definition and the Terrain images */
-        public readGroundMap(lr: LevelReader, gr: GroundReader) {
+        public createGroundMap(lr: LevelReader, terrarImg: TerrainImageInfo[]) {
 
             this.img = new GroundImage(lr.levelWidth, lr.levelHeight);
 
             this.img.clearImageArray();
 
             let terrarObjects: LevelElement[] = lr.terrains;
-            let terrarImg: TerrainImageInfo[] = gr.imgTerrar;
 
             for (let i = 0; i < terrarObjects.length; i++) {
                 let tOb = terrarObjects[i];
