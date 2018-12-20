@@ -78,7 +78,7 @@ module Lemmings {
                 /// run game logic
                 this.tick();
                 this.render();
-            }, 200);
+            }, 20);
         }
 
 

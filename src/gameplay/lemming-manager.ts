@@ -43,6 +43,8 @@ module Lemmings {
 
                 let lem = lems[i];
 
+                if (lem.action == null) continue;
+
                 let newAction = lem.action.process(level, lem);
                 if (newAction != LemmingStateType.NO_STATE_TYPE) {
                    this.setLemmingState(lem, newAction); 
@@ -59,6 +61,8 @@ module Lemmings {
 
             for(let i = 0; i < lems.length; i++){
                 let lem = lems[i];
+                if (lem.removed) continue;
+                
                 lem.action.draw(gameDisplay, lem);
             }
         }

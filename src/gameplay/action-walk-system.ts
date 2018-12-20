@@ -17,7 +17,7 @@ module Lemmings {
         public draw(gameDisplay:GameDisplay, lem: Lemming) {
             let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
 
-            let frame = ani.getFrame(lem.frame);
+            let frame = ani.getFrame(lem.frameIndex);
 
             gameDisplay.drawImage(frame, lem.x, lem.y);
         }
@@ -31,7 +31,7 @@ module Lemmings {
         
         public process(level:Level, lem: Lemming) {
 
-            lem.frame++;
+            lem.frameIndex++;
             lem.x += (lem.lookRight ? 1 : -1);
 
             let newAction:LemmingStateType = LemmingStateType.NO_STATE_TYPE;
@@ -41,11 +41,11 @@ module Lemmings {
                 return LemmingStateType.NO_STATE_TYPE;
             }
 
-            if (level.has_pixel_at(lem.x, lem.y)) {
+            if (level.hasGroundAt(lem.x, lem.y)) {
                 // walk, jump, climb, or turn
                 let i;
                 for (i = 1; i < 8; i++) {
-                    if (!level.has_pixel_at(lem.x, lem.y - i)) {
+                    if (!level.hasGroundAt(lem.x, lem.y - i)) {
                         break;
                     }
                 }
@@ -78,7 +78,7 @@ module Lemmings {
                 // walk or fall
                 let i;
                 for (i = 1; i < 4; i++) {
-                    if (level.has_pixel_at(lem.x, lem.y + i)) {
+                    if (level.hasGroundAt(lem.x, lem.y + i)) {
                         break;
                     }
                 }

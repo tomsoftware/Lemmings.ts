@@ -4,7 +4,7 @@ module Lemmings {
 
     export class ActionDiggSystem implements IActionSystem {
 
-        public soundSystem;
+        public soundSystem = new SoundSystem();
         private sprite:Animation[] = [];
 
         constructor(sprites:LemmingsSprite){
@@ -17,7 +17,7 @@ module Lemmings {
         public draw(gameDisplay:GameDisplay, lem: Lemming) {
             let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
 
-            let frame = ani.getFrame(lem.frame);
+            let frame = ani.getFrame(lem.frameIndex);
 
             gameDisplay.drawImage(frame, lem.x, lem.y);
         }
@@ -31,22 +31,20 @@ module Lemmings {
         
         public process(level:Level, lem: Lemming):LemmingStateType {
 
-            lem.frame++;
-
             if (lem.state == 0) {
                 this.digRow(level, lem, lem.y-2);
                 this.digRow(level, lem, lem.y-1);
                 lem.state = 1;
             } else {
-                lem.frame = (lem.frame + 1) % 16;
+                lem.frameIndex = (lem.frameIndex + 1) % 16;
             }
 
-            if (!(lem.frame & 0x07)) {
+            if (!(lem.frameIndex & 0x07)) {
                 lem.y++;
 
                 if (level.isOutOfLevel(lem.y)) {
                     // play sound: fall out of level
-                    this.soundSystem.play_sound(lem, 0x13);
+                    this.soundSystem.playSound(lem, 0x13);
                     lem.removed = true;
                     return LemmingStateType.OUT_OFF_LEVEL;
                 }
@@ -54,7 +52,7 @@ module Lemmings {
                 if (!this.digRow(level, lem, lem.y-1)) {
                     return LemmingStateType.FALLING;
                 }
-                //if (level.read_object_map(level,lem->x, lem->y) == OBJECT_STEEL) {
+                //if (level.readobjectmap(level,lem->x, lem->y) == OBJECT_STEEL) {
                     // play sound effect: hitting steel
                    // play_sound(0x0A);
                    // return ActionType.WALKING;
@@ -68,8 +66,8 @@ module Lemmings {
             let removeCount:number = 0;
 
             for (let x=lem.x-4; x < lem.x + 5; x++) {
-                if (level.has_pixel_at(x, y)) {
-                    level.clear_pixel_at(x,y);
+                if (level.hasGroundAt(x, y)) {
+                    level.clearGroundAt(x,y);
                     removeCount++;
                 }
             }

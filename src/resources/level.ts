@@ -46,7 +46,7 @@ module Lemmings {
             this.mapObjects = objects;
             this.entrances = [];
 
-            for(let i=0; i<objects.length; i++){
+            for(let i = 0; i<objects.length; i++){
                 let ob = objects[i];
 
                 if (ob.id == 0) this.entrances.push(ob);
@@ -55,16 +55,23 @@ module Lemmings {
 
         /** check if a y-position is out of the level */
         public isOutOfLevel(y:number) {
-            return false;
+            return ((y >= this.height) || (y <= 0));
         }
 
         /** check if a point is solid */
-        public has_pixel_at(x:number, y:number):boolean{
-            return (this.groundMask[x + y*this.width] != 0);
+        public hasGroundAt(x:number, y:number):boolean{
+            return (this.groundMask[x + y * this.width] != 0);
         }
-        /** check if a point is solid */
-        public clear_pixel_at(x:number, y:number) {
-            this.groundMask[x + y*this.width] = 0;
+        /** clear a point  */
+        public clearGroundAt(x:number, y:number) {
+            let index = x + y*this.width;
+
+            this.groundMask[index] = 0;
+
+            index = index * 4;
+            this.groundImage[index + 0] = 0;
+            this.groundImage[index + 1] = 0;
+            this.groundImage[index + 2] = 0;
         }
 
 

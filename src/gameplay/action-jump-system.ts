@@ -2,7 +2,7 @@ module Lemmings {
 
     export class ActionJumpSystem implements IActionSystem {
 
-        public soundSystem;
+        public soundSystem = new SoundSystem();
 
         private sprite: Animation[] = [];
 
@@ -20,7 +20,7 @@ module Lemmings {
         public draw(gameDisplay:GameDisplay, lem: Lemming) {
             let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
 
-            let frame = ani.getFrame(lem.frame);
+            let frame = ani.getFrame(lem.frameIndex);
 
             gameDisplay.drawImage(frame, lem.x, lem.y);
         }
@@ -28,11 +28,11 @@ module Lemmings {
 
         public process(level: Level, lem: Lemming): LemmingStateType {
 
-            lem.frame++;
+            lem.frameIndex++;
 
             let i = 0;
             for (; i < 2; i++) {
-                if (!level.has_pixel_at(lem.x, lem.y + i - 1)) { // really -1?
+                if (!level.hasGroundAt(lem.x, lem.y + i - 1)) { // really -1?
                     break;
                 }
             }

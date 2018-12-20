@@ -244,7 +244,7 @@ var Lemmings;
                 /// run game logic
                 this.tick();
                 this.render();
-            }, 200);
+            }, 20);
         }
         /** refresh display */
         render() {
@@ -439,40 +439,40 @@ var Lemmings;
 (function (Lemmings) {
     class ActionDiggSystem {
         constructor(sprites) {
+            this.soundSystem = new Lemmings.SoundSystem();
             this.sprite = [];
             this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.DIGGING, false));
             this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.DIGGING, true));
         }
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
-            let frame = ani.getFrame(lem.frame);
+            let frame = ani.getFrame(lem.frameIndex);
             gameDisplay.drawImage(frame, lem.x, lem.y);
         }
         getActionName() {
             return "digging";
         }
         process(level, lem) {
-            lem.frame++;
             if (lem.state == 0) {
                 this.digRow(level, lem, lem.y - 2);
                 this.digRow(level, lem, lem.y - 1);
                 lem.state = 1;
             }
             else {
-                lem.frame = (lem.frame + 1) % 16;
+                lem.frameIndex = (lem.frameIndex + 1) % 16;
             }
-            if (!(lem.frame & 0x07)) {
+            if (!(lem.frameIndex & 0x07)) {
                 lem.y++;
                 if (level.isOutOfLevel(lem.y)) {
                     // play sound: fall out of level
-                    this.soundSystem.play_sound(lem, 0x13);
+                    this.soundSystem.playSound(lem, 0x13);
                     lem.removed = true;
                     return Lemmings.LemmingStateType.OUT_OFF_LEVEL;
                 }
                 if (!this.digRow(level, lem, lem.y - 1)) {
                     return Lemmings.LemmingStateType.FALLING;
                 }
-                //if (level.read_object_map(level,lem->x, lem->y) == OBJECT_STEEL) {
+                //if (level.readobjectmap(level,lem->x, lem->y) == OBJECT_STEEL) {
                 // play sound effect: hitting steel
                 // play_sound(0x0A);
                 // return ActionType.WALKING;
@@ -483,8 +483,8 @@ var Lemmings;
         digRow(level, lem, y) {
             let removeCount = 0;
             for (let x = lem.x - 4; x < lem.x + 5; x++) {
-                if (level.has_pixel_at(x, y)) {
-                    level.clear_pixel_at(x, y);
+                if (level.hasGroundAt(x, y)) {
+                    level.clearGroundAt(x, y);
                     removeCount++;
                 }
             }
@@ -497,6 +497,7 @@ var Lemmings;
 (function (Lemmings) {
     class ActionFallSystem {
         constructor(sprites) {
+            this.soundSystem = new Lemmings.SoundSystem();
             this.sprite = [];
             this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, false));
             this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, true));
@@ -507,18 +508,18 @@ var Lemmings;
         /** render Leming to gamedisply */
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
-            let frame = ani.getFrame(lem.frame);
+            let frame = ani.getFrame(lem.frameIndex);
             gameDisplay.drawImage(frame, lem.x, lem.y);
         }
         process(level, lem) {
-            lem.frame++;
+            lem.frameIndex++;
             if (lem.state > 16 && (lem.hasParachute)) {
                 return Lemmings.LemmingStateType.FLOATING;
             }
             // fall down!
             let i;
             for (i = 0; i < 3; i++) {
-                if (level.has_pixel_at(lem.x, lem.y + i)) {
+                if (level.hasGroundAt(lem.x, lem.y + i)) {
                     break;
                 }
             }
@@ -542,6 +543,7 @@ var Lemmings;
 (function (Lemmings) {
     class ActionJumpSystem {
         constructor(sprites) {
+            this.soundSystem = new Lemmings.SoundSystem();
             this.sprite = [];
             this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, false));
             this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, true));
@@ -551,14 +553,14 @@ var Lemmings;
         }
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
-            let frame = ani.getFrame(lem.frame);
+            let frame = ani.getFrame(lem.frameIndex);
             gameDisplay.drawImage(frame, lem.x, lem.y);
         }
         process(level, lem) {
-            lem.frame++;
+            lem.frameIndex++;
             let i = 0;
             for (; i < 2; i++) {
-                if (!level.has_pixel_at(lem.x, lem.y + i - 1)) {
+                if (!level.hasGroundAt(lem.x, lem.y + i - 1)) {
                     break;
                 }
             }
@@ -582,25 +584,25 @@ var Lemmings;
         }
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
-            let frame = ani.getFrame(lem.frame);
+            let frame = ani.getFrame(lem.frameIndex);
             gameDisplay.drawImage(frame, lem.x, lem.y);
         }
         getActionName() {
             return "walk";
         }
         process(level, lem) {
-            lem.frame++;
+            lem.frameIndex++;
             lem.x += (lem.lookRight ? 1 : -1);
             let newAction = Lemmings.LemmingStateType.NO_STATE_TYPE;
             if (lem.x < 0) {
                 lem.lookRight = true;
                 return Lemmings.LemmingStateType.NO_STATE_TYPE;
             }
-            if (level.has_pixel_at(lem.x, lem.y)) {
+            if (level.hasGroundAt(lem.x, lem.y)) {
                 // walk, jump, climb, or turn
                 let i;
                 for (i = 1; i < 8; i++) {
-                    if (!level.has_pixel_at(lem.x, lem.y - i)) {
+                    if (!level.hasGroundAt(lem.x, lem.y - i)) {
                         break;
                     }
                 }
@@ -633,7 +635,7 @@ var Lemmings;
                 // walk or fall
                 let i;
                 for (i = 1; i < 4; i++) {
-                    if (level.has_pixel_at(lem.x, lem.y + i)) {
+                    if (level.hasGroundAt(lem.x, lem.y + i)) {
                         break;
                     }
                 }
@@ -708,6 +710,8 @@ var Lemmings;
             let lems = this.lemmings;
             for (let i = 0; i < lems.length; i++) {
                 let lem = lems[i];
+                if (lem.action == null)
+                    continue;
                 let newAction = lem.action.process(level, lem);
                 if (newAction != Lemmings.LemmingStateType.NO_STATE_TYPE) {
                     this.setLemmingState(lem, newAction);
@@ -720,6 +724,8 @@ var Lemmings;
             let lems = this.lemmings;
             for (let i = 0; i < lems.length; i++) {
                 let lem = lems[i];
+                if (lem.removed)
+                    continue;
                 lem.action.draw(gameDisplay, lem);
             }
         }
@@ -760,7 +766,7 @@ var Lemmings;
             this.x = 0;
             this.y = 0;
             this.lookRight = false;
-            this.frame = 0;
+            this.frameIndex = 0;
             this.canClimb = false;
             this.hasParachute = false;
             this.removed = false;
@@ -770,13 +776,25 @@ var Lemmings;
         }
         setAction(action) {
             this.action = action;
-            this.frame = 0;
+            this.frameIndex = 0;
             this.state = 0;
         }
     }
     Lemming.LEM_MIN_Y = -5;
     Lemming.LEM_MAX_FALLING = 60; // MAX_FALLDISTANCECOUNT
     Lemmings.Lemming = Lemming;
+})(Lemmings || (Lemmings = {}));
+/// <reference path="../resources/lemmings-sprite.ts"/>
+var Lemmings;
+(function (Lemmings) {
+    class SoundSystem {
+        constructor() {
+        }
+        playSound(lem, soundId) {
+            console.log("Play sound " + soundId);
+        }
+    }
+    Lemmings.SoundSystem = SoundSystem;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -1180,15 +1198,20 @@ var Lemmings;
         }
         /** check if a y-position is out of the level */
         isOutOfLevel(y) {
-            return false;
+            return ((y >= this.height) || (y <= 0));
         }
         /** check if a point is solid */
-        has_pixel_at(x, y) {
+        hasGroundAt(x, y) {
             return (this.groundMask[x + y * this.width] != 0);
         }
-        /** check if a point is solid */
-        clear_pixel_at(x, y) {
-            this.groundMask[x + y * this.width] = 0;
+        /** clear a point  */
+        clearGroundAt(x, y) {
+            let index = x + y * this.width;
+            this.groundMask[index] = 0;
+            index = index * 4;
+            this.groundImage[index + 0] = 0;
+            this.groundImage[index + 1] = 0;
+            this.groundImage[index + 2] = 0;
         }
         /** set the color palettes for this level */
         setPalettes(colorPallet, groundPallet, previewPallet) {
