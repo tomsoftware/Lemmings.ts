@@ -249,7 +249,7 @@ var Lemmings;
         /** refresh display */
         render() {
             if (this.dispaly) {
-                this.dispaly.render(this.level);
+                this.dispaly.renderLevel(this.level);
                 this.lemmingManager.render(this.dispaly);
                 this.dispaly.redraw();
             }
@@ -1202,6 +1202,10 @@ var Lemmings;
         }
         /** check if a point is solid */
         hasGroundAt(x, y) {
+            if ((x < 0) || (x >= this.width))
+                return false;
+            if ((y < 0) || (y >= this.height))
+                return false;
             return (this.groundMask[x + y * this.width] != 0);
         }
         /** clear a point  */
@@ -4654,7 +4658,7 @@ var Lemmings;
                     this.elementLevelName.innerHTML = level.name;
                 }
                 if (this.display != null) {
-                    this.display.render(level);
+                    this.display.renderLevel(level);
                 }
                 this.controller.setViewRange(0, 0, level.width, level.height);
                 console.dir(level);
@@ -4823,14 +4827,17 @@ var Lemmings;
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
         /** render the level-background to an image */
-        render(level) {
-            this.contentWidth = level.width;
-            this.contentHeight = level.height;
-            this.processCav.width = level.width;
-            this.processCav.height = level.height;
-            var backCtx = this.processCav.getContext("2d");
-            /// create image
-            this.imgData = backCtx.createImageData(level.width, level.height);
+        renderLevel(level) {
+            /// create image data
+            if ((this.contentWidth != level.width) || (this.contentHeight != level.height)) {
+                this.contentWidth = level.width;
+                this.contentHeight = level.height;
+                this.processCav.width = level.width;
+                this.processCav.height = level.height;
+                var backCtx = this.processCav.getContext("2d");
+                /// create image
+                this.imgData = backCtx.createImageData(level.width, level.height);
+            }
             /// set pixels
             this.imgData.data.set(level.groundImage);
         }

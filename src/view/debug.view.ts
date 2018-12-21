@@ -221,7 +221,7 @@ module Lemmings {
                     }
 
                     if (this.display != null){
-                        this.display.render(level);
+                        this.display.renderLevel(level);
                     }
 
                     this.controller.setViewRange(0, 0, level.width, level.height);

@@ -71,7 +71,8 @@ module Lemmings {
                     removeCount++;
                 }
             }
-            return (removeCount>0);
+
+            return (removeCount > 0);
         }
     }
 

@@ -33,17 +33,22 @@ module Lemmings {
 
 
         /** render the level-background to an image */
-        public render(level: Level) {
-            this.contentWidth = level.width;
-            this.contentHeight = level.height;
+        public renderLevel(level: Level) {
 
-            this.processCav.width = level.width;
-            this.processCav.height = level.height;
-
-            var backCtx = this.processCav.getContext("2d");
-
-            /// create image
-            this.imgData = backCtx.createImageData(level.width, level.height);
+            /// create image data
+            if ((this.contentWidth != level.width) || (this.contentHeight != level.height)) {
+                this.contentWidth = level.width;
+                this.contentHeight = level.height;
+    
+                this.processCav.width = level.width;
+                this.processCav.height = level.height;
+    
+                var backCtx = this.processCav.getContext("2d");
+    
+                /// create image
+                this.imgData = backCtx.createImageData(level.width, level.height);
+            }
+            
             /// set pixels
             this.imgData.data.set(level.groundImage);
         }

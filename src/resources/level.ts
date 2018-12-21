@@ -59,12 +59,16 @@ module Lemmings {
         }
 
         /** check if a point is solid */
-        public hasGroundAt(x:number, y:number):boolean{
+        public hasGroundAt(x:number, y:number):boolean {
+            if ((x < 0) || (x >= this.width)) return false;
+            if ((y < 0) || (y >= this.height)) return false;
+
             return (this.groundMask[x + y * this.width] != 0);
         }
+        
         /** clear a point  */
         public clearGroundAt(x:number, y:number) {
-            let index = x + y*this.width;
+            let index = x + y * this.width;
 
             this.groundMask[index] = 0;
 

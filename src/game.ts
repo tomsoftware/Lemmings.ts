@@ -86,7 +86,7 @@ module Lemmings {
         private render() {
           
             if (this.dispaly) {
-                this.dispaly.render(this.level);
+                this.dispaly.renderLevel(this.level);
                 
                 this.lemmingManager.render(this.dispaly);
 
