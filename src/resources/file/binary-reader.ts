@@ -14,6 +14,8 @@ module Lemmings {
     constructor(dataArray? : BinaryReader| Uint8Array | ArrayBuffer | Blob, offset: number = 0, length?: number, filename: string = "[unknown]") {
 
       this.filename = filename;
+      
+      if (offset == null) offset = 0;
 
       let dataLenght = 0;
 

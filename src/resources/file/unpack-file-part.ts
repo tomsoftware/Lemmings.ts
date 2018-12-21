@@ -41,8 +41,11 @@ module Lemmings {
 			if (!this.unpackingDone) {
 				this.fileReader = this.doUnpacking(this.fileReader);
 				this.unpackingDone = true;
+				return this.fileReader;
 			}
-			return this.fileReader;
+
+			/// use the cached file buffer but with a new file pointer
+			return new BinaryReader(this.fileReader);
 
 		}
 

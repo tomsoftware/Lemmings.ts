@@ -206,11 +206,6 @@ module Lemmings {
         this.previewPallet.setColorRGB(i, r, g, b);
       }
 
-      if (frO.eof()) {
-        this.error.log("readPalettes() : unexpected end of file!: " + frO.filename);
-        return;
-      }
-
     }
 
   }

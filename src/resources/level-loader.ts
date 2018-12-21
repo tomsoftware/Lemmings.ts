@@ -74,7 +74,7 @@
                         level.timeLimit = levelProperties.timeLimit;
                         level.skills = levelProperties.skills;
 
-                        let fileList:Promise<BinaryReader>[]= [];
+                        let fileList:Promise<BinaryReader>[] = [];
 
                         /// load level ground
                         fileList.push(this.fileProvider.loadBinary(this.config.path, "VGAGR"+ levelReader.graphicSet1 +".DAT"));

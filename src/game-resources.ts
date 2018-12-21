@@ -8,7 +8,7 @@ module Lemmings {
         private musicPlayer: AudioPlayer;
         private soundPlayer: AudioPlayer;
         private soundImage: Promise<SoundImageManager>;
-        private mainDat: Promise<BinaryReader> = null;
+        private mainDat: Promise<FileContainer> = null;
 
         constructor(private fileProvider: FileProvider, private config: GameConfig) {
 
@@ -21,10 +21,22 @@ module Lemmings {
             this.soundImage = null;
         }
 
-        /** return the main.dat file content */
-        public getMainDat():Promise<BinaryReader> {
+        /** return the main.dat file container */
+        public getMainDat():Promise<FileContainer> {
             if (this.mainDat != null) return this.mainDat;
-            this.mainDat = this.fileProvider.loadBinary(this.config.path, "MAIN.DAT")
+
+            this.mainDat = new Promise<FileContainer>((resolve, reject) => {
+
+                this.fileProvider.loadBinary(this.config.path, "MAIN.DAT")
+                .then(data => {
+
+                    /// split the file in it's parts
+                    let mainParts = new FileContainer(data);
+
+                    resolve(mainParts);
+                });
+            });
+
             return this.mainDat;
         }
 
@@ -34,12 +46,22 @@ module Lemmings {
 
             return new Promise<LemmingsSprite>((resolve, reject) => {
 
-                this.getMainDat().then(data => {
+                this.getMainDat().then(container => {
+                    
+                    let sprite = new LemmingsSprite(container.getPart(0), colorPallet);
 
-                    /// unpack the file
-                    var container = new FileContainer(data);
- 
-                    resolve(new LemmingsSprite(container.getPart(0), colorPallet));
+                    resolve(sprite);
+                });
+            });
+        }
+
+
+        public getSkillPanelSprite(colorPallet:ColorPallet): Promise<SkillPanelSprites> {
+            return new Promise<SkillPanelSprites>((resolve, reject) => {
+
+                this.getMainDat().then(container => {
+
+                    resolve(new SkillPanelSprites(container.getPart(2), container.getPart(6), colorPallet));
                 });
             });
         }

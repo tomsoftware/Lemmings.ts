@@ -48,20 +48,33 @@ var Lemmings;
             this.stopSound();
             this.soundImage = null;
         }
-        /** return the main.dat file content */
+        /** return the main.dat file container */
         getMainDat() {
             if (this.mainDat != null)
                 return this.mainDat;
-            this.mainDat = this.fileProvider.loadBinary(this.config.path, "MAIN.DAT");
+            this.mainDat = new Promise((resolve, reject) => {
+                this.fileProvider.loadBinary(this.config.path, "MAIN.DAT")
+                    .then(data => {
+                    /// split the file in it's parts
+                    let mainParts = new Lemmings.FileContainer(data);
+                    resolve(mainParts);
+                });
+            });
             return this.mainDat;
         }
         /** return the Lemings animations */
         getLemmingsSprite(colorPallet) {
             return new Promise((resolve, reject) => {
-                this.getMainDat().then(data => {
-                    /// unpack the file
-                    var container = new Lemmings.FileContainer(data);
-                    resolve(new Lemmings.LemmingsSprite(container.getPart(0), colorPallet));
+                this.getMainDat().then(container => {
+                    let sprite = new Lemmings.LemmingsSprite(container.getPart(0), colorPallet);
+                    resolve(sprite);
+                });
+            });
+        }
+        getSkillPanelSprite(colorPallet) {
+            return new Promise((resolve, reject) => {
+                this.getMainDat().then(container => {
+                    resolve(new Lemmings.SkillPanelSprites(container.getPart(2), container.getPart(6), colorPallet));
                 });
             });
         }
@@ -826,42 +839,8 @@ var Lemmings;
             return this.frames[frame];
         }
         loadFromFile(fr, bitsPerPixle, width, height, frames, pallet) {
-            var bitBuf = 0;
-            var bitBufLen = 0;
-            var pixCount = width * height;
             for (let f = 0; f < frames; f++) {
-                var pixBuf = new Uint8Array(pixCount);
-                //- read pixle data
-                for (var i = 0; i < bitsPerPixle; i++) {
-                    for (var p = 0; p < pixCount; p++) {
-                        if (bitBufLen <= 0) {
-                            bitBuf = fr.readByte();
-                            bitBufLen = 8;
-                        }
-                        pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
-                        bitBuf = (bitBuf << 1);
-                        bitBufLen--;
-                    }
-                }
-                var imgBuf = new Uint8Array(pixCount * 4);
-                var imgBufPos = 0;
-                for (var i = 0; i < pixCount; i++) {
-                    let colorIndex = pixBuf[i];
-                    if (colorIndex == 0) {
-                        imgBuf[imgBufPos++] = 0;
-                        imgBuf[imgBufPos++] = 0;
-                        imgBuf[imgBufPos++] = 0;
-                        imgBuf[imgBufPos++] = 0;
-                    }
-                    else {
-                        let color = pallet.getColor(colorIndex);
-                        imgBuf[imgBufPos++] = color[0];
-                        imgBuf[imgBufPos++] = color[1];
-                        imgBuf[imgBufPos++] = color[2];
-                        imgBuf[imgBufPos++] = 255;
-                    }
-                }
-                this.frames.push(new Lemmings.Frame(width, height, imgBuf));
+                this.frames.push(new Lemmings.Frame(width, height, fr, bitsPerPixle, pallet));
             }
         }
     }
@@ -966,16 +945,60 @@ var Lemmings;
 (function (Lemmings) {
     /** image frame with index color */
     class Frame {
-        constructor(width, height, data) {
+        /*
+        constructor(width:number, height:number, data:Uint8Array) {
+            this.width = width;
+            this.height = height;
+            this.data = data;
+            this.offsetX = Math.floor(this.width / 2);
+            this.offsetY = this.height;
+        }
+        */
+        constructor(width, height, fr, bitsPerPixle, pallet) {
             this.width = 0;
             this.height = 0;
             this.offsetX = 0;
             this.offsetY = 0;
             this.width = width;
             this.height = height;
-            this.data = data;
-            this.offsetX = Math.floor(this.width / 2);
-            this.offsetY = this.height;
+            this.offsetX = Math.floor(width / 2);
+            this.offsetY = height;
+            let bitBuf = 0;
+            let bitBufLen = 0;
+            let pixCount = width * height;
+            let pixBuf = new Uint8Array(pixCount);
+            //- read color-index data
+            for (let i = 0; i < bitsPerPixle; i++) {
+                for (let p = 0; p < pixCount; p++) {
+                    if (bitBufLen <= 0) {
+                        bitBuf = fr.readByte();
+                        bitBufLen = 8;
+                    }
+                    pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
+                    bitBuf = (bitBuf << 1);
+                    bitBufLen--;
+                }
+            }
+            /// convert color-index data to pixle image
+            var imgBuf = new Uint8Array(pixCount * 4);
+            var imgBufPos = 0;
+            for (var i = 0; i < pixCount; i++) {
+                let colorIndex = pixBuf[i];
+                if (colorIndex == 0) {
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                }
+                else {
+                    let color = pallet.getColor(colorIndex);
+                    imgBuf[imgBufPos++] = color[0];
+                    imgBuf[imgBufPos++] = color[1];
+                    imgBuf[imgBufPos++] = color[2];
+                    imgBuf[imgBufPos++] = 255;
+                }
+            }
+            this.data = imgBuf;
         }
     }
     Lemmings.Frame = Frame;
@@ -1228,6 +1251,44 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    /** manage the sprites need for the game skill panel */
+    class SkillPanelSprites {
+        constructor(fr2, fr6, colorPallet) {
+            /// read skill panel
+            this.panelSprite = new Lemmings.Frame(320, 40, fr6, 4, colorPallet);
+            /// read green panel letters
+            let letters = ["%", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+            for (let l = 0; l < letters.length; l++) {
+                this.letterSprite[letters[l]] = new Lemmings.Frame(8, 16, fr6, 3, colorPallet);
+            }
+            /// read panel skill-count number letters
+            fr2.setOffset(0x1900);
+            for (let i = 0; i < 10; i++) {
+                this.numberSpriteRight.push(new Lemmings.Frame(8, 16, fr2, 2, colorPallet));
+                this.numberSpriteLeft.push(new Lemmings.Frame(8, 16, fr2, 2, colorPallet));
+            }
+        }
+        /** return the sprite for the skill panel */
+        getPanelSprite() {
+            return this.panelSprite;
+        }
+        /** return a green letter */
+        getLetterSprite(letter) {
+            return this.letterSprite[letter];
+        }
+        /** return a number letter */
+        getNumberSpriteLeft(number) {
+            return this.numberSpriteLeft[number];
+        }
+        /** return a number letter */
+        getNumberSpriteRight(number) {
+            return this.numberSpriteRight[number];
+        }
+    }
+    Lemmings.SkillPanelSprites = SkillPanelSprites;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     var SpriteType;
     (function (SpriteType) {
         SpriteType[SpriteType["WALKING"] = 0] = "WALKING";
@@ -1260,6 +1321,8 @@ var Lemmings;
         constructor(dataArray, offset = 0, length, filename = "[unknown]") {
             this._error = new Lemmings.ErrorHandler("BinaryReader");
             this.filename = filename;
+            if (offset == null)
+                offset = 0;
             let dataLenght = 0;
             if (dataArray == null) {
                 this.data = new Uint8Array(0);
@@ -1639,8 +1702,10 @@ var Lemmings;
             if (!this.unpackingDone) {
                 this.fileReader = this.doUnpacking(this.fileReader);
                 this.unpackingDone = true;
+                return this.fileReader;
             }
-            return this.fileReader;
+            /// use the cached file buffer but with a new file pointer
+            return new Lemmings.BinaryReader(this.fileReader);
         }
         /// unpack the fileReader
         doUnpacking(fileReader) {
@@ -2123,10 +2188,6 @@ var Lemmings;
                 let g = frO.readByte() << 2;
                 let b = frO.readByte() << 2;
                 this.previewPallet.setColorRGB(i, r, g, b);
-            }
-            if (frO.eof()) {
-                this.error.log("readPalettes() : unexpected end of file!: " + frO.filename);
-                return;
             }
         }
     }
@@ -4906,6 +4967,12 @@ var Lemmings;
         }
     }
     Lemmings.GameDisplay = GameDisplay;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class GameGui {
+    }
+    Lemmings.GameGui = GameGui;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
