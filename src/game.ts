@@ -11,6 +11,7 @@ module Lemmings {
         private levelIndex: number;
         private level: Level;
         private lemmingManager: LemmingManager;
+        private gui: GameGui;
         private lemmingsLeft = 0;
         private dispaly: GameDisplay = null;
         private gameTimer: number = 0;
@@ -86,9 +87,13 @@ module Lemmings {
         private render() {
           
             if (this.dispaly) {
-                this.dispaly.renderLevel(this.level);
+                this.dispaly.initRender(this.level.width, this.level.height);
+
+                this.level.render(this.dispaly);
                 
                 this.lemmingManager.render(this.dispaly);
+
+                //this.gui.render(this.dispaly);
 
                 this.dispaly.redraw();
             }

@@ -5,7 +5,7 @@ module Lemmings {
     export class Level {
 
         /** the background image */
-        public groundImage: Uint8ClampedArray;//ImageData;
+        private groundImage: Uint8ClampedArray;//ImageData;
 
         /** the background mask 0=noGround / 1=ground*/
         public groundMask : Int8Array;
@@ -90,6 +90,11 @@ module Lemmings {
 
         constructor() {
            
+        }
+
+        /** render ground to display */
+        public render(gameDisplay:GameDisplay) {
+            gameDisplay.setBackground(this.groundImage);
         }
 
     }

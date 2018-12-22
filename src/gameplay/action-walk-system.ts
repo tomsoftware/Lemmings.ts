@@ -19,7 +19,7 @@ module Lemmings {
 
             let frame = ani.getFrame(lem.frameIndex);
 
-            gameDisplay.drawImage(frame, lem.x, lem.y);
+            gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
 
 

@@ -4,7 +4,9 @@ module Lemmings {
     export class GameDisplay {
 
         private outputCav: HTMLCanvasElement;
+        private outputCtx: CanvasRenderingContext2D;
         private processCav: HTMLCanvasElement;
+        private processCtx: CanvasRenderingContext2D;
         private viewPoint:ViewPoint = new ViewPoint(0, 0, 1);
         private contentWidth = 0;
         private contentHeight = 0;
@@ -32,32 +34,43 @@ module Lemmings {
         }
 
 
-        /** render the level-background to an image */
-        public renderLevel(level: Level) {
-
+        public initRender(width:number, height:number) {
             /// create image data
-            if ((this.contentWidth != level.width) || (this.contentHeight != level.height)) {
-                this.contentWidth = level.width;
-                this.contentHeight = level.height;
-    
-                this.processCav.width = level.width;
-                this.processCav.height = level.height;
-    
-                var backCtx = this.processCav.getContext("2d");
-    
+            if ((this.contentWidth != width) || (this.contentHeight != height)) {
+                this.contentWidth = width;
+                this.contentHeight = height;
+
+                this.processCav.width = width;
+                this.processCav.height = height;
+
+                this.processCtx = this.processCav.getContext("2d");
+
                 /// create image
-                this.imgData = backCtx.createImageData(level.width, level.height);
+                this.imgData = this.processCtx.createImageData(width, height);
             }
-            
-            /// set pixels
-            this.imgData.data.set(level.groundImage);
         }
 
 
+        /** render the level-background to an image */
+        public setBackground(groundImage: Uint8ClampedArray) {
+
+            /// set pixels
+            this.imgData.data.set(groundImage);
+        }
+
+
+        public drawImage(imageDate: Uint8ClampedArray, width:number, height:number, posX:number, posY:number) {
+  
+            var DAT = new ImageData(imageDate, width, height);
+            this.processCtx.putImageData( DAT , posX, posY );
+        }
+
 
         /** copys a frame to the display */
-        public drawImage(frame:Frame, posX:number, posY:number){
-            
+        public drawFrame(frame:Frame, posX:number, posY:number){
+         //   var UAC = new Uint8ClampedArray( frame.data, frame.width, frame.height);
+         //   this.drawImage(UAC, frame.width, frame.height, posX - frame.offsetX, posY - frame.offsetY);
+         //   return;
             var srcW = frame.width;
             var srcH = frame.height;
             var srcBuffer = frame.data;
@@ -106,12 +119,13 @@ module Lemmings {
         /** draw everything to the display */
         public redraw() {
 
-            var backCtx = this.processCav.getContext("2d");
-
             /// write image to context
-            backCtx.putImageData(this.imgData, 0, 0);
+            this.processCtx.putImageData(this.imgData, 0, 0);
 
-            var ctx = this.outputCav.getContext("2d");
+            if (this.outputCtx == null) {
+                this.outputCtx = this.outputCav.getContext("2d");
+            }
+            let ctx = this.outputCtx;
 
             //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;

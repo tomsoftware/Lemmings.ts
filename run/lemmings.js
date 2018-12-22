@@ -262,8 +262,10 @@ var Lemmings;
         /** refresh display */
         render() {
             if (this.dispaly) {
-                this.dispaly.renderLevel(this.level);
+                this.dispaly.initRender(this.level.width, this.level.height);
+                this.level.render(this.dispaly);
                 this.lemmingManager.render(this.dispaly);
+                //this.gui.render(this.dispaly);
                 this.dispaly.redraw();
             }
         }
@@ -460,7 +462,7 @@ var Lemmings;
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
-            gameDisplay.drawImage(frame, lem.x, lem.y);
+            gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
         getActionName() {
             return "digging";
@@ -522,7 +524,7 @@ var Lemmings;
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
-            gameDisplay.drawImage(frame, lem.x, lem.y);
+            gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
         process(level, lem) {
             lem.frameIndex++;
@@ -567,7 +569,7 @@ var Lemmings;
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
-            gameDisplay.drawImage(frame, lem.x, lem.y);
+            gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
         process(level, lem) {
             lem.frameIndex++;
@@ -598,7 +600,7 @@ var Lemmings;
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
-            gameDisplay.drawImage(frame, lem.x, lem.y);
+            gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
         getActionName() {
             return "walk";
@@ -1245,6 +1247,10 @@ var Lemmings;
             this.colorPallet = colorPallet;
             this.groundPallet = groundPallet;
             this.previewPallet = previewPallet;
+        }
+        /** render ground to display */
+        render(gameDisplay) {
+            gameDisplay.setBackground(this.groundImage);
         }
     }
     Lemmings.Level = Level;
@@ -4719,7 +4725,9 @@ var Lemmings;
                     this.elementLevelName.innerHTML = level.name;
                 }
                 if (this.display != null) {
-                    this.display.renderLevel(level);
+                    this.display.initRender(level.width, level.height);
+                    level.render(this.display);
+                    this.display.redraw();
                 }
                 this.controller.setViewRange(0, 0, level.width, level.height);
                 console.dir(level);
@@ -4887,23 +4895,32 @@ var Lemmings;
             ctx.fillStyle = "#000000";
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
-        /** render the level-background to an image */
-        renderLevel(level) {
+        initRender(width, height) {
             /// create image data
-            if ((this.contentWidth != level.width) || (this.contentHeight != level.height)) {
-                this.contentWidth = level.width;
-                this.contentHeight = level.height;
-                this.processCav.width = level.width;
-                this.processCav.height = level.height;
-                var backCtx = this.processCav.getContext("2d");
+            if ((this.contentWidth != width) || (this.contentHeight != height)) {
+                this.contentWidth = width;
+                this.contentHeight = height;
+                this.processCav.width = width;
+                this.processCav.height = height;
+                this.processCtx = this.processCav.getContext("2d");
                 /// create image
-                this.imgData = backCtx.createImageData(level.width, level.height);
+                this.imgData = this.processCtx.createImageData(width, height);
             }
+        }
+        /** render the level-background to an image */
+        setBackground(groundImage) {
             /// set pixels
-            this.imgData.data.set(level.groundImage);
+            this.imgData.data.set(groundImage);
+        }
+        drawImage(imageDate, width, height, posX, posY) {
+            var DAT = new ImageData(imageDate, width, height);
+            this.processCtx.putImageData(DAT, posX, posY);
         }
         /** copys a frame to the display */
-        drawImage(frame, posX, posY) {
+        drawFrame(frame, posX, posY) {
+            //   var UAC = new Uint8ClampedArray( frame.data, frame.width, frame.height);
+            //   this.drawImage(UAC, frame.width, frame.height, posX - frame.offsetX, posY - frame.offsetY);
+            //   return;
             var srcW = frame.width;
             var srcH = frame.height;
             var srcBuffer = frame.data;
@@ -4939,10 +4956,12 @@ var Lemmings;
         }
         /** draw everything to the display */
         redraw() {
-            var backCtx = this.processCav.getContext("2d");
             /// write image to context
-            backCtx.putImageData(this.imgData, 0, 0);
-            var ctx = this.outputCav.getContext("2d");
+            this.processCtx.putImageData(this.imgData, 0, 0);
+            if (this.outputCtx == null) {
+                this.outputCtx = this.outputCav.getContext("2d");
+            }
+            let ctx = this.outputCtx;
             //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;
             //@ts-ignore
@@ -4971,6 +4990,9 @@ var Lemmings;
 var Lemmings;
 (function (Lemmings) {
     class GameGui {
+        render(gameDisplay) {
+            // gameDisplay.drawImage();
+        }
     }
     Lemmings.GameGui = GameGui;
 })(Lemmings || (Lemmings = {}));
