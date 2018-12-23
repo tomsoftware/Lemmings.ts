@@ -11,15 +11,28 @@ module Lemmings {
         public mask: Int8Array;
 
 
-        constructor(width:number, height:number)
+        constructor(width:number, height:number, offsetX?:number, offsetY?:number)
         {
-            this.width = width;
-            this.height = height;
-            this.offsetX = Math.floor(width / 2);
-            this.offsetY = height;
+            this.width = Math.floor(width);
+            this.height = Math.floor(height);
 
-            this.data = new Uint8ClampedArray(width * height * 4);
-            this.mask = new Int8Array(width * height)
+            if (offsetX == null) {
+                this.offsetX = Math.floor(this.width / 2);
+            }
+            else {
+                this.offsetX = Math.floor(offsetX);
+            }
+            
+            if (offsetY == null) {
+                this.offsetY = this.height;
+            }
+            else {
+                this.offsetY = Math.floor(offsetY);
+            }
+
+            let pixCount =  this.width * this.height ;
+            this.data = new Uint8ClampedArray(pixCount * 4);
+            this.mask = new Int8Array(pixCount)
         }
         
      

@@ -399,36 +399,36 @@ var Lemmings;
         constructor(fr, colorPalette) {
             this.lemmingAnimation = []; //- Loockup table from ActionType -> this.animations(); First Element: left-move, Second: right-move
             this.colorPalette = colorPalette;
-            this.registerAnimation(Lemmings.SpriteType.WALKING, 1, fr, 2, 16, 10, 8); //- walking (r)
-            this.registerAnimation(Lemmings.SpriteType.JUMPING, 1, fr, 2, 16, 10, 1); //- jumping (r)
-            this.registerAnimation(Lemmings.SpriteType.WALKING, -1, fr, 2, 16, 10, 8); //- walking (l)
-            this.registerAnimation(Lemmings.SpriteType.JUMPING, -1, fr, 2, 16, 10, 1); //- jumping (l)
-            this.registerAnimation(Lemmings.SpriteType.DIGGING, 0, fr, 3, 16, 14, 16); //- digging
-            this.registerAnimation(Lemmings.SpriteType.CLIMBING, 1, fr, 2, 16, 12, 8); //- climbing (r)
-            this.registerAnimation(Lemmings.SpriteType.CLIMBING, -1, fr, 2, 16, 12, 8); //- climbing (l)
-            this.registerAnimation(Lemmings.SpriteType.DROWNING, 0, fr, 2, 16, 10, 16); //- drowning
-            this.registerAnimation(Lemmings.SpriteType.POSTCLIMBING, 1, fr, 2, 16, 12, 8); //- post-climb (r)
-            this.registerAnimation(Lemmings.SpriteType.POSTCLIMBING, -1, fr, 2, 16, 12, 8); //- post-climb (l)
-            this.registerAnimation(Lemmings.SpriteType.BUILDING, 1, fr, 3, 16, 13, 16); //- brick-laying (r)
-            this.registerAnimation(Lemmings.SpriteType.BUILDING, -1, fr, 3, 16, 13, 16); //- brick-laying (l)
-            this.registerAnimation(Lemmings.SpriteType.BASHING, 1, fr, 3, 16, 10, 32); //- bashing (r)
-            this.registerAnimation(Lemmings.SpriteType.BASHING, -1, fr, 3, 16, 10, 32); //- bashing (l)
-            this.registerAnimation(Lemmings.SpriteType.MINEING, 1, fr, 3, 16, 13, 24); //- mining (r)
-            this.registerAnimation(Lemmings.SpriteType.MINEING, -1, fr, 3, 16, 13, 24); //- mining (l)
-            this.registerAnimation(Lemmings.SpriteType.FALLING, 1, fr, 2, 16, 10, 4); //- falling (r)
-            this.registerAnimation(Lemmings.SpriteType.FALLING, -1, fr, 2, 16, 10, 4); //- falling (l)
-            this.registerAnimation(Lemmings.SpriteType.PREUMBRELLA, 1, fr, 3, 16, 16, 4); //- pre-umbrella (r)
-            this.registerAnimation(Lemmings.SpriteType.UMBRELLA, 1, fr, 3, 16, 16, 4, true); //- umbrella (r)
-            this.registerAnimation(Lemmings.SpriteType.PREUMBRELLA, -1, fr, 3, 16, 16, 4); //- pre-umbrella (l)
-            this.registerAnimation(Lemmings.SpriteType.UMBRELLA, -1, fr, 3, 16, 16, 4, true); //- umbrella (l)
-            this.registerAnimation(Lemmings.SpriteType.SPLATTING, 0, fr, 2, 16, 10, 16); //- splatting
-            this.registerAnimation(Lemmings.SpriteType.EXITING, 0, fr, 2, 16, 13, 8); //- exiting
-            this.registerAnimation(Lemmings.SpriteType.FRYING, 1, fr, 4, 16, 14, 14); //- fried
-            this.registerAnimation(Lemmings.SpriteType.BLOCKING, 0, fr, 2, 16, 10, 16); //- blocking
-            this.registerAnimation(Lemmings.SpriteType.SHRUGGING, 1, fr, 2, 16, 10, 8); //- shrugging (r)
-            this.registerAnimation(Lemmings.SpriteType.SHRUGGING, 0, fr, 2, 16, 10, 8); //- shrugging (l)
-            this.registerAnimation(Lemmings.SpriteType.OHNO, 0, fr, 2, 16, 10, 16); //- oh-no-ing
-            this.registerAnimation(Lemmings.SpriteType.EXPLODING, 0, fr, 3, 32, 32, 1); //- explosion
+            this.registerAnimation(Lemmings.SpriteType.WALKING, 1, fr, 2, 16, 10, -8, -10, 8); //- walking (r)
+            this.registerAnimation(Lemmings.SpriteType.JUMPING, 1, fr, 2, 16, 10, -8, -10, 1); //- jumping (r)
+            this.registerAnimation(Lemmings.SpriteType.WALKING, -1, fr, 2, 16, 10, -8, -10, 8); //- walking (l)
+            this.registerAnimation(Lemmings.SpriteType.JUMPING, -1, fr, 2, 16, 10, -8, -10, 1); //- jumping (l)
+            this.registerAnimation(Lemmings.SpriteType.DIGGING, 0, fr, 3, 16, 14, -8, -12, 16); //- digging
+            this.registerAnimation(Lemmings.SpriteType.CLIMBING, 1, fr, 2, 16, 12, -8, -10, 8); //- climbing (r)
+            this.registerAnimation(Lemmings.SpriteType.CLIMBING, -1, fr, 2, 16, 12, -8, -10, 8); //- climbing (l)
+            this.registerAnimation(Lemmings.SpriteType.DROWNING, 0, fr, 2, 16, 10, -8, -10, 16); //- drowning
+            this.registerAnimation(Lemmings.SpriteType.POSTCLIMBING, 1, fr, 2, 16, 12, -8, -10, 8); //- post-climb (r)
+            this.registerAnimation(Lemmings.SpriteType.POSTCLIMBING, -1, fr, 2, 16, 12, -8, -10, 8); //- post-climb (l)
+            this.registerAnimation(Lemmings.SpriteType.BUILDING, 1, fr, 3, 16, 13, -8, -10, 16); //- brick-laying (r)
+            this.registerAnimation(Lemmings.SpriteType.BUILDING, -1, fr, 3, 16, 13, -8, -10, 16); //- brick-laying (l)
+            this.registerAnimation(Lemmings.SpriteType.BASHING, 1, fr, 3, 16, 10, -8, -10, 32); //- bashing (r)
+            this.registerAnimation(Lemmings.SpriteType.BASHING, -1, fr, 3, 16, 10, -8, -10, 32); //- bashing (l)
+            this.registerAnimation(Lemmings.SpriteType.MINEING, 1, fr, 3, 16, 13, -8, -10, 24); //- mining (r)
+            this.registerAnimation(Lemmings.SpriteType.MINEING, -1, fr, 3, 16, 13, -8, -10, 24); //- mining (l)
+            this.registerAnimation(Lemmings.SpriteType.FALLING, 1, fr, 2, 16, 10, -8, -10, 4); //- falling (r)
+            this.registerAnimation(Lemmings.SpriteType.FALLING, -1, fr, 2, 16, 10, -8, -10, 4); //- falling (l)
+            this.registerAnimation(Lemmings.SpriteType.PREUMBRELLA, 1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (r)
+            this.registerAnimation(Lemmings.SpriteType.UMBRELLA, 1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (r)
+            this.registerAnimation(Lemmings.SpriteType.PREUMBRELLA, -1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (l)
+            this.registerAnimation(Lemmings.SpriteType.UMBRELLA, -1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (l)
+            this.registerAnimation(Lemmings.SpriteType.SPLATTING, 0, fr, 2, 16, 10, -8, -10, 16); //- splatting
+            this.registerAnimation(Lemmings.SpriteType.EXITING, 0, fr, 2, 16, 13, -8, -10, 8); //- exiting
+            this.registerAnimation(Lemmings.SpriteType.FRYING, 1, fr, 4, 16, 14, -8, -10, 14); //- fried
+            this.registerAnimation(Lemmings.SpriteType.BLOCKING, 0, fr, 2, 16, 10, -8, -10, 16); //- blocking
+            this.registerAnimation(Lemmings.SpriteType.SHRUGGING, 1, fr, 2, 16, 10, -8, -10, 8); //- shrugging (r)
+            this.registerAnimation(Lemmings.SpriteType.SHRUGGING, 0, fr, 2, 16, 10, -8, -10, 8); //- shrugging (l)
+            this.registerAnimation(Lemmings.SpriteType.OHNO, 0, fr, 2, 16, 10, -8, -10, 16); //- oh-no-ing
+            this.registerAnimation(Lemmings.SpriteType.EXPLODING, 0, fr, 3, 32, 32, -8, -10, 1); //- explosion
         }
         /** return the animation for a given animation type */
         getAnimation(state, right) {
@@ -437,10 +437,10 @@ var Lemmings;
         typeToIndex(state, dir) {
             return state * 2 + ((dir <= 0) ? 0 : 1);
         }
-        registerAnimation(state, dir, fr, bitsPerPixle, width, height, frames, usePingPong = false) {
+        registerAnimation(state, dir, fr, bitsPerPixle, width, height, offsetX, offsetY, frames, usePingPong = false) {
             //- load animation frames from main file (fr)
             var animation = new Lemmings.Animation();
-            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette);
+            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, -offsetX, -offsetY);
             animation.isPingPong = usePingPong;
             //- add animation to cache
             if (dir >= 0) {
@@ -844,11 +844,11 @@ var Lemmings;
             }
             return this.frames[frame];
         }
-        loadFromFile(fr, bitsPerPixle, width, height, frames, palette) {
+        loadFromFile(fr, bitsPerPixle, width, height, frames, palette, offsetX = null, offsetY = null) {
             for (let f = 0; f < frames; f++) {
                 let paletteImg = new Lemmings.PaletteImage(width, height);
                 paletteImg.processImage(fr, bitsPerPixle);
-                this.frames.push(paletteImg.createtFrame(palette));
+                this.frames.push(paletteImg.createtFrame(palette, offsetX, offsetY));
             }
         }
     }
@@ -953,17 +953,28 @@ var Lemmings;
 (function (Lemmings) {
     /** image frame with index color */
     class Frame {
-        constructor(width, height) {
+        constructor(width, height, offsetX, offsetY) {
             this.width = 0;
             this.height = 0;
             this.offsetX = 0;
             this.offsetY = 0;
-            this.width = width;
-            this.height = height;
-            this.offsetX = Math.floor(width / 2);
-            this.offsetY = height;
-            this.data = new Uint8ClampedArray(width * height * 4);
-            this.mask = new Int8Array(width * height);
+            this.width = Math.floor(width);
+            this.height = Math.floor(height);
+            if (offsetX == null) {
+                this.offsetX = Math.floor(this.width / 2);
+            }
+            else {
+                this.offsetX = Math.floor(offsetX);
+            }
+            if (offsetY == null) {
+                this.offsetY = this.height;
+            }
+            else {
+                this.offsetY = Math.floor(offsetY);
+            }
+            let pixCount = this.width * this.height;
+            this.data = new Uint8ClampedArray(pixCount * 4);
+            this.mask = new Int8Array(pixCount);
         }
         /** set the image to color=black / alpha=1 */
         clear() {
@@ -2318,11 +2329,11 @@ var Lemmings;
             return this.pixBuf;
         }
         /** convert to frame (collored image) */
-        createtFrame(palette) {
+        createtFrame(palette, offsetX, offsetY) {
             /// convert color-index data to pixle image
             let pixBuf = this.pixBuf;
             ;
-            let resultFrame = new Lemmings.Frame(this.width, this.height);
+            let resultFrame = new Lemmings.Frame(this.width, this.height, offsetX, offsetY);
             let imgBuf = resultFrame.data;
             let imgBufPos = 0;
             for (var i = 0; i < pixBuf.length; i++) {

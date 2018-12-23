@@ -18,11 +18,11 @@ module Lemmings {
         }
 
         /** convert to frame (collored image) */
-        public createtFrame(palette:ColorPalette):Frame {
+        public createtFrame(palette:ColorPalette,offsetX?:number, offsetY?:number):Frame {
           
             /// convert color-index data to pixle image
             let pixBuf = this.pixBuf;;
-            let resultFrame = new Frame(this.width, this.height);
+            let resultFrame = new Frame(this.width, this.height, offsetX, offsetY);
 
             let imgBuf = resultFrame.data;
             let imgBufPos = 0;
