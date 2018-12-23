@@ -11,7 +11,7 @@ module Lemmings {
         public img:Frame;
 
         /** the color palette stored in this file */
-        public groundPallet: ColorPallet = new ColorPallet();
+        public groundPalette: ColorPalette = new ColorPalette();
 
         constructor(vgaspecFile: BinaryReader) {
             this.read(vgaspecFile);
@@ -31,7 +31,7 @@ module Lemmings {
             fr = fc.getPart(0);
 
             /// read palette
-            this.readPalletes(fr, 0);
+            this.readPalettes(fr, 0);
 
             /// process the image
             this.readImage(fr, 40);
@@ -64,11 +64,11 @@ module Lemmings {
 
                     /// unpack image data to image-buffer
                     let fileReader = new BinaryReader(bitBuffer);
-                    let bitImage = new PaletteImageProcessor(width, chunkHeight);
+                    let bitImage = new PaletteImage(width, chunkHeight);
                     bitImage.processImage(fileReader, 3, 0);
                     bitImage.processTransparentByColorIndex(0);
 
-                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPallet, 0, startScanLine);
+                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPalette, 0, startScanLine);
 
                     startScanLine +=40;
                     if (startScanLine >= this.img.height) return;
@@ -111,14 +111,14 @@ module Lemmings {
 
 
           /** loads the palettes  */
-        private readPalletes(fr: BinaryReader, offset: number): void {
+        private readPalettes(fr: BinaryReader, offset: number): void {
 
             /// read the VGA palette index 0..8
             for (let i = 0; i < 8; i++) {
                 let r = fr.readByte() << 2;
                 let g = fr.readByte() << 2;
                 let b = fr.readByte() << 2;
-                this.groundPallet.setColorRGB(i, r, g, b);
+                this.groundPalette.setColorRGB(i, r, g, b);
             }
 
             if (fr.eof()) {

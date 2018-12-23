@@ -35,9 +35,9 @@ module Lemmings {
 
         public isSuperLemming = false;
 
-        public colorPallet:ColorPallet;
-        public groundPallet:ColorPallet;
-        public previewPallet:ColorPallet;
+        public colorPalette:ColorPalette;
+        public groundPalette:ColorPalette;
+        public previewPalette:ColorPalette;
 
 
 
@@ -84,10 +84,10 @@ module Lemmings {
         }
 
         /** set the color palettes for this level */
-        public setPalettes(colorPallet:ColorPallet, groundPallet:ColorPallet, previewPallet:ColorPallet) {
-            this.colorPallet = colorPallet;
-            this.groundPallet = groundPallet;
-            this.previewPallet = previewPallet;
+        public setPalettes(colorPalette:ColorPalette, groundPalette:ColorPalette, previewPalette:ColorPalette) {
+            this.colorPalette = colorPalette;
+            this.groundPalette = groundPalette;
+            this.previewPalette = previewPalette;
         }
         
 

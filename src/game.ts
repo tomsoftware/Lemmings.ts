@@ -39,7 +39,7 @@ module Lemmings {
                 .then(level => {
 
                     this.level = level;
-                    return this.gameResources.getLemmingsSprite(level.colorPallet);
+                    return this.gameResources.getLemmingsSprite(level.colorPalette);
                 })
                 .then(lemSprite => {
 

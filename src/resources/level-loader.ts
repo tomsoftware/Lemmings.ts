@@ -117,7 +117,7 @@
                         level.height = render.img.height;
 
                         level.setMapObjects(levelReader.objects, groundReader.getObjectImages());
-                        level.setPalettes(groundReader.colorPallet, groundReader.groundPallet, groundReader.previewPallet);
+                        level.setPalettes(groundReader.colorPalette, groundReader.groundPalette, groundReader.previewPalette);
 
                         resolve(level);
                         

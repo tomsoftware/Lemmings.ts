@@ -1,6 +1,6 @@
 /// <reference path="../file/binary-reader.ts"/>
 /// <reference path="../error-handler.ts"/>
-/// <reference path="./color-pallet.ts"/>
+/// <reference path="./color-palette.ts"/>
 /// <reference path="./object-image-info.ts"/>
 /// <reference path="./terrain-image-info.ts"/>
 
@@ -12,7 +12,7 @@ module Lemmings {
    * The ground file contains 
    *  - the meta data for the level-background-images (e.g mud and grass)
    *  - the meta data for the level-object-images (e.g. Exists and Traps)
-   *  - the color pallets to use
+   *  - the color palettes to use
    * The VGAGx file contains
    *  - the image data (color-indexed) of the level-background-images
    *  - the image data (color-indexed) of the level-object-images (multi frame/animation)
@@ -23,9 +23,9 @@ module Lemmings {
     private imgTerrar: TerrainImageInfo[] = new Array(64);
 
     /** the color palette stored in this file */
-    public groundPallet = new ColorPallet();
-    public colorPallet = new ColorPallet();
-    public previewPallet = new ColorPallet();
+    public groundPalette = new ColorPalette();
+    public colorPalette = new ColorPalette();
+    public previewPalette = new ColorPalette();
 
 
     private error = new ErrorHandler("GroundReader");
@@ -49,8 +49,8 @@ module Lemmings {
 
       this.readPalettes(groundFile, BYTE_SIZE_OF_OBJECTS + BYTE_SIZE_OF_TERRAIN);
 
-      this.readObjectImages(groundFile, 0, this.colorPallet);
-      this.readTerrainImages(groundFile, BYTE_SIZE_OF_OBJECTS, this.groundPallet);
+      this.readObjectImages(groundFile, 0, this.colorPalette);
+      this.readTerrainImages(groundFile, BYTE_SIZE_OF_OBJECTS, this.groundPalette);
 
       this.readImages(this.imgObjects, vgaObject);
       this.readImages(this.imgTerrar, vgaTerrar);
@@ -81,7 +81,7 @@ module Lemmings {
 
         for (let f = 0; f < img.frameCount; f++) {
 
-          var bitImage = new PaletteImageProcessor(img.width, img.height);
+          var bitImage = new PaletteImage(img.width, img.height);
 
           //// read image
           bitImage.processImage(vga, 3, filePos);
@@ -99,7 +99,7 @@ module Lemmings {
 
 
     /** loads the properties for object-images from the groundFile  */
-    private readObjectImages(frO: BinaryReader, offset: number, colorPalett: ColorPallet): void {
+    private readObjectImages(frO: BinaryReader, offset: number, colorPalett: ColorPalette): void {
 
       /// offset to the objects
       frO.setOffset(offset);
@@ -128,7 +128,7 @@ module Lemmings {
         img.unknown = frO.readWordBE();
         img.trap_sound_effect_id = frO.readByte();
 
-        img.pallet = colorPalett;
+        img.palette = colorPalett;
 
         if (frO.eof()) {
           this.error.log("readObjectImages() : unexpected end of file: " + frO.filename);
@@ -141,7 +141,7 @@ module Lemmings {
     }
 
     /** loads the properties for terrain-images  */
-    private readTerrainImages(frO: BinaryReader, offset: number, colorPallet: ColorPallet): void {
+    private readTerrainImages(frO: BinaryReader, offset: number, colorPalette: ColorPalette): void {
 
       frO.setOffset(offset);
 
@@ -153,7 +153,7 @@ module Lemmings {
         img.imageLoc = frO.readWordBE();
         img.maskLoc = frO.readWordBE();
         img.vgaLoc = frO.readWordBE();
-        img.pallet = colorPallet;
+        img.palette = colorPalette;
         img.frameCount = 1;
 
         if (frO.eof()) {
@@ -174,15 +174,15 @@ module Lemmings {
       /// jump over the EGA palettes
       frO.setOffset(offset + 3 * 8);
 
-      this.colorPallet.initLockedValues();
-      this.previewPallet.initLockedValues();
+      this.colorPalette.initLockedValues();
+      this.previewPalette.initLockedValues();
 
       /// read the VGA palette index 8..15
       for (let i = 0; i < 8; i++) {
         let r = frO.readByte() << 2;
         let g = frO.readByte() << 2;
         let b = frO.readByte() << 2;
-        this.groundPallet.setColorRGB(i, r, g, b);
+        this.groundPalette.setColorRGB(i, r, g, b);
       }
 
       /// read the VGA palette index 0..7
@@ -190,8 +190,8 @@ module Lemmings {
         let r = frO.readByte() << 2;
         let g = frO.readByte() << 2;
         let b = frO.readByte() << 2;
-        this.previewPallet.setColorRGB(i, r, g, b);
-        this.colorPallet.setColorRGB(i, r, g, b);
+        this.previewPalette.setColorRGB(i, r, g, b);
+        this.colorPalette.setColorRGB(i, r, g, b);
       }
 
       /// read the VGA palette index 8..15 for preview
@@ -199,7 +199,7 @@ module Lemmings {
         let r = frO.readByte() << 2;
         let g = frO.readByte() << 2;
         let b = frO.readByte() << 2;
-        this.previewPallet.setColorRGB(i, r, g, b);
+        this.previewPalette.setColorRGB(i, r, g, b);
       }
 
     }

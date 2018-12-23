@@ -1,6 +1,6 @@
 /// <reference path="../file/binary-reader.ts"/>
 /// <reference path="../error-handler.ts"/>
-/// <reference path="./color-pallet.ts"/>
+/// <reference path="./color-palette.ts"/>
 
 
 
@@ -38,8 +38,8 @@ module Lemmings {
         /** number of frames used by this image */
         public frameCount: number = 0;
 
-        /** the color pallete to be used for this image */
-        public pallet:ColorPallet = null;
+        /** the color palette to be used for this image */
+        public palette:ColorPalette = null;
 
     }
 }

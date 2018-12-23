@@ -42,7 +42,7 @@ module Lemmings {
             var w = srcImg.width;
             var h = srcImg.height;
 
-            var pal = srcImg.pallet;
+            var pal = srcImg.palette;
 
             var destX = destConfig.x;
             var destY = destConfig.y;

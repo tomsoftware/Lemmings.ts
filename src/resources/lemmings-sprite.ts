@@ -5,7 +5,7 @@ module Lemmings {
     export class LemmingsSprite {
 
         private lemmingAnimation:Animation[] = []; //- Loockup table from ActionType -> this.animations(); First Element: left-move, Second: right-move
-        private colorPallet:ColorPallet;
+        private colorPalette:ColorPalette;
 
         /** return the animation for a given animation type */
         public getAnimation(state:SpriteType, right:boolean) : Animation {
@@ -13,8 +13,8 @@ module Lemmings {
         }
 
 
-        constructor(fr:BinaryReader, colorPallet:ColorPallet) {
-            this.colorPallet = colorPallet;
+        constructor(fr:BinaryReader, colorPalette:ColorPalette) {
+            this.colorPalette = colorPalette;
 
             this.registerAnimation(SpriteType.WALKING,       1, fr, 2, 16, 10, 8); //- walking (r)
             this.registerAnimation(SpriteType.JUMPING,       1, fr, 2, 16, 10, 1); //- jumping (r)
@@ -59,7 +59,7 @@ module Lemmings {
             //- load animation frames from main file (fr)
             var animation = new Animation();
 
-            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPallet);
+            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette);
             animation.isPingPong = usePingPong;
 
             //- add animation to cache

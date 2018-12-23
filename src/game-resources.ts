@@ -42,13 +42,13 @@ module Lemmings {
 
 
         /** return the Lemings animations */
-        public getLemmingsSprite(colorPallet:ColorPallet): Promise<LemmingsSprite> {
+        public getLemmingsSprite(colorPalette:ColorPalette): Promise<LemmingsSprite> {
 
             return new Promise<LemmingsSprite>((resolve, reject) => {
 
                 this.getMainDat().then(container => {
                     
-                    let sprite = new LemmingsSprite(container.getPart(0), colorPallet);
+                    let sprite = new LemmingsSprite(container.getPart(0), colorPalette);
 
                     resolve(sprite);
                 });
@@ -56,12 +56,12 @@ module Lemmings {
         }
 
 
-        public getSkillPanelSprite(colorPallet:ColorPallet): Promise<SkillPanelSprites> {
+        public getSkillPanelSprite(colorPalette:ColorPalette): Promise<SkillPanelSprites> {
             return new Promise<SkillPanelSprites>((resolve, reject) => {
 
                 this.getMainDat().then(container => {
 
-                    resolve(new SkillPanelSprites(container.getPart(2), container.getPart(6), colorPallet));
+                    resolve(new SkillPanelSprites(container.getPart(2), container.getPart(6), colorPalette));
                 });
             });
         }

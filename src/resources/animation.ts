@@ -37,14 +37,12 @@ module Lemmings {
             
         }
 
-        public loadFromFile(fr: BinaryReader, bitsPerPixle: number, width: number, height: number, frames: number, pallet:ColorPallet) {
+        public loadFromFile(fr: BinaryReader, bitsPerPixle: number, width: number, height: number, frames: number, palette:ColorPalette) {
 
             for (let f = 0; f < frames; f++) {
-
-                let frame = new Frame(width, height);
-                frame.readFromFile(fr, bitsPerPixle, pallet);
-
-                this.frames.push(frame);
+                let paletteImg = new PaletteImage(width, height);
+                paletteImg.processImage(fr, bitsPerPixle);
+                this.frames.push(paletteImg.createtFrame(palette));
             }
 
         }

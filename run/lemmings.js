@@ -63,18 +63,18 @@ var Lemmings;
             return this.mainDat;
         }
         /** return the Lemings animations */
-        getLemmingsSprite(colorPallet) {
+        getLemmingsSprite(colorPalette) {
             return new Promise((resolve, reject) => {
                 this.getMainDat().then(container => {
-                    let sprite = new Lemmings.LemmingsSprite(container.getPart(0), colorPallet);
+                    let sprite = new Lemmings.LemmingsSprite(container.getPart(0), colorPalette);
                     resolve(sprite);
                 });
             });
         }
-        getSkillPanelSprite(colorPallet) {
+        getSkillPanelSprite(colorPalette) {
             return new Promise((resolve, reject) => {
                 this.getMainDat().then(container => {
-                    resolve(new Lemmings.SkillPanelSprites(container.getPart(2), container.getPart(6), colorPallet));
+                    resolve(new Lemmings.SkillPanelSprites(container.getPart(2), container.getPart(6), colorPalette));
                 });
             });
         }
@@ -228,7 +228,7 @@ var Lemmings;
                 this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
                     .then(level => {
                     this.level = level;
-                    return this.gameResources.getLemmingsSprite(level.colorPallet);
+                    return this.gameResources.getLemmingsSprite(level.colorPalette);
                 })
                     .then(lemSprite => {
                     this.lemmingManager = new Lemmings.LemmingManager(lemSprite);
@@ -396,9 +396,9 @@ var Lemmings;
 (function (Lemmings) {
     /** manage the in-game Lemmings animation sprite */
     class LemmingsSprite {
-        constructor(fr, colorPallet) {
+        constructor(fr, colorPalette) {
             this.lemmingAnimation = []; //- Loockup table from ActionType -> this.animations(); First Element: left-move, Second: right-move
-            this.colorPallet = colorPallet;
+            this.colorPalette = colorPalette;
             this.registerAnimation(Lemmings.SpriteType.WALKING, 1, fr, 2, 16, 10, 8); //- walking (r)
             this.registerAnimation(Lemmings.SpriteType.JUMPING, 1, fr, 2, 16, 10, 1); //- jumping (r)
             this.registerAnimation(Lemmings.SpriteType.WALKING, -1, fr, 2, 16, 10, 8); //- walking (l)
@@ -440,7 +440,7 @@ var Lemmings;
         registerAnimation(state, dir, fr, bitsPerPixle, width, height, frames, usePingPong = false) {
             //- load animation frames from main file (fr)
             var animation = new Lemmings.Animation();
-            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPallet);
+            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette);
             animation.isPingPong = usePingPong;
             //- add animation to cache
             if (dir >= 0) {
@@ -844,11 +844,11 @@ var Lemmings;
             }
             return this.frames[frame];
         }
-        loadFromFile(fr, bitsPerPixle, width, height, frames, pallet) {
+        loadFromFile(fr, bitsPerPixle, width, height, frames, palette) {
             for (let f = 0; f < frames; f++) {
-                let frame = new Lemmings.Frame(width, height);
-                frame.readFromFile(fr, bitsPerPixle, pallet);
-                this.frames.push(frame);
+                let paletteImg = new Lemmings.PaletteImage(width, height);
+                paletteImg.processImage(fr, bitsPerPixle);
+                this.frames.push(paletteImg.createtFrame(palette));
             }
         }
     }
@@ -965,31 +965,6 @@ var Lemmings;
             this.data = new Uint8ClampedArray(width * height * 4);
             this.mask = new Int8Array(width * height);
         }
-        readFromFile(fr, bitsPerPixle, pallet) {
-            let paletImg = new Lemmings.PaletteImageProcessor(this.width, this.height);
-            paletImg.processImage(fr, bitsPerPixle);
-            let pixBuf = paletImg.getImageBuffer();
-            let pixCount = pixBuf.length;
-            /// convert color-index data to pixle image
-            let imgBuf = this.data;
-            let imgBufPos = 0;
-            for (var i = 0; i < pixCount; i++) {
-                let colorIndex = pixBuf[i];
-                if (colorIndex == 0) {
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                }
-                else {
-                    let color = pallet.getColor(colorIndex);
-                    imgBuf[imgBufPos++] = color[0];
-                    imgBuf[imgBufPos++] = color[1];
-                    imgBuf[imgBufPos++] = color[2];
-                    imgBuf[imgBufPos++] = 255;
-                }
-            }
-        }
         /** set the image to color=black / alpha=1 */
         clear() {
             let buffer32 = new Uint32Array(this.data.buffer);
@@ -1001,19 +976,18 @@ var Lemmings;
             //buffer32[len] = 0xFFCBC0FF;
             this.mask[len] = 0;
         }
-        /** drwa a palette Image to this frame */
-        drawPaletteImage(srcImg, srcWidth, srcHeight, pallet, left, top) {
+        /** draw a palette Image to this frame */
+        drawPaletteImage(srcImg, srcWidth, srcHeight, palette, left, top) {
             let pixIndex = 0;
             for (let y = 0; y < srcHeight; y++) {
                 for (let x = 0; x < srcWidth; x++) {
                     let colorIndex = srcImg[pixIndex];
                     pixIndex++;
                     if ((colorIndex & 0x80) > 0) {
-                        //this.setPixel(x+left, y+top, pallet.data[2]);
                         this.clearPixel(x + left, y + top);
                     }
                     else {
-                        this.setPixel(x + left, y + top, pallet.data[colorIndex]);
+                        this.setPixel(x + left, y + top, palette.data[colorIndex]);
                     }
                 }
             }
@@ -1083,7 +1057,7 @@ var Lemmings;
             var pixBuf = srcImg.frames[frameIndex];
             var w = srcImg.width;
             var h = srcImg.height;
-            var pal = srcImg.pallet;
+            var pal = srcImg.palette;
             var destX = destConfig.x;
             var destY = destConfig.y;
             var upsideDown = destConfig.isUpsideDown;
@@ -1235,7 +1209,7 @@ var Lemmings;
                     level.width = render.img.width;
                     level.height = render.img.height;
                     level.setMapObjects(levelReader.objects, groundReader.getObjectImages());
-                    level.setPalettes(groundReader.colorPallet, groundReader.groundPallet, groundReader.previewPallet);
+                    level.setPalettes(groundReader.colorPalette, groundReader.groundPalette, groundReader.previewPalette);
                     resolve(level);
                 });
             });
@@ -1298,10 +1272,10 @@ var Lemmings;
             this.groundImage = new Uint8ClampedArray(img);
         }
         /** set the color palettes for this level */
-        setPalettes(colorPallet, groundPallet, previewPallet) {
-            this.colorPallet = colorPallet;
-            this.groundPallet = groundPallet;
-            this.previewPallet = previewPallet;
+        setPalettes(colorPalette, groundPalette, previewPalette) {
+            this.colorPalette = colorPalette;
+            this.groundPalette = groundPalette;
+            this.previewPalette = previewPalette;
         }
         /** render ground to display */
         render(gameDisplay) {
@@ -1314,26 +1288,27 @@ var Lemmings;
 (function (Lemmings) {
     /** manage the sprites need for the game skill panel */
     class SkillPanelSprites {
-        constructor(fr2, fr6, colorPallet) {
+        constructor(fr2, fr6, colorPalette) {
             /// read skill panel
-            let panelSprite = new Lemmings.Frame(320, 40);
-            panelSprite.readFromFile(fr6, 4, colorPallet);
+            let paletteImg = new Lemmings.PaletteImage(320, 40);
+            paletteImg.processImage(fr6, 4);
+            this.panelSprite = paletteImg.createtFrame(colorPalette);
             /// read green panel letters
             let letters = ["%", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
             for (let l = 0; l < letters.length; l++) {
-                let frame = new Lemmings.Frame(8, 16);
-                frame.readFromFile(fr6, 3, colorPallet);
-                this.letterSprite[letters[l]] = frame;
+                let paletteImg = new Lemmings.PaletteImage(8, 16);
+                paletteImg.processImage(fr6, 3);
+                this.letterSprite[letters[l]] = paletteImg.createtFrame(colorPalette);
             }
             /// read panel skill-count number letters
             fr2.setOffset(0x1900);
             for (let i = 0; i < 10; i++) {
-                let sprite = new Lemmings.Frame(8, 16);
-                sprite.readFromFile(fr2, 2, colorPallet);
-                this.numberSpriteRight.push(sprite);
-                sprite = new Lemmings.Frame(8, 16);
-                sprite.readFromFile(fr2, 2, colorPallet);
-                this.numberSpriteLeft.push(sprite);
+                let paletteImgRight = new Lemmings.PaletteImage(8, 16);
+                paletteImgRight.processImage(fr2, 2);
+                this.numberSpriteRight.push(paletteImgRight.createtFrame(colorPalette));
+                let paletteImgLeft = new Lemmings.PaletteImage(8, 16);
+                paletteImgLeft.processImage(fr2, 2);
+                this.numberSpriteLeft.push(paletteImgLeft.createtFrame(colorPalette));
             }
         }
         /** return the sprite for the skill panel */
@@ -1822,13 +1797,13 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    /** The ColorPallet Class provides a Collor Pallet of the game.
+    /** The ColorPalette Class provides a Collor Palette of the game.
      *  use:
      *                           INDEX   RGBA
-     * read:  ColorPallet.data[0 ... 16][0..3];
-     * write: ColorPallet.setColor(INT index, INT r, INT g, INT b, BOOL locked)
+     * read:  ColorPalette.data[0 ... 16][0..3];
+     * write: ColorPalette.setColor(INT index, INT r, INT g, INT b, BOOL locked)
      */
-    class ColorPallet {
+    class ColorPalette {
         constructor() {
             this.data = new Array(16); //- 16 colors
             this.isColorLock = new Int8Array(16);
@@ -1871,11 +1846,11 @@ var Lemmings;
             this.setColorInt(7, 0xe08020); // this color is set by the level
         }
     }
-    Lemmings.ColorPallet = ColorPallet;
+    Lemmings.ColorPalette = ColorPalette;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts"/>
 /// <reference path="../error-handler.ts"/>
-/// <reference path="./color-pallet.ts"/>
+/// <reference path="./color-palette.ts"/>
 var Lemmings;
 (function (Lemmings) {
     /** base image information of objects */
@@ -1900,8 +1875,8 @@ var Lemmings;
             this.frameDataSize = 0;
             /** number of frames used by this image */
             this.frameCount = 0;
-            /** the color pallete to be used for this image */
-            this.pallet = null;
+            /** the color palette to be used for this image */
+            this.palette = null;
         }
     }
     Lemmings.BaseImageInfo = BaseImageInfo;
@@ -1957,7 +1932,7 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts"/>
 /// <reference path="../error-handler.ts"/>
-/// <reference path="./color-pallet.ts"/>
+/// <reference path="./color-palette.ts"/>
 /// <reference path="./object-image-info.ts"/>
 /// <reference path="./terrain-image-info.ts"/>
 var Lemmings;
@@ -1967,7 +1942,7 @@ var Lemmings;
      * The ground file contains
      *  - the meta data for the level-background-images (e.g mud and grass)
      *  - the meta data for the level-object-images (e.g. Exists and Traps)
-     *  - the color pallets to use
+     *  - the color palettes to use
      * The VGAGx file contains
      *  - the image data (color-indexed) of the level-background-images
      *  - the image data (color-indexed) of the level-object-images (multi frame/animation)
@@ -1981,9 +1956,9 @@ var Lemmings;
             this.imgObjects = new Array(16);
             this.imgTerrar = new Array(64);
             /** the color palette stored in this file */
-            this.groundPallet = new Lemmings.ColorPallet();
-            this.colorPallet = new Lemmings.ColorPallet();
-            this.previewPallet = new Lemmings.ColorPallet();
+            this.groundPalette = new Lemmings.ColorPalette();
+            this.colorPalette = new Lemmings.ColorPalette();
+            this.previewPalette = new Lemmings.ColorPalette();
             this.error = new Lemmings.ErrorHandler("GroundReader");
             if (groundFile.length != 1056) {
                 this.error.log("groundFile " + groundFile.filename + " has wrong size: " + groundFile.length);
@@ -1992,8 +1967,8 @@ var Lemmings;
             let BYTE_SIZE_OF_OBJECTS = 28 * 16;
             let BYTE_SIZE_OF_TERRAIN = 64 * 8;
             this.readPalettes(groundFile, BYTE_SIZE_OF_OBJECTS + BYTE_SIZE_OF_TERRAIN);
-            this.readObjectImages(groundFile, 0, this.colorPallet);
-            this.readTerrainImages(groundFile, BYTE_SIZE_OF_OBJECTS, this.groundPallet);
+            this.readObjectImages(groundFile, 0, this.colorPalette);
+            this.readTerrainImages(groundFile, BYTE_SIZE_OF_OBJECTS, this.groundPalette);
             this.readImages(this.imgObjects, vgaObject);
             this.readImages(this.imgTerrar, vgaTerrar);
         }
@@ -2011,7 +1986,7 @@ var Lemmings;
                 img.frames = [];
                 let filePos = img.imageLoc;
                 for (let f = 0; f < img.frameCount; f++) {
-                    var bitImage = new Lemmings.PaletteImageProcessor(img.width, img.height);
+                    var bitImage = new Lemmings.PaletteImage(img.width, img.height);
                     //// read image
                     bitImage.processImage(vga, 3, filePos);
                     bitImage.processTransparentData(vga, img.maskLoc);
@@ -2046,7 +2021,7 @@ var Lemmings;
                 img.preview_image_index = frO.readWordBE();
                 img.unknown = frO.readWordBE();
                 img.trap_sound_effect_id = frO.readByte();
-                img.pallet = colorPalett;
+                img.palette = colorPalett;
                 if (frO.eof()) {
                     this.error.log("readObjectImages() : unexpected end of file: " + frO.filename);
                     return;
@@ -2056,7 +2031,7 @@ var Lemmings;
             }
         }
         /** loads the properties for terrain-images  */
-        readTerrainImages(frO, offset, colorPallet) {
+        readTerrainImages(frO, offset, colorPalette) {
             frO.setOffset(offset);
             for (let i = 0; i < 64; i++) {
                 let img = new Lemmings.TerrainImageInfo();
@@ -2065,7 +2040,7 @@ var Lemmings;
                 img.imageLoc = frO.readWordBE();
                 img.maskLoc = frO.readWordBE();
                 img.vgaLoc = frO.readWordBE();
-                img.pallet = colorPallet;
+                img.palette = colorPalette;
                 img.frameCount = 1;
                 if (frO.eof()) {
                     this.error.log("readTerrainImages() : unexpected end of file! " + frO.filename);
@@ -2079,29 +2054,29 @@ var Lemmings;
         readPalettes(frO, offset) {
             /// jump over the EGA palettes
             frO.setOffset(offset + 3 * 8);
-            this.colorPallet.initLockedValues();
-            this.previewPallet.initLockedValues();
+            this.colorPalette.initLockedValues();
+            this.previewPalette.initLockedValues();
             /// read the VGA palette index 8..15
             for (let i = 0; i < 8; i++) {
                 let r = frO.readByte() << 2;
                 let g = frO.readByte() << 2;
                 let b = frO.readByte() << 2;
-                this.groundPallet.setColorRGB(i, r, g, b);
+                this.groundPalette.setColorRGB(i, r, g, b);
             }
             /// read the VGA palette index 0..7
             for (var i = 0; i < 8; i++) {
                 let r = frO.readByte() << 2;
                 let g = frO.readByte() << 2;
                 let b = frO.readByte() << 2;
-                this.previewPallet.setColorRGB(i, r, g, b);
-                this.colorPallet.setColorRGB(i, r, g, b);
+                this.previewPalette.setColorRGB(i, r, g, b);
+                this.colorPalette.setColorRGB(i, r, g, b);
             }
             /// read the VGA palette index 8..15 for preview
             for (let i = 8; i < 16; i++) {
                 let r = frO.readByte() << 2;
                 let g = frO.readByte() << 2;
                 let b = frO.readByte() << 2;
-                this.previewPallet.setColorRGB(i, r, g, b);
+                this.previewPalette.setColorRGB(i, r, g, b);
             }
         }
     }
@@ -2331,7 +2306,7 @@ var Lemmings;
     /** convert the lemmings bit plain image format to real color-index-image data.
      * The lemmings file format uses multiple plains for every bit of color.
      * E.g. Save all lowest bits of the image in a chunk then all second bits... */
-    class PaletteImageProcessor {
+    class PaletteImage {
         constructor(width, height) {
             this.width = width;
             this.height = height;
@@ -2341,6 +2316,32 @@ var Lemmings;
         /** return the image buffer */
         getImageBuffer() {
             return this.pixBuf;
+        }
+        /** convert to frame (collored image) */
+        createtFrame(palette) {
+            /// convert color-index data to pixle image
+            let pixBuf = this.pixBuf;
+            ;
+            let resultFrame = new Lemmings.Frame(this.width, this.height);
+            let imgBuf = resultFrame.data;
+            let imgBufPos = 0;
+            for (var i = 0; i < pixBuf.length; i++) {
+                let colorIndex = pixBuf[i];
+                if (colorIndex == 0) {
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                }
+                else {
+                    let color = palette.getColor(colorIndex);
+                    imgBuf[imgBufPos++] = color[0];
+                    imgBuf[imgBufPos++] = color[1];
+                    imgBuf[imgBufPos++] = color[2];
+                    imgBuf[imgBufPos++] = 255;
+                }
+            }
+            return resultFrame;
         }
         /** convert the multi-bit-plain image to image */
         processImage(src, bitsPerPixle = 3, startPos) {
@@ -2403,7 +2404,7 @@ var Lemmings;
             this.pixBuf = pixBuf;
         }
     }
-    Lemmings.PaletteImageProcessor = PaletteImageProcessor;
+    Lemmings.PaletteImage = PaletteImage;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts" />
 /// <reference path="../file/file-container.ts" />
@@ -2415,7 +2416,7 @@ var Lemmings;
             this.levelProperties = [];
             this.error = new Lemmings.ErrorHandler("VgaspecReader");
             /** the color palette stored in this file */
-            this.groundPallet = new Lemmings.ColorPallet();
+            this.groundPalette = new Lemmings.ColorPalette();
             this.read(vgaspecFile);
         }
         read(fr) {
@@ -2428,7 +2429,7 @@ var Lemmings;
             /// we only need the first part
             fr = fc.getPart(0);
             /// read palette
-            this.readPalletes(fr, 0);
+            this.readPalettes(fr, 0);
             /// process the image
             this.readImage(fr, 40);
         }
@@ -2449,10 +2450,10 @@ var Lemmings;
                     /// end of chunk
                     /// unpack image data to image-buffer
                     let fileReader = new Lemmings.BinaryReader(bitBuffer);
-                    let bitImage = new Lemmings.PaletteImageProcessor(width, chunkHeight);
+                    let bitImage = new Lemmings.PaletteImage(width, chunkHeight);
                     bitImage.processImage(fileReader, 3, 0);
                     bitImage.processTransparentByColorIndex(0);
-                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPallet, 0, startScanLine);
+                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPalette, 0, startScanLine);
                     startScanLine += 40;
                     if (startScanLine >= this.img.height)
                         return;
@@ -2486,13 +2487,13 @@ var Lemmings;
             }
         }
         /** loads the palettes  */
-        readPalletes(fr, offset) {
+        readPalettes(fr, offset) {
             /// read the VGA palette index 0..8
             for (let i = 0; i < 8; i++) {
                 let r = fr.readByte() << 2;
                 let g = fr.readByte() << 2;
                 let b = fr.readByte() << 2;
-                this.groundPallet.setColorRGB(i, r, g, b);
+                this.groundPalette.setColorRGB(i, r, g, b);
             }
             if (fr.eof()) {
                 this.error.log("readPalettes() : unexpected end of file!: " + fr.filename);

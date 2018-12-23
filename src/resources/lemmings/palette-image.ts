@@ -3,9 +3,8 @@ module Lemmings {
     /** convert the lemmings bit plain image format to real color-index-image data. 
      * The lemmings file format uses multiple plains for every bit of color.
      * E.g. Save all lowest bits of the image in a chunk then all second bits... */
-    export class PaletteImageProcessor {
+    export class PaletteImage {
         private pixBuf:Uint8Array;
-
 
         constructor(private width: number, private height: number) {
             let pixCount = this.width * this.height;
@@ -16,6 +15,40 @@ module Lemmings {
         /** return the image buffer */
         public getImageBuffer():Uint8Array {
             return this.pixBuf;
+        }
+
+        /** convert to frame (collored image) */
+        public createtFrame(palette:ColorPalette):Frame {
+          
+            /// convert color-index data to pixle image
+            let pixBuf = this.pixBuf;;
+            let resultFrame = new Frame(this.width, this.height);
+
+            let imgBuf = resultFrame.data;
+            let imgBufPos = 0;
+
+            for (var i = 0; i < pixBuf.length; i++) {
+                let colorIndex = pixBuf[i];
+                
+                if (colorIndex == 0) {
+                    
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                }
+                else {
+                    let color = palette.getColor(colorIndex);
+
+                    imgBuf[imgBufPos++] = color[0];
+                    imgBuf[imgBufPos++] = color[1];
+                    imgBuf[imgBufPos++] = color[2];
+                    imgBuf[imgBufPos++] = 255;
+
+                }
+            }
+
+            return resultFrame;
         }
 
 

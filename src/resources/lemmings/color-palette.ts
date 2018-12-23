@@ -1,12 +1,12 @@
 module Lemmings {
 
-	/** The ColorPallet Class provides a Collor Pallet of the game.
+	/** The ColorPalette Class provides a Collor Palette of the game.
 	 *  use:
 	 *                           INDEX   RGBA
-	 * read:  ColorPallet.data[0 ... 16][0..3];
-	 * write: ColorPallet.setColor(INT index, INT r, INT g, INT b, BOOL locked)
+	 * read:  ColorPalette.data[0 ... 16][0..3];
+	 * write: ColorPalette.setColor(INT index, INT r, INT g, INT b, BOOL locked)
 	 */
-	export class ColorPallet {
+	export class ColorPalette {
 
 		public data = new Array(16); //- 16 colors
 		private isColorLock = new Int8Array(16);

@@ -22,41 +22,8 @@ module Lemmings {
             this.mask = new Int8Array(width * height)
         }
         
+     
 
-        public readFromFile(fr:BinaryReader, bitsPerPixle: number, pallet:ColorPallet) {
-
-            let paletImg = new PaletteImageProcessor(this.width, this.height);
-            paletImg.processImage(fr, bitsPerPixle);
-            let pixBuf = paletImg.getImageBuffer();
-            
-            let pixCount = pixBuf.length;
-
-            /// convert color-index data to pixle image
-            let imgBuf = this.data;
-            let imgBufPos = 0;
-
-            for (var i = 0; i < pixCount; i++) {
-                let colorIndex = pixBuf[i];
-                
-                if (colorIndex == 0) {
-                    
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                }
-                else {
-                    let color = pallet.getColor(colorIndex);
-
-                    imgBuf[imgBufPos++] = color[0];
-                    imgBuf[imgBufPos++] = color[1];
-                    imgBuf[imgBufPos++] = color[2];
-                    imgBuf[imgBufPos++] = 255;
-
-                }
-            }
-
-        }
 
         /** set the image to color=black / alpha=1 */
         public clear() {
@@ -73,8 +40,8 @@ module Lemmings {
                 this.mask[len] = 0;
         }
 
-        /** drwa a palette Image to this frame */
-        public drawPaletteImage(srcImg: Uint8Array, srcWidth:number, srcHeight:number, pallet:ColorPallet, left:number, top:number){
+        /** draw a palette Image to this frame */
+        public drawPaletteImage(srcImg: Uint8Array, srcWidth:number, srcHeight:number, palette:ColorPalette, left:number, top:number){
 
             let pixIndex = 0;
 
@@ -84,10 +51,9 @@ module Lemmings {
                     pixIndex++;
 
                     if ((colorIndex & 0x80) > 0) {
-                        //this.setPixel(x+left, y+top, pallet.data[2]);
                         this.clearPixel(x+left, y+top);
                     } else {
-                        this.setPixel(x+left, y+top, pallet.data[colorIndex]);
+                        this.setPixel(x+left, y+top, palette.data[colorIndex]);
                     }
                     
                 }
@@ -95,8 +61,6 @@ module Lemmings {
 
         }
 
-
-        
         /** set the color of a pixle */
         public setPixel(x: number, y:number, color:number, noOverwrite:boolean = false, onlyOverwrite:boolean=false) {
             
