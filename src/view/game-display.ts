@@ -4,7 +4,7 @@ module Lemmings {
     export class GameDisplay {
 
         private outputCav: HTMLCanvasElement;
-        private outputCtx: CanvasRenderingContext2D;
+      // private outputCtx: CanvasRenderingContext2D;
         private processCav: HTMLCanvasElement;
         private processCtx: CanvasRenderingContext2D;
         private viewPoint:ViewPoint = new ViewPoint(0, 0, 1);
@@ -48,6 +48,7 @@ module Lemmings {
                 /// create image
                 this.imgData = this.processCtx.createImageData(width, height);
             }
+         
         }
 
 
@@ -59,18 +60,11 @@ module Lemmings {
         }
 
 
-        public drawImage(imageDate: Uint8ClampedArray, width:number, height:number, posX:number, posY:number) {
-  
-            var DAT = new ImageData(imageDate, width, height);
-            this.processCtx.putImageData( DAT , posX, posY );
-        }
 
 
         /** copys a frame to the display */
         public drawFrame(frame:Frame, posX:number, posY:number){
-         //   var UAC = new Uint8ClampedArray( frame.data, frame.width, frame.height);
-         //   this.drawImage(UAC, frame.width, frame.height, posX - frame.offsetX, posY - frame.offsetY);
-         //   return;
+
             var srcW = frame.width;
             var srcH = frame.height;
             var srcBuffer = frame.data;
@@ -120,13 +114,11 @@ module Lemmings {
         public redraw() {
 
             /// write image to context
+           
             this.processCtx.putImageData(this.imgData, 0, 0);
-
-            if (this.outputCtx == null) {
-                this.outputCtx = this.outputCav.getContext("2d");
-            }
-            let ctx = this.outputCtx;
-
+            
+            let  ctx = this.outputCav.getContext("2d");
+        
             //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;
             //@ts-ignore
@@ -152,7 +144,7 @@ module Lemmings {
             }
 
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
-            ctx.drawImage(this.processCav, viewX, viewY, dW, dH, 0, 0, dW * viewScale, dH * viewScale);
+            ctx.drawImage(this.processCav, viewX, viewY, dW, dH, 0, 0, Math.floor(dW * viewScale), Math.floor(dH * viewScale));
 
         }
     }

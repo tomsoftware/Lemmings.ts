@@ -8,7 +8,7 @@ module Lemmings {
     export class VgaspecReader {
         private levelProperties: LevelProperties[] = []
         private error = new ErrorHandler("VgaspecReader");
-        public img:GroundImage;
+        public img:Frame;
 
         /** the color palette stored in this file */
         public groundPallet: ColorPallet = new ColorPallet();
@@ -46,17 +46,14 @@ module Lemmings {
             let chunkHeight = 40;
             let chunkCount = 4;
 
-            this.img = new GroundImage(width, chunkHeight * chunkCount);
-            this.img.clearImageArray();
+            this.img = new Frame(width, chunkHeight * chunkCount);
+            this.img.clear();
 
             let startScanLine = 0;
-
 
             let pixelCount = width * chunkHeight;
             let bitBuffer = new Uint8Array(pixelCount);
             let bitBufferPos:number = 0;
-
-
 
 
             while(!fr.eof()) {
@@ -66,11 +63,12 @@ module Lemmings {
                     /// end of chunk
 
                     /// unpack image data to image-buffer
-                    var bitImage = new BitPlainImage(new BinaryReader(bitBuffer), width, chunkHeight);
-                    bitImage.processImage(0);
+                    let fileReader = new BinaryReader(bitBuffer);
+                    let bitImage = new PaletteImageProcessor(width, chunkHeight);
+                    bitImage.processImage(fileReader, 3, 0);
                     bitImage.processTransparentByColorIndex(0);
 
-                    this.img.drawPalettImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPallet, 0, startScanLine);
+                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPallet, 0, startScanLine);
 
                     startScanLine +=40;
                     if (startScanLine >= this.img.height) return;

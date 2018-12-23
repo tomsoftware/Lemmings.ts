@@ -40,7 +40,11 @@ module Lemmings {
         public loadFromFile(fr: BinaryReader, bitsPerPixle: number, width: number, height: number, frames: number, pallet:ColorPallet) {
 
             for (let f = 0; f < frames; f++) {
-                this.frames.push(new Frame(width, height, fr, bitsPerPixle, pallet));
+
+                let frame = new Frame(width, height);
+                frame.readFromFile(fr, bitsPerPixle, pallet);
+
+                this.frames.push(frame);
             }
 
         }

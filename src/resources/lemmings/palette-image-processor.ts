@@ -1,39 +1,40 @@
 module Lemmings {
 
-    /** convert the lemmings bit plain image format to real image data. 
+    /** convert the lemmings bit plain image format to real color-index-image data. 
      * The lemmings file format uses multiple plains for every bit of color.
      * E.g. Save all lowest bits of the image in a chunk then all second bits... */
-    export class BitPlainImage {
+    export class PaletteImageProcessor {
         private pixBuf:Uint8Array;
 
 
-        constructor(private reader: BinaryReader, private width: number, private height: number) {
+        constructor(private width: number, private height: number) {
             let pixCount = this.width * this.height;
             this.pixBuf = new Uint8Array(pixCount);
         }
 
 
         /** return the image buffer */
-        public getImageBuffer() {
+        public getImageBuffer():Uint8Array {
             return this.pixBuf;
         }
 
 
         /** convert the multi-bit-plain image to image */
-        public processImage(startPos: number = 0) {
+        public processImage(src: BinaryReader,  bitsPerPixle: number=3, startPos?: number) {
 
-            let src = this.reader;
             let pixBuf = this.pixBuf;
             let pixCount = pixBuf.length;
             let bitBufLen = 0;
             let bitBuf = 0;
 
-
+            if (startPos != null){
+                src.setOffset(startPos);
+            }
+            
             /// read image
-            src.setOffset(startPos);
 
             //-  3 bit per Pixel - bits of byte are stored separately
-            for (var i = 0; i < 3; i++) {
+            for (var i = 0; i < bitsPerPixle; i++) {
 
                 for (var p = 0; p < pixCount; p++) {
 
@@ -70,17 +71,18 @@ module Lemmings {
 
         
         /** use a bit plain for the transparency in the image */
-        public processTransparentData(startPos: number = 0){
+        public processTransparentData(src: BinaryReader, startPos: number = 0){
 
-            let src = this.reader;
             let pixBuf = this.pixBuf;
             let pixCount = pixBuf.length;
             let bitBufLen = 0;
             let bitBuf = 0;
 
-            /// read image mask
-            src.setOffset(startPos);
+            if (startPos != null){
+                src.setOffset(startPos);
+            }
 
+            /// read image mask
             for (var p = 0; p < pixCount; p++) {
 
                 if (bitBufLen <= 0) {

@@ -42,7 +42,7 @@ module Lemmings {
 
 
         /** set the map objects of this level */
-        public setMapObjects(objects:LevelElement[], objectImg:ObjectImageInfo[]) {
+        public setMapObjects(objects:LevelElement[], objectImg:ObjectImageInfo[]):void {
             this.mapObjects = objects;
             this.entrances = [];
 
@@ -54,7 +54,7 @@ module Lemmings {
         }
 
         /** check if a y-position is out of the level */
-        public isOutOfLevel(y:number) {
+        public isOutOfLevel(y:number):boolean {
             return ((y >= this.height) || (y <= 0));
         }
 
@@ -79,7 +79,10 @@ module Lemmings {
         }
 
 
-        
+        public setGroundImage(img: Uint8ClampedArray) {
+            this.groundImage = new Uint8ClampedArray(img);
+        }
+
         /** set the color palettes for this level */
         public setPalettes(colorPallet:ColorPallet, groundPallet:ColorPallet, previewPallet:ColorPallet) {
             this.colorPallet = colorPallet;

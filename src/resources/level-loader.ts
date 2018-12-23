@@ -110,8 +110,8 @@
                         }
 
                         
-                        level.groundImage = render.img.imgData;
-                        level.groundMask = render.img.imgMask
+                        level.setGroundImage(render.img.data);
+                        level.groundMask = render.img.mask
 
                         level.width = render.img.width;
                         level.height = render.img.height;

@@ -1,81 +1,146 @@
 module Lemmings {
     
-        /** image frame with index color */
-        export class Frame {
-            public width:number = 0;
-            public height:number = 0;
-            public offsetX:number = 0;
-            public offsetY:number = 0;
+    /** image frame with index color */
+    export class Frame {
+        public width:number = 0;
+        public height:number = 0;
+        public offsetX:number = 0;
+        public offsetY:number = 0;
 
-            public data:Uint8Array;
- 
-            /*
-            constructor(width:number, height:number, data:Uint8Array) {
-                this.width = width;
-                this.height = height;
-                this.data = data;
-                this.offsetX = Math.floor(this.width / 2);
-                this.offsetY = this.height;
-            }
-            */
+        public data:Uint8ClampedArray;
+        public mask: Int8Array;
 
-            constructor(width:number, height:number, fr:BinaryReader, bitsPerPixle: number, pallet:ColorPallet) {
-                
-                this.width = width;
-                this.height = height;
-                this.offsetX = Math.floor(width / 2);
-                this.offsetY = height;
 
-                let bitBuf = 0;
-                let bitBufLen = 0;
-      
-                let pixCount = width * height;
+        constructor(width:number, height:number)
+        {
+            this.width = width;
+            this.height = height;
+            this.offsetX = Math.floor(width / 2);
+            this.offsetY = height;
 
-                let pixBuf = new Uint8Array(pixCount);
-       
-
-                //- read color-index data
-                for (let i = 0; i < bitsPerPixle; i++) {
-                    for (let p = 0; p < pixCount; p++) {
-                        if (bitBufLen <= 0) {
-                            bitBuf = fr.readByte();
-                            bitBufLen = 8
-                        }
-
-                        pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
-                        bitBuf = (bitBuf << 1);
-                        bitBufLen--;
-                    }
-                }
-
-                /// convert color-index data to pixle image
-                var imgBuf = new Uint8Array(pixCount * 4);
-                var imgBufPos = 0;
-
-                for (var i = 0; i < pixCount; i++) {
-                    let colorIndex = pixBuf[i];
-                    
-                    if (colorIndex == 0) {
-                        
-                        imgBuf[imgBufPos++] = 0;
-                        imgBuf[imgBufPos++] = 0;
-                        imgBuf[imgBufPos++] = 0;
-                        imgBuf[imgBufPos++] = 0;
-                    }
-                    else {
-                        let color = pallet.getColor(colorIndex);
-
-                        imgBuf[imgBufPos++] = color[0];
-                        imgBuf[imgBufPos++] = color[1];
-                        imgBuf[imgBufPos++] = color[2];
-                        imgBuf[imgBufPos++] = 255;
-
-                    }
-                }
-
-                this.data = imgBuf;
-
-            }
+            this.data = new Uint8ClampedArray(width * height * 4);
+            this.mask = new Int8Array(width * height)
         }
+        
+
+        public readFromFile(fr:BinaryReader, bitsPerPixle: number, pallet:ColorPallet) {
+
+            let paletImg = new PaletteImageProcessor(this.width, this.height);
+            paletImg.processImage(fr, bitsPerPixle);
+            let pixBuf = paletImg.getImageBuffer();
+            
+            let pixCount = pixBuf.length;
+
+            /// convert color-index data to pixle image
+            let imgBuf = this.data;
+            let imgBufPos = 0;
+
+            for (var i = 0; i < pixCount; i++) {
+                let colorIndex = pixBuf[i];
+                
+                if (colorIndex == 0) {
+                    
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                    imgBuf[imgBufPos++] = 0;
+                }
+                else {
+                    let color = pallet.getColor(colorIndex);
+
+                    imgBuf[imgBufPos++] = color[0];
+                    imgBuf[imgBufPos++] = color[1];
+                    imgBuf[imgBufPos++] = color[2];
+                    imgBuf[imgBufPos++] = 255;
+
+                }
+            }
+
+        }
+
+        /** set the image to color=black / alpha=1 */
+        public clear() {
+            let buffer32  = new Uint32Array(this.data.buffer);
+            let len = buffer32.length;
+
+            while(len--)
+                /// set r,g,b = 0 and alpha=FF
+                buffer32[len] = 0xFF000000;
+
+                /// for debugging
+                //buffer32[len] = 0xFFCBC0FF;
+
+                this.mask[len] = 0;
+        }
+
+        /** drwa a palette Image to this frame */
+        public drawPaletteImage(srcImg: Uint8Array, srcWidth:number, srcHeight:number, pallet:ColorPallet, left:number, top:number){
+
+            let pixIndex = 0;
+
+            for(let y=0; y<srcHeight; y++){
+                for(let x=0; x<srcWidth; x++){
+                    let colorIndex = srcImg[pixIndex];
+                    pixIndex++;
+
+                    if ((colorIndex & 0x80) > 0) {
+                        //this.setPixel(x+left, y+top, pallet.data[2]);
+                        this.clearPixel(x+left, y+top);
+                    } else {
+                        this.setPixel(x+left, y+top, pallet.data[colorIndex]);
+                    }
+                    
+                }
+            }
+
+        }
+
+
+        
+        /** set the color of a pixle */
+        public setPixel(x: number, y:number, color:number, noOverwrite:boolean = false, onlyOverwrite:boolean=false) {
+            
+            if ((x < 0) || (x >= this.width)) return;
+            if ((y < 0) || (y >= this.height)) return;
+
+            let destPixelPos = y * this.width + x;
+
+            if (noOverwrite) {
+                /// if some data have been drawn here before
+                if (this.mask[destPixelPos] != 0) return;
+            }
+
+            if (onlyOverwrite) {
+                /// if no data have been drawn here before
+                if (this.mask[destPixelPos] == 0) return;
+            }
+
+            let i = destPixelPos* 4;
+
+            this.data[i + 0] = color[0]; //- R
+            this.data[i + 1] = color[1]; //- G
+            this.data[i + 2] = color[2]; //- B
+
+            this.mask[destPixelPos] = 1;
+        }
+
+
+        /** set a pixle to back */
+        public clearPixel(x: number, y:number) {
+
+            if ((x < 0) || (x >= this.width)) return;
+            if ((y < 0) || (y >= this.height)) return;
+
+            let destPixelPos = y * this.width + x;
+            let i = destPixelPos* 4;
+
+            this.data[i + 0] = 0; //- R
+            this.data[i + 1] = 0; //- G
+            this.data[i + 2] = 0; //- B
+
+            this.mask[destPixelPos] = 0;
+        }
+
+
     }
-    
+}

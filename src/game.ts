@@ -76,12 +76,16 @@ module Lemmings {
 
             this.gameTimer = setInterval(()=>{
 
-                /// run game logic
-                this.tick();
-                this.render();
+                this.nextFrame();
             }, 20);
         }
 
+        /** run one step in game time and render the result */
+        public nextFrame() {
+            /// run game logic
+            this.tick();
+            this.render();
+        }
 
         /** refresh display */ 
         private render() {

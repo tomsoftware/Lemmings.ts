@@ -4,7 +4,7 @@ module Lemmings {
     /** uses the LevelReader and GroundReader to render/create the games background */
     export class GroundRenderer {
 
-        public img: GroundImage;
+        public img: Frame;
 
         constructor() {
 
@@ -18,9 +18,9 @@ module Lemmings {
         /** create the ground image from the level definition and the Terrain images */
         public createGroundMap(lr: LevelReader, terrarImg: TerrainImageInfo[]) {
 
-            this.img = new GroundImage(lr.levelWidth, lr.levelHeight);
+            this.img = new Frame(lr.levelWidth, lr.levelHeight);
 
-            this.img.clearImageArray();
+            this.img.clear();
 
             let terrarObjects: LevelElement[] = lr.terrains;
 

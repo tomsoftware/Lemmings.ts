@@ -73,23 +73,19 @@ module Lemmings {
     /** loads all images of imgList from the VGAGx file */
     private readImages(imgList: BaseImageInfo[], vga: BinaryReader) {
 
-      imgList.map((img) => {
-
-        let bitBuf = 0;
-        let bitBufLen = 0;
-        
+      imgList.map((img) => {      
 
         img.frames = [];
 
         let filePos = img.imageLoc;
 
-
         for (let f = 0; f < img.frameCount; f++) {
 
-          var bitImage = new BitPlainImage(vga, img.width, img.height);
+          var bitImage = new PaletteImageProcessor(img.width, img.height);
 
-          bitImage.processImage(filePos);
-          bitImage.processTransparentData(img.maskLoc);
+          //// read image
+          bitImage.processImage(vga, 3, filePos);
+          bitImage.processTransparentData(vga, img.maskLoc);
 
           img.frames.push(bitImage.getImageBuffer());
 

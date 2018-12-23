@@ -88,6 +88,10 @@ module Lemmings {
             this.game.continue(); 
         }
 
+        public nextFrame() {
+            this.game.nextFrame();
+        }
+
         public playMusic(moveInterval: number) {
 
             this.stopMusic();

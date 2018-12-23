@@ -254,10 +254,14 @@ var Lemmings;
             if (this.gameTimer != 0)
                 return;
             this.gameTimer = setInterval(() => {
-                /// run game logic
-                this.tick();
-                this.render();
+                this.nextFrame();
             }, 20);
+        }
+        /** run one step in game time and render the result */
+        nextFrame() {
+            /// run game logic
+            this.tick();
+            this.render();
         }
         /** refresh display */
         render() {
@@ -842,7 +846,9 @@ var Lemmings;
         }
         loadFromFile(fr, bitsPerPixle, width, height, frames, pallet) {
             for (let f = 0; f < frames; f++) {
-                this.frames.push(new Lemmings.Frame(width, height, fr, bitsPerPixle, pallet));
+                let frame = new Lemmings.Frame(width, height);
+                frame.readFromFile(fr, bitsPerPixle, pallet);
+                this.frames.push(frame);
             }
         }
     }
@@ -947,16 +953,7 @@ var Lemmings;
 (function (Lemmings) {
     /** image frame with index color */
     class Frame {
-        /*
-        constructor(width:number, height:number, data:Uint8Array) {
-            this.width = width;
-            this.height = height;
-            this.data = data;
-            this.offsetX = Math.floor(this.width / 2);
-            this.offsetY = this.height;
-        }
-        */
-        constructor(width, height, fr, bitsPerPixle, pallet) {
+        constructor(width, height) {
             this.width = 0;
             this.height = 0;
             this.offsetX = 0;
@@ -965,25 +962,17 @@ var Lemmings;
             this.height = height;
             this.offsetX = Math.floor(width / 2);
             this.offsetY = height;
-            let bitBuf = 0;
-            let bitBufLen = 0;
-            let pixCount = width * height;
-            let pixBuf = new Uint8Array(pixCount);
-            //- read color-index data
-            for (let i = 0; i < bitsPerPixle; i++) {
-                for (let p = 0; p < pixCount; p++) {
-                    if (bitBufLen <= 0) {
-                        bitBuf = fr.readByte();
-                        bitBufLen = 8;
-                    }
-                    pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
-                    bitBuf = (bitBuf << 1);
-                    bitBufLen--;
-                }
-            }
+            this.data = new Uint8ClampedArray(width * height * 4);
+            this.mask = new Int8Array(width * height);
+        }
+        readFromFile(fr, bitsPerPixle, pallet) {
+            let paletImg = new Lemmings.PaletteImageProcessor(this.width, this.height);
+            paletImg.processImage(fr, bitsPerPixle);
+            let pixBuf = paletImg.getImageBuffer();
+            let pixCount = pixBuf.length;
             /// convert color-index data to pixle image
-            var imgBuf = new Uint8Array(pixCount * 4);
-            var imgBufPos = 0;
+            let imgBuf = this.data;
+            let imgBufPos = 0;
             for (var i = 0; i < pixCount; i++) {
                 let colorIndex = pixBuf[i];
                 if (colorIndex == 0) {
@@ -1000,7 +989,70 @@ var Lemmings;
                     imgBuf[imgBufPos++] = 255;
                 }
             }
-            this.data = imgBuf;
+        }
+        /** set the image to color=black / alpha=1 */
+        clear() {
+            let buffer32 = new Uint32Array(this.data.buffer);
+            let len = buffer32.length;
+            while (len--)
+                /// set r,g,b = 0 and alpha=FF
+                buffer32[len] = 0xFF000000;
+            /// for debugging
+            //buffer32[len] = 0xFFCBC0FF;
+            this.mask[len] = 0;
+        }
+        /** drwa a palette Image to this frame */
+        drawPaletteImage(srcImg, srcWidth, srcHeight, pallet, left, top) {
+            let pixIndex = 0;
+            for (let y = 0; y < srcHeight; y++) {
+                for (let x = 0; x < srcWidth; x++) {
+                    let colorIndex = srcImg[pixIndex];
+                    pixIndex++;
+                    if ((colorIndex & 0x80) > 0) {
+                        //this.setPixel(x+left, y+top, pallet.data[2]);
+                        this.clearPixel(x + left, y + top);
+                    }
+                    else {
+                        this.setPixel(x + left, y + top, pallet.data[colorIndex]);
+                    }
+                }
+            }
+        }
+        /** set the color of a pixle */
+        setPixel(x, y, color, noOverwrite = false, onlyOverwrite = false) {
+            if ((x < 0) || (x >= this.width))
+                return;
+            if ((y < 0) || (y >= this.height))
+                return;
+            let destPixelPos = y * this.width + x;
+            if (noOverwrite) {
+                /// if some data have been drawn here before
+                if (this.mask[destPixelPos] != 0)
+                    return;
+            }
+            if (onlyOverwrite) {
+                /// if no data have been drawn here before
+                if (this.mask[destPixelPos] == 0)
+                    return;
+            }
+            let i = destPixelPos * 4;
+            this.data[i + 0] = color[0]; //- R
+            this.data[i + 1] = color[1]; //- G
+            this.data[i + 2] = color[2]; //- B
+            this.mask[destPixelPos] = 1;
+        }
+        /** set a pixle to back */
+        clearPixel(x, y) {
+            if ((x < 0) || (x >= this.width))
+                return;
+            if ((y < 0) || (y >= this.height))
+                return;
+            let destPixelPos = y * this.width + x;
+            let i = destPixelPos * 4;
+            this.data[i + 0] = 0; //- R
+            this.data[i + 1] = 0; //- G
+            this.data[i + 2] = 0; //- B
+            this.mask[destPixelPos] = 0;
         }
     }
     Lemmings.Frame = Frame;
@@ -1016,8 +1068,8 @@ var Lemmings;
         }
         /** create the ground image from the level definition and the Terrain images */
         createGroundMap(lr, terrarImg) {
-            this.img = new Lemmings.GroundImage(lr.levelWidth, lr.levelHeight);
-            this.img.clearImageArray();
+            this.img = new Lemmings.Frame(lr.levelWidth, lr.levelHeight);
+            this.img.clear();
             let terrarObjects = lr.terrains;
             for (let i = 0; i < terrarObjects.length; i++) {
                 let tOb = terrarObjects[i];
@@ -1178,8 +1230,8 @@ var Lemmings;
                         /// this is a normal map background
                         render.createGroundMap(levelReader, groundReader.getTerraImages());
                     }
-                    level.groundImage = render.img.imgData;
-                    level.groundMask = render.img.imgMask;
+                    level.setGroundImage(render.img.data);
+                    level.groundMask = render.img.mask;
                     level.width = render.img.width;
                     level.height = render.img.height;
                     level.setMapObjects(levelReader.objects, groundReader.getObjectImages());
@@ -1242,6 +1294,9 @@ var Lemmings;
             this.groundImage[index + 1] = 0;
             this.groundImage[index + 2] = 0;
         }
+        setGroundImage(img) {
+            this.groundImage = new Uint8ClampedArray(img);
+        }
         /** set the color palettes for this level */
         setPalettes(colorPallet, groundPallet, previewPallet) {
             this.colorPallet = colorPallet;
@@ -1261,17 +1316,24 @@ var Lemmings;
     class SkillPanelSprites {
         constructor(fr2, fr6, colorPallet) {
             /// read skill panel
-            this.panelSprite = new Lemmings.Frame(320, 40, fr6, 4, colorPallet);
+            let panelSprite = new Lemmings.Frame(320, 40);
+            panelSprite.readFromFile(fr6, 4, colorPallet);
             /// read green panel letters
             let letters = ["%", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
             for (let l = 0; l < letters.length; l++) {
-                this.letterSprite[letters[l]] = new Lemmings.Frame(8, 16, fr6, 3, colorPallet);
+                let frame = new Lemmings.Frame(8, 16);
+                frame.readFromFile(fr6, 3, colorPallet);
+                this.letterSprite[letters[l]] = frame;
             }
             /// read panel skill-count number letters
             fr2.setOffset(0x1900);
             for (let i = 0; i < 10; i++) {
-                this.numberSpriteRight.push(new Lemmings.Frame(8, 16, fr2, 2, colorPallet));
-                this.numberSpriteLeft.push(new Lemmings.Frame(8, 16, fr2, 2, colorPallet));
+                let sprite = new Lemmings.Frame(8, 16);
+                sprite.readFromFile(fr2, 2, colorPallet);
+                this.numberSpriteRight.push(sprite);
+                sprite = new Lemmings.Frame(8, 16);
+                sprite.readFromFile(fr2, 2, colorPallet);
+                this.numberSpriteLeft.push(sprite);
             }
         }
         /** return the sprite for the skill panel */
@@ -1846,159 +1908,6 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    /** convert the lemmings bit plain image format to real image data.
-     * The lemmings file format uses multiple plains for every bit of color.
-     * E.g. Save all lowest bits of the image in a chunk then all second bits... */
-    class BitPlainImage {
-        constructor(reader, width, height) {
-            this.reader = reader;
-            this.width = width;
-            this.height = height;
-            let pixCount = this.width * this.height;
-            this.pixBuf = new Uint8Array(pixCount);
-        }
-        /** return the image buffer */
-        getImageBuffer() {
-            return this.pixBuf;
-        }
-        /** convert the multi-bit-plain image to image */
-        processImage(startPos = 0) {
-            let src = this.reader;
-            let pixBuf = this.pixBuf;
-            let pixCount = pixBuf.length;
-            let bitBufLen = 0;
-            let bitBuf = 0;
-            /// read image
-            src.setOffset(startPos);
-            //-  3 bit per Pixel - bits of byte are stored separately
-            for (var i = 0; i < 3; i++) {
-                for (var p = 0; p < pixCount; p++) {
-                    if (bitBufLen <= 0) {
-                        bitBuf = src.readByte();
-                        bitBufLen = 8;
-                    }
-                    pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
-                    bitBuf = (bitBuf << 1);
-                    bitBufLen--;
-                }
-            }
-            this.pixBuf = pixBuf;
-        }
-        /** use a color-index for the transparency in the image */
-        processTransparentByColorIndex(transparentColorIndex) {
-            let pixBuf = this.pixBuf;
-            let pixCount = pixBuf.length;
-            for (let i = 0; i < pixCount; i++) {
-                if (pixBuf[i] == transparentColorIndex) {
-                    /// Sets the highest bit to indicate the transparency.
-                    pixBuf[i] = 0x80 | pixBuf[i];
-                }
-            }
-            this.pixBuf = pixBuf;
-        }
-        /** use a bit plain for the transparency in the image */
-        processTransparentData(startPos = 0) {
-            let src = this.reader;
-            let pixBuf = this.pixBuf;
-            let pixCount = pixBuf.length;
-            let bitBufLen = 0;
-            let bitBuf = 0;
-            /// read image mask
-            src.setOffset(startPos);
-            for (var p = 0; p < pixCount; p++) {
-                if (bitBufLen <= 0) {
-                    bitBuf = src.readByte();
-                    bitBufLen = 8;
-                }
-                if ((bitBuf & 0x80) == 0) {
-                    /// Sets the highest bit to indicate the transparency.
-                    pixBuf[p] = 0x80 | pixBuf[p];
-                }
-                bitBuf = (bitBuf << 1);
-                bitBufLen--;
-            }
-            this.pixBuf = pixBuf;
-        }
-    }
-    Lemmings.BitPlainImage = BitPlainImage;
-})(Lemmings || (Lemmings = {}));
-var Lemmings;
-(function (Lemmings) {
-    /** store a ground image */
-    class GroundImage {
-        constructor(width, height) {
-            this.width = width;
-            this.height = height;
-            this.imgData = new Uint8ClampedArray(width * height * 4);
-            this.imgMask = new Int8Array(width * height);
-        }
-        /** set the image to color=black / alpha=1 */
-        clearImageArray() {
-            var buffer32 = new Uint32Array(this.imgData.buffer);
-            let len = buffer32.length;
-            while (len--)
-                /// set r,g,b = 0 and alpha=FF
-                buffer32[len] = 0xFF000000;
-            /// for debugging
-            //buffer32[len] = 0xFFCBC0FF;
-        }
-        drawPalettImage(srcImg, srcWidth, srcHeight, pallet, left, top) {
-            let pixIndex = 0;
-            for (let y = 0; y < srcHeight; y++) {
-                for (let x = 0; x < srcWidth; x++) {
-                    let colorIndex = srcImg[pixIndex];
-                    pixIndex++;
-                    if ((colorIndex & 0x80) > 0) {
-                        //this.setPixel(x+left, y+top, pallet.data[2]);
-                        this.clearPixel(x + left, y + top);
-                    }
-                    else {
-                        this.setPixel(x + left, y + top, pallet.data[colorIndex]);
-                    }
-                }
-            }
-        }
-        /** set the color of a pixle */
-        setPixel(x, y, color, noOverwrite = false, onlyOverwrite = false) {
-            if ((x < 0) || (x >= this.width))
-                return;
-            if ((y < 0) || (y >= this.height))
-                return;
-            var destPixelPos = y * this.width + x;
-            if (noOverwrite) {
-                /// if some data have been drawn here before
-                if (this.imgMask[destPixelPos] != 0)
-                    return;
-            }
-            if (onlyOverwrite) {
-                /// if no data have been drawn here before
-                if (this.imgMask[destPixelPos] == 0)
-                    return;
-            }
-            var i = destPixelPos * 4;
-            this.imgData[i + 0] = color[0]; //- R
-            this.imgData[i + 1] = color[1]; //- G
-            this.imgData[i + 2] = color[2]; //- B
-            this.imgMask[destPixelPos] = 1;
-        }
-        /** set a pixle to back */
-        clearPixel(x, y) {
-            if ((x < 0) || (x >= this.width))
-                return;
-            if ((y < 0) || (y >= this.height))
-                return;
-            var destPixelPos = y * this.width + x;
-            var i = destPixelPos * 4;
-            this.imgData[i + 0] = 0; //- R
-            this.imgData[i + 1] = 0; //- G
-            this.imgData[i + 2] = 0; //- B
-            this.imgMask[destPixelPos] = 0;
-        }
-    }
-    Lemmings.GroundImage = GroundImage;
-})(Lemmings || (Lemmings = {}));
-var Lemmings;
-(function (Lemmings) {
     /** Define Types a triggers */
     var TriggerTypes;
     (function (TriggerTypes) {
@@ -2099,14 +2008,13 @@ var Lemmings;
         /** loads all images of imgList from the VGAGx file */
         readImages(imgList, vga) {
             imgList.map((img) => {
-                let bitBuf = 0;
-                let bitBufLen = 0;
                 img.frames = [];
                 let filePos = img.imageLoc;
                 for (let f = 0; f < img.frameCount; f++) {
-                    var bitImage = new Lemmings.BitPlainImage(vga, img.width, img.height);
-                    bitImage.processImage(filePos);
-                    bitImage.processTransparentData(img.maskLoc);
+                    var bitImage = new Lemmings.PaletteImageProcessor(img.width, img.height);
+                    //// read image
+                    bitImage.processImage(vga, 3, filePos);
+                    bitImage.processTransparentData(vga, img.maskLoc);
                     img.frames.push(bitImage.getImageBuffer());
                     /// move to the next frame data
                     filePos += img.frameDataSize;
@@ -2418,6 +2326,85 @@ var Lemmings;
     }
     Lemmings.OddTableReader = OddTableReader;
 })(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    /** convert the lemmings bit plain image format to real color-index-image data.
+     * The lemmings file format uses multiple plains for every bit of color.
+     * E.g. Save all lowest bits of the image in a chunk then all second bits... */
+    class PaletteImageProcessor {
+        constructor(width, height) {
+            this.width = width;
+            this.height = height;
+            let pixCount = this.width * this.height;
+            this.pixBuf = new Uint8Array(pixCount);
+        }
+        /** return the image buffer */
+        getImageBuffer() {
+            return this.pixBuf;
+        }
+        /** convert the multi-bit-plain image to image */
+        processImage(src, bitsPerPixle = 3, startPos) {
+            let pixBuf = this.pixBuf;
+            let pixCount = pixBuf.length;
+            let bitBufLen = 0;
+            let bitBuf = 0;
+            if (startPos != null) {
+                src.setOffset(startPos);
+            }
+            /// read image
+            //-  3 bit per Pixel - bits of byte are stored separately
+            for (var i = 0; i < bitsPerPixle; i++) {
+                for (var p = 0; p < pixCount; p++) {
+                    if (bitBufLen <= 0) {
+                        bitBuf = src.readByte();
+                        bitBufLen = 8;
+                    }
+                    pixBuf[p] = pixBuf[p] | ((bitBuf & 0x80) >> (7 - i));
+                    bitBuf = (bitBuf << 1);
+                    bitBufLen--;
+                }
+            }
+            this.pixBuf = pixBuf;
+        }
+        /** use a color-index for the transparency in the image */
+        processTransparentByColorIndex(transparentColorIndex) {
+            let pixBuf = this.pixBuf;
+            let pixCount = pixBuf.length;
+            for (let i = 0; i < pixCount; i++) {
+                if (pixBuf[i] == transparentColorIndex) {
+                    /// Sets the highest bit to indicate the transparency.
+                    pixBuf[i] = 0x80 | pixBuf[i];
+                }
+            }
+            this.pixBuf = pixBuf;
+        }
+        /** use a bit plain for the transparency in the image */
+        processTransparentData(src, startPos = 0) {
+            let pixBuf = this.pixBuf;
+            let pixCount = pixBuf.length;
+            let bitBufLen = 0;
+            let bitBuf = 0;
+            if (startPos != null) {
+                src.setOffset(startPos);
+            }
+            /// read image mask
+            for (var p = 0; p < pixCount; p++) {
+                if (bitBufLen <= 0) {
+                    bitBuf = src.readByte();
+                    bitBufLen = 8;
+                }
+                if ((bitBuf & 0x80) == 0) {
+                    /// Sets the highest bit to indicate the transparency.
+                    pixBuf[p] = 0x80 | pixBuf[p];
+                }
+                bitBuf = (bitBuf << 1);
+                bitBufLen--;
+            }
+            this.pixBuf = pixBuf;
+        }
+    }
+    Lemmings.PaletteImageProcessor = PaletteImageProcessor;
+})(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts" />
 /// <reference path="../file/file-container.ts" />
 var Lemmings;
@@ -2450,8 +2437,8 @@ var Lemmings;
             let width = 960;
             let chunkHeight = 40;
             let chunkCount = 4;
-            this.img = new Lemmings.GroundImage(width, chunkHeight * chunkCount);
-            this.img.clearImageArray();
+            this.img = new Lemmings.Frame(width, chunkHeight * chunkCount);
+            this.img.clear();
             let startScanLine = 0;
             let pixelCount = width * chunkHeight;
             let bitBuffer = new Uint8Array(pixelCount);
@@ -2461,10 +2448,11 @@ var Lemmings;
                 if (curByte == 128) {
                     /// end of chunk
                     /// unpack image data to image-buffer
-                    var bitImage = new Lemmings.BitPlainImage(new Lemmings.BinaryReader(bitBuffer), width, chunkHeight);
-                    bitImage.processImage(0);
+                    let fileReader = new Lemmings.BinaryReader(bitBuffer);
+                    let bitImage = new Lemmings.PaletteImageProcessor(width, chunkHeight);
+                    bitImage.processImage(fileReader, 3, 0);
                     bitImage.processTransparentByColorIndex(0);
-                    this.img.drawPalettImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPallet, 0, startScanLine);
+                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPallet, 0, startScanLine);
                     startScanLine += 40;
                     if (startScanLine >= this.img.height)
                         return;
@@ -4629,6 +4617,9 @@ var Lemmings;
         continue() {
             this.game.continue();
         }
+        nextFrame() {
+            this.game.nextFrame();
+        }
         playMusic(moveInterval) {
             this.stopMusic();
             if (!this.gameResources)
@@ -4912,15 +4903,8 @@ var Lemmings;
             /// set pixels
             this.imgData.data.set(groundImage);
         }
-        drawImage(imageDate, width, height, posX, posY) {
-            var DAT = new ImageData(imageDate, width, height);
-            this.processCtx.putImageData(DAT, posX, posY);
-        }
         /** copys a frame to the display */
         drawFrame(frame, posX, posY) {
-            //   var UAC = new Uint8ClampedArray( frame.data, frame.width, frame.height);
-            //   this.drawImage(UAC, frame.width, frame.height, posX - frame.offsetX, posY - frame.offsetY);
-            //   return;
             var srcW = frame.width;
             var srcH = frame.height;
             var srcBuffer = frame.data;
@@ -4958,10 +4942,7 @@ var Lemmings;
         redraw() {
             /// write image to context
             this.processCtx.putImageData(this.imgData, 0, 0);
-            if (this.outputCtx == null) {
-                this.outputCtx = this.outputCav.getContext("2d");
-            }
-            let ctx = this.outputCtx;
+            let ctx = this.outputCav.getContext("2d");
             //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;
             //@ts-ignore
@@ -4982,7 +4963,7 @@ var Lemmings;
                 dH = outGameH / viewScale;
             }
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
-            ctx.drawImage(this.processCav, viewX, viewY, dW, dH, 0, 0, dW * viewScale, dH * viewScale);
+            ctx.drawImage(this.processCav, viewX, viewY, dW, dH, 0, 0, Math.floor(dW * viewScale), Math.floor(dH * viewScale));
         }
     }
     Lemmings.GameDisplay = GameDisplay;

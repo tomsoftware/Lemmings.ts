@@ -26,7 +26,6 @@ module Lemmings {
         }
 
 
-
         public process(level:Level, lem: Lemming):LemmingStateType {
 
             lem.frameIndex++;
