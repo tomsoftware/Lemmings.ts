@@ -9,7 +9,7 @@ module Lemmings {
 
         /** return the animation for a given animation type */
         public getAnimation(state:SpriteType, right:boolean) : Animation {
-            return this.lemmingAnimation[this.typeToIndex(state, (right?1:0))];
+            return this.lemmingAnimation[this.typeToIndex(state, right)];
         }
 
 
@@ -49,27 +49,26 @@ module Lemmings {
         }
 
 
-        private typeToIndex(state:SpriteType, dir:number): number{
-            return state * 2 + ((dir<=0)?0:1);
+        private typeToIndex(state:SpriteType, right:boolean): number{
+            return state * 2 + (right?0:1);
         }
 
 
         private registerAnimation(state:SpriteType, dir:number, fr:BinaryReader, bitsPerPixle:number, width:number, height:number, offsetX:number, offsetY:number, frames:number, usePingPong:boolean = false) {
 
-            //- load animation frames from main file (fr)
+            //- load animation frames from file (fr)
             var animation = new Animation();
 
             animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, -offsetX, -offsetY);
             animation.isPingPong = usePingPong;
 
-            //- add animation to cache
-
+            //- add animation to cache -add unidirectional (dir == 0) annimations to both lists
             if (dir >= 0) {
-                this.lemmingAnimation[this.typeToIndex(state, 1)] = animation;
+                this.lemmingAnimation[this.typeToIndex(state, true)] = animation;
             }
 
             if (dir <= 0) {
-                this.lemmingAnimation[this.typeToIndex(state, -1)] = animation;
+                this.lemmingAnimation[this.typeToIndex(state, false)] = animation;
             }
         }
 

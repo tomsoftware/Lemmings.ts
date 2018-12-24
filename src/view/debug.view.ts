@@ -45,9 +45,12 @@ module Lemmings {
             };
 
             this.controller.onMouseClick = (x: number, y:number) => {
-                
+                if(this.game == null) return;
+
                 let lem = this.game.getLemmingAt(x,y);
                 if (lem != null) {
+                    
+
                     console.log("Mouse click ("+ x +" / "+ y +") lem: "+ lem.id);
 
                     this.game.setLemmingAction(lem, ActionType.DIGG);

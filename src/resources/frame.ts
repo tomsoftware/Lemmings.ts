@@ -17,14 +17,14 @@ module Lemmings {
             this.height = Math.floor(height);
 
             if (offsetX == null) {
-                this.offsetX = Math.floor(this.width / 2);
+                this.offsetX = 0;
             }
             else {
                 this.offsetX = Math.floor(offsetX);
             }
             
             if (offsetY == null) {
-                this.offsetY = this.height;
+                this.offsetY = 0;
             }
             else {
                 this.offsetY = Math.floor(offsetY);

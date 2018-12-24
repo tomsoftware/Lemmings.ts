@@ -220,6 +220,9 @@ var Lemmings;
         setDispaly(dispaly) {
             this.dispaly = dispaly;
         }
+        getGui() {
+            return this.gameGui;
+        }
         /** load a new game/level */
         loadLevel(levelGroupIndex, levelIndex) {
             this.levelGroupIndex = levelGroupIndex;
@@ -231,10 +234,17 @@ var Lemmings;
                     return this.gameResources.getLemmingsSprite(level.colorPalette);
                 })
                     .then(lemSprite => {
+                    /// setup Lemmings
                     this.lemmingManager = new Lemmings.LemmingManager(lemSprite);
                     this.lemmingsLeft = this.level.releaseCount;
                     this.tickIndex = 0;
                     this.releaseTickIndex = 99;
+                    return this.gameResources.getSkillPanelSprite(this.level.colorPalette);
+                })
+                    .then(skillPanelSprites => {
+                    /// setup gui
+                    this.gameGui = new Lemmings.GameGui(skillPanelSprites);
+                    /// let's start!
                     resolve(this);
                 });
             });
@@ -269,7 +279,7 @@ var Lemmings;
                 this.dispaly.initRender(this.level.width, this.level.height);
                 this.level.render(this.dispaly);
                 this.lemmingManager.render(this.dispaly);
-                //this.gui.render(this.dispaly);
+                this.gameGui.render(this.dispaly);
                 this.dispaly.redraw();
             }
         }
@@ -432,22 +442,22 @@ var Lemmings;
         }
         /** return the animation for a given animation type */
         getAnimation(state, right) {
-            return this.lemmingAnimation[this.typeToIndex(state, (right ? 1 : 0))];
+            return this.lemmingAnimation[this.typeToIndex(state, right)];
         }
-        typeToIndex(state, dir) {
-            return state * 2 + ((dir <= 0) ? 0 : 1);
+        typeToIndex(state, right) {
+            return state * 2 + (right ? 0 : 1);
         }
         registerAnimation(state, dir, fr, bitsPerPixle, width, height, offsetX, offsetY, frames, usePingPong = false) {
-            //- load animation frames from main file (fr)
+            //- load animation frames from file (fr)
             var animation = new Lemmings.Animation();
             animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, -offsetX, -offsetY);
             animation.isPingPong = usePingPong;
-            //- add animation to cache
+            //- add animation to cache -add unidirectional (dir == 0) annimations to both lists
             if (dir >= 0) {
-                this.lemmingAnimation[this.typeToIndex(state, 1)] = animation;
+                this.lemmingAnimation[this.typeToIndex(state, true)] = animation;
             }
             if (dir <= 0) {
-                this.lemmingAnimation[this.typeToIndex(state, -1)] = animation;
+                this.lemmingAnimation[this.typeToIndex(state, false)] = animation;
             }
         }
     }
@@ -961,13 +971,13 @@ var Lemmings;
             this.width = Math.floor(width);
             this.height = Math.floor(height);
             if (offsetX == null) {
-                this.offsetX = Math.floor(this.width / 2);
+                this.offsetX = 0;
             }
             else {
                 this.offsetX = Math.floor(offsetX);
             }
             if (offsetY == null) {
-                this.offsetY = this.height;
+                this.offsetY = 0;
             }
             else {
                 this.offsetY = Math.floor(offsetY);
@@ -1300,6 +1310,9 @@ var Lemmings;
     /** manage the sprites need for the game skill panel */
     class SkillPanelSprites {
         constructor(fr2, fr6, colorPalette) {
+            this.letterSprite = {};
+            this.numberSpriteLeft = [];
+            this.numberSpriteRight = [];
             /// read skill panel
             let paletteImg = new Lemmings.PaletteImage(320, 40);
             paletteImg.processImage(fr6, 4);
@@ -4595,6 +4608,8 @@ var Lemmings;
             this.controller.onMouseMove = (x, y) => {
             };
             this.controller.onMouseClick = (x, y) => {
+                if (this.game == null)
+                    return;
                 let lem = this.game.getLemmingAt(x, y);
                 if (lem != null) {
                     console.log("Mouse click (" + x + " / " + y + ") lem: " + lem.id);
@@ -4983,7 +4998,15 @@ var Lemmings;
 var Lemmings;
 (function (Lemmings) {
     class GameGui {
+        constructor(skillPanelSprites) {
+            this.skillPanelSprites = skillPanelSprites;
+            this.selectedAction = Lemmings.ActionType.DIGG;
+        }
+        getSelectedAction() {
+            return this.selectedAction;
+        }
         render(gameDisplay) {
+            gameDisplay.drawFrame(this.skillPanelSprites.getPanelSprite(), 200, 120);
             // gameDisplay.drawImage();
         }
     }
