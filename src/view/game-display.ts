@@ -3,52 +3,18 @@ module Lemmings {
     /** handel the display of the game */
     export class GameDisplay {
 
-        private outputCav: HTMLCanvasElement;
-      // private outputCtx: CanvasRenderingContext2D;
-        private processCav: HTMLCanvasElement;
-        private processCtx: CanvasRenderingContext2D;
-        private viewPoint:ViewPoint = new ViewPoint(0, 0, 1);
-        private contentWidth = 0;
-        private contentHeight = 0;
+        private imgData:ContextImage;
 
-        private imgData:ImageData;
-
-        constructor(canvasForOutput: HTMLCanvasElement) {
-            this.outputCav = canvasForOutput;
-            this.processCav = document.createElement('canvas');
-            this.clear();
+        constructor(private stage: Stage) {
         }
 
-
-        public setViewPoint(viewPoint:ViewPoint) {
-            this.viewPoint = viewPoint;
-
-            this.clear();
-            this.redraw();
-        }
-
-        public clear() {
-            var ctx = this.outputCav.getContext("2d");
-            ctx.fillStyle = "#000000";
-            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        }
 
 
         public initRender(width:number, height:number) {
             /// create image data
-            if ((this.contentWidth != width) || (this.contentHeight != height)) {
-                this.contentWidth = width;
-                this.contentHeight = height;
-
-                this.processCav.width = width;
-                this.processCav.height = height;
-
-                this.processCtx = this.processCav.getContext("2d");
-
-                /// create image
-                this.imgData = this.processCtx.createImageData(width, height);
+            if ((this.imgData == null) || (this.imgData.width != width) || (this.imgData.height != height)) {
+                this.imgData = this.stage.createImage(width, height)   
             }
-         
         }
 
 
@@ -60,33 +26,31 @@ module Lemmings {
         }
 
 
-
-
         /** copys a frame to the display */
         public drawFrame(frame:Frame, posX:number, posY:number){
 
-            var srcW = frame.width;
-            var srcH = frame.height;
-            var srcBuffer = frame.data;
+            let srcW = frame.width;
+            let srcH = frame.height;
+            let srcBuffer = frame.data;
 
-            var destW = this.contentWidth;
-            var destH = this.contentHeight;
-            var destData = this.imgData.data;
+            let destW = this.imgData.width;
+            let destH = this.imgData.height;
+            let destData = this.imgData.data;
 
 
             let destX = posX - frame.offsetX;
             let destY = posY - frame.offsetY;
 
-            for (var y = 0; y < srcH; y++) {
+            for (let y = 0; y < srcH; y++) {
 
-                var outY = y + destY;
+                let outY = y + destY;
                 if ((outY < 0) || (outY >= destH)) continue;
 
-                for (var x = 0; x < srcW; x++) {
+                for (let x = 0; x < srcW; x++) {
                     let srcIndex = ((srcW * y) + x) * 4;
                     if (srcBuffer[srcIndex + 3] == 0) continue;
 
-                    var outX = x + destX;
+                    let outX = x + destX;
                     if ((outX < 0) || (outX >= destW)) continue;
 
                     let destIndex = ((destW * outY) + outX) * 4;
@@ -102,50 +66,19 @@ module Lemmings {
 
 
         public setDebugPixel(x:number, y:number) {
-            let pointIndex = (this.contentWidth * (y) + x) * 4;
+            let pointIndex = (this.imgData.width * (y) + x) * 4;
 
             this.imgData.data[pointIndex] = 255;
             this.imgData.data[pointIndex + 1] = 0;
             this.imgData.data[pointIndex + 2] = 0;
         }
 
+        public getImageData(): ContextImage {
+            return this.imgData;
+        }
 
-        /** draw everything to the display */
         public redraw() {
-
-            /// write image to context
-           
-            this.processCtx.putImageData(this.imgData, 0, 0);
-            
-            let  ctx = this.outputCav.getContext("2d");
-        
-            //@ts-ignore
-            ctx.mozImageSmoothingEnabled = false;
-            //@ts-ignore
-            ctx.webkitImageSmoothingEnabled = false;
-            ctx.imageSmoothingEnabled = false;
-
-            let outGameH = ctx.canvas.height;
-            let outW = ctx.canvas.width;
-
-            let viewScale = this.viewPoint.scale;
-            let viewX = this.viewPoint.x;
-            let viewY = this.viewPoint.y;
-
-            //- Display Layers
-            var dW = this.contentWidth - viewX; //- display width
-            if ((dW * viewScale) > outW) {
-                dW = outW / viewScale;
-            }
-
-            var dH = this.contentHeight - viewY; //- display height
-            if ((dH * viewScale) > outGameH) {
-                dH = outGameH / viewScale;
-            }
-
-            //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
-            ctx.drawImage(this.processCav, viewX, viewY, dW, dH, 0, 0, Math.floor(dW * viewScale), Math.floor(dH * viewScale));
-
+            this.stage.redraw();
         }
     }
 }
