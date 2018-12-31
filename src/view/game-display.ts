@@ -3,17 +3,17 @@ module Lemmings {
     /** handel the display of the game */
     export class GameDisplay {
 
-        private imgData:ContextImage;
+        private imgData:ImageData;
 
         constructor(private stage: Stage) {
         }
 
 
 
-        public initRender(width:number, height:number) {
+        public initSize(width:number, height:number) {
             /// create image data
             if ((this.imgData == null) || (this.imgData.width != width) || (this.imgData.height != height)) {
-                this.imgData = this.stage.createImage(width, height)   
+                this.imgData = this.stage.createImage(this, width, height); 
             }
         }
 
@@ -26,7 +26,7 @@ module Lemmings {
         }
 
 
-        /** copys a frame to the display */
+        /** copy a frame to the display */
         public drawFrame(frame:Frame, posX:number, posY:number){
 
             let srcW = frame.width;
@@ -73,7 +73,7 @@ module Lemmings {
             this.imgData.data[pointIndex + 2] = 0;
         }
 
-        public getImageData(): ContextImage {
+        public getImageData(): ImageData {
             return this.imgData;
         }
 

@@ -1,30 +1,54 @@
 module Lemmings {
 
-    export class ContextImage extends ImageData {
+    export class ContextImage {
         public ctx: CanvasRenderingContext2D;
         public cav: HTMLCanvasElement;
+        /** X position to display this Image */
+        public x:number = 0;
+        /** Y position to display this Image */
+        public y:number = 0;
+
+        public width:number = 0;
+        public height:number = 0;
+
+        public display : GameDisplay = null;
+        public viewPoint: ViewPoint = new ViewPoint(0, 0, 1);
+
+        public createImage(width:number, height:number) {
+            this.cav = document.createElement('canvas');
+
+            this.cav.width = width;
+            this.cav.height = height;
+
+            this.ctx = this.cav.getContext("2d");
+
+            return this.ctx.createImageData(width, height);
+        }
     }
 
-    /** handel the display of the game */
+
+    /** handel the display / output of game, gui, ... */
     export class Stage {
 
         private outputCav: HTMLCanvasElement;
-        private gameDisplay : GameDisplay = null;
-        private gameViewPoint: ViewPoint = new ViewPoint(0, 0, 1);
+        private gameDisplay : ContextImage;
 
         constructor(canvasForOutput: HTMLCanvasElement) {
             this.outputCav = canvasForOutput;
+
+            this.gameDisplay = new ContextImage();
+
             this.clear();
         }
 
-        public getGameDisplay() {
-            if (this.gameDisplay != null) return this.gameDisplay;
-            this.gameDisplay = new GameDisplay(this);
-            return this.gameDisplay;
+        public getGameDisplay():GameDisplay {
+            if (this.gameDisplay.display != null) return this.gameDisplay.display;
+            this.gameDisplay.display = new GameDisplay(this);
+            return this.gameDisplay.display;
         }
 
         public setGameDisplayViewPoint(gameViewPoint:ViewPoint) {
-            this.gameViewPoint = gameViewPoint;
+            this.gameDisplay.viewPoint = gameViewPoint;
             this.redraw();
         }
 
@@ -32,28 +56,16 @@ module Lemmings {
         public redraw() {
             if (this.gameDisplay == null) return;
 
-            let gameImg = this.gameDisplay.getImageData();
-            this.draw(gameImg, this.gameViewPoint.x, this.gameViewPoint.y, this.gameViewPoint.scale);
+            let gameImg = this.gameDisplay.display.getImageData();
+            this.draw(this.gameDisplay, gameImg);
         }
 
 
-        public createImage(width:number, height:number): ContextImage {
-            let processCav = document.createElement('canvas');
-
-            processCav.width = width;
-            processCav.height = height;
-
-            let processCtx = processCav.getContext("2d");
-
-            let img:any = processCtx.createImageData(width, height);
-            img.ctx = processCtx;
-            img.cav = processCav;
-
-            /// create image
-            return (img as ContextImage);
+        public createImage(display:GameDisplay, width:number, height:number): ImageData {
+            return this.gameDisplay.createImage(width, height);
         }
 
-
+        /** clear the stage/display/output */
         public clear() {
             var ctx = this.outputCav.getContext("2d");
             ctx.fillStyle = "#000000";
@@ -62,13 +74,13 @@ module Lemmings {
 
 
 
-        /** draw everything to the display */
-        private draw(img:ContextImage, viewX:number, viewY:number, viewScale:number) {
+        /** draw everything to the stage/display */
+        private draw(display:ContextImage, img:ImageData) {
             
-            if (img.ctx == null) return;
+            if (display.ctx == null) return;
 
             /// write image to context
-            img.ctx.putImageData(img, 0, 0);
+            display.ctx.putImageData(img, 0, 0);
             
             let ctx = this.outputCav.getContext("2d");
         
@@ -83,18 +95,18 @@ module Lemmings {
 
 
             //- Display Layers
-            var dW = img.width - viewX; //- display width
-            if ((dW * viewScale) > outW) {
-                dW = outW / viewScale;
+            var dW = img.width - display.viewPoint.x; //- display width
+            if ((dW * display.viewPoint.scale) > outW) {
+                dW = outW / display.viewPoint.scale;
             }
 
-            var dH = img.height - viewY; //- display height
-            if ((dH * viewScale) > outGameH) {
-                dH = outGameH / viewScale;
+            var dH = img.height - display.viewPoint.y; //- display height
+            if ((dH * display.viewPoint.scale) > outGameH) {
+                dH = outGameH / display.viewPoint.scale;
             }
 
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
-            ctx.drawImage(img.cav, viewX, viewY, dW, dH, 0, 0, Math.floor(dW * viewScale), Math.floor(dH * viewScale));
+            ctx.drawImage(display.cav, display.viewPoint.x, display.viewPoint.y, dW, dH, 0, 0, Math.floor(dW * display.viewPoint.scale), Math.floor(dH * display.viewPoint.scale));
 
         }
     }

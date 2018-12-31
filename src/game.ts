@@ -103,7 +103,7 @@ module Lemmings {
         private render() {
           
             if (this.dispaly) {
-                this.dispaly.initRender(this.level.width, this.level.height);
+                this.dispaly.initSize(this.level.width, this.level.height);
 
                 this.level.render(this.dispaly);
                 

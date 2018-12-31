@@ -2,7 +2,6 @@ module Lemmings {
 
     export class DebugView {
 
-
         private levelIndex = 0;
         private levelGroupIndex = 0;
         private gameType: GameTypes;
@@ -230,7 +229,7 @@ module Lemmings {
 
                     if (this.stage != null){
                         let gameDisplay = this.stage.getGameDisplay();
-                        gameDisplay.initRender(level.width, level.height);
+                        gameDisplay.initSize(level.width, level.height);
                         level.render(gameDisplay);
                         gameDisplay.redraw();
                     }

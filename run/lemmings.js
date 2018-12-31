@@ -276,7 +276,7 @@ var Lemmings;
         /** refresh display */
         render() {
             if (this.dispaly) {
-                this.dispaly.initRender(this.level.width, this.level.height);
+                this.dispaly.initSize(this.level.width, this.level.height);
                 this.level.render(this.dispaly);
                 this.lemmingManager.render(this.dispaly);
                 this.gameGui.render(this.dispaly);
@@ -4744,7 +4744,7 @@ var Lemmings;
                 }
                 if (this.stage != null) {
                     let gameDisplay = this.stage.getGameDisplay();
-                    gameDisplay.initRender(level.width, level.height);
+                    gameDisplay.initSize(level.width, level.height);
                     level.render(gameDisplay);
                     gameDisplay.redraw();
                 }
@@ -4899,10 +4899,10 @@ var Lemmings;
         constructor(stage) {
             this.stage = stage;
         }
-        initRender(width, height) {
+        initSize(width, height) {
             /// create image data
             if ((this.imgData == null) || (this.imgData.width != width) || (this.imgData.height != height)) {
-                this.imgData = this.stage.createImage(width, height);
+                this.imgData = this.stage.createImage(this, width, height);
             }
         }
         /** render the level-background to an image */
@@ -4910,7 +4910,7 @@ var Lemmings;
             /// set pixels
             this.imgData.data.set(groundImage);
         }
-        /** copys a frame to the display */
+        /** copy a frame to the display */
         drawFrame(frame, posX, posY) {
             let srcW = frame.width;
             let srcH = frame.height;
@@ -4973,55 +4973,64 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    class ContextImage extends ImageData {
+    class ContextImage {
+        constructor() {
+            /** X position to display this Image */
+            this.x = 0;
+            /** Y position to display this Image */
+            this.y = 0;
+            this.width = 0;
+            this.height = 0;
+            this.display = null;
+            this.viewPoint = new Lemmings.ViewPoint(0, 0, 1);
+        }
+        createImage(width, height) {
+            this.cav = document.createElement('canvas');
+            this.cav.width = width;
+            this.cav.height = height;
+            this.ctx = this.cav.getContext("2d");
+            return this.ctx.createImageData(width, height);
+        }
     }
     Lemmings.ContextImage = ContextImage;
-    /** handel the display of the game */
+    /** handel the display / output of game, gui, ... */
     class Stage {
         constructor(canvasForOutput) {
-            this.gameDisplay = null;
-            this.gameViewPoint = new Lemmings.ViewPoint(0, 0, 1);
             this.outputCav = canvasForOutput;
+            this.gameDisplay = new ContextImage();
             this.clear();
         }
         getGameDisplay() {
-            if (this.gameDisplay != null)
-                return this.gameDisplay;
-            this.gameDisplay = new Lemmings.GameDisplay(this);
-            return this.gameDisplay;
+            if (this.gameDisplay.display != null)
+                return this.gameDisplay.display;
+            this.gameDisplay.display = new Lemmings.GameDisplay(this);
+            return this.gameDisplay.display;
         }
         setGameDisplayViewPoint(gameViewPoint) {
-            this.gameViewPoint = gameViewPoint;
+            this.gameDisplay.viewPoint = gameViewPoint;
             this.redraw();
         }
         redraw() {
             if (this.gameDisplay == null)
                 return;
-            let gameImg = this.gameDisplay.getImageData();
-            this.draw(gameImg, this.gameViewPoint.x, this.gameViewPoint.y, this.gameViewPoint.scale);
+            let gameImg = this.gameDisplay.display.getImageData();
+            this.draw(this.gameDisplay, gameImg);
         }
-        createImage(width, height) {
-            let processCav = document.createElement('canvas');
-            processCav.width = width;
-            processCav.height = height;
-            let processCtx = processCav.getContext("2d");
-            let img = processCtx.createImageData(width, height);
-            img.ctx = processCtx;
-            img.cav = processCav;
-            /// create image
-            return img;
+        createImage(display, width, height) {
+            return this.gameDisplay.createImage(width, height);
         }
+        /** clear the stage/display/output */
         clear() {
             var ctx = this.outputCav.getContext("2d");
             ctx.fillStyle = "#000000";
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
-        /** draw everything to the display */
-        draw(img, viewX, viewY, viewScale) {
-            if (img.ctx == null)
+        /** draw everything to the stage/display */
+        draw(display, img) {
+            if (display.ctx == null)
                 return;
             /// write image to context
-            img.ctx.putImageData(img, 0, 0);
+            display.ctx.putImageData(img, 0, 0);
             let ctx = this.outputCav.getContext("2d");
             //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;
@@ -5031,16 +5040,16 @@ var Lemmings;
             let outGameH = ctx.canvas.height;
             let outW = ctx.canvas.width;
             //- Display Layers
-            var dW = img.width - viewX; //- display width
-            if ((dW * viewScale) > outW) {
-                dW = outW / viewScale;
+            var dW = img.width - display.viewPoint.x; //- display width
+            if ((dW * display.viewPoint.scale) > outW) {
+                dW = outW / display.viewPoint.scale;
             }
-            var dH = img.height - viewY; //- display height
-            if ((dH * viewScale) > outGameH) {
-                dH = outGameH / viewScale;
+            var dH = img.height - display.viewPoint.y; //- display height
+            if ((dH * display.viewPoint.scale) > outGameH) {
+                dH = outGameH / display.viewPoint.scale;
             }
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
-            ctx.drawImage(img.cav, viewX, viewY, dW, dH, 0, 0, Math.floor(dW * viewScale), Math.floor(dH * viewScale));
+            ctx.drawImage(display.cav, display.viewPoint.x, display.viewPoint.y, dW, dH, 0, 0, Math.floor(dW * display.viewPoint.scale), Math.floor(dH * display.viewPoint.scale));
         }
     }
     Lemmings.Stage = Stage;
