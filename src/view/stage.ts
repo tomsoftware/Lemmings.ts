@@ -1,6 +1,6 @@
 module Lemmings {
 
-    export class ContextImage {
+    export class StageImage {
         public ctx: CanvasRenderingContext2D;
         public cav: HTMLCanvasElement;
         /** X position to display this Image */
@@ -30,21 +30,50 @@ module Lemmings {
     /** handel the display / output of game, gui, ... */
     export class Stage {
 
-        private outputCav: HTMLCanvasElement;
-        private gameDisplay : ContextImage;
+        private stageCav: HTMLCanvasElement;
+        private gameDisplay : StageImage;
+        private guiDisplay : StageImage;
 
         constructor(canvasForOutput: HTMLCanvasElement) {
-            this.outputCav = canvasForOutput;
+            this.stageCav = canvasForOutput;
 
-            this.gameDisplay = new ContextImage();
+            this.gameDisplay = new StageImage();
+
+            this.guiDisplay = new StageImage();
+            this.guiDisplay.viewPoint = new ViewPoint(0,0,2);
+            this.updateStageSize();
 
             this.clear();
+        }
+
+
+        public updateStageSize() {
+
+            let ctx = this.stageCav.getContext("2d");
+        
+            let stageHeight = ctx.canvas.height;
+            let stageWidth = ctx.canvas.width;
+
+            this.gameDisplay.y = 0;
+            this.gameDisplay.height = stageHeight - 100;
+            this.gameDisplay.width = stageWidth;
+
+            this.guiDisplay.y = stageHeight - 100;
+            this.guiDisplay.height = 100;
+            this.guiDisplay.width = stageWidth;
+            
         }
 
         public getGameDisplay():GameDisplay {
             if (this.gameDisplay.display != null) return this.gameDisplay.display;
             this.gameDisplay.display = new GameDisplay(this);
             return this.gameDisplay.display;
+        }
+
+        public getGuiDisplay():GameDisplay {
+            if (this.guiDisplay.display != null) return this.guiDisplay.display;
+            this.guiDisplay.display = new GameDisplay(this);
+            return this.guiDisplay.display;
         }
 
         public setGameDisplayViewPoint(gameViewPoint:ViewPoint) {
@@ -54,20 +83,30 @@ module Lemmings {
 
 
         public redraw() {
-            if (this.gameDisplay == null) return;
+            if (this.gameDisplay.display != null) {
+                let gameImg = this.gameDisplay.display.getImageData();
+                this.draw(this.gameDisplay, gameImg);
+            };
 
-            let gameImg = this.gameDisplay.display.getImageData();
-            this.draw(this.gameDisplay, gameImg);
+            if (this.guiDisplay.display != null) {
+                let guiImg = this.guiDisplay.display.getImageData();
+                this.draw(this.guiDisplay, guiImg);
+            };
         }
 
 
         public createImage(display:GameDisplay, width:number, height:number): ImageData {
-            return this.gameDisplay.createImage(width, height);
+            if (display == this.gameDisplay.display) {
+                return this.gameDisplay.createImage(width, height);
+            }
+            else {
+                return this.guiDisplay.createImage(width, height);
+            }
         }
 
         /** clear the stage/display/output */
         public clear() {
-            var ctx = this.outputCav.getContext("2d");
+            var ctx = this.stageCav.getContext("2d");
             ctx.fillStyle = "#000000";
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
@@ -75,14 +114,14 @@ module Lemmings {
 
 
         /** draw everything to the stage/display */
-        private draw(display:ContextImage, img:ImageData) {
+        private draw(display:StageImage, img:ImageData) {
             
             if (display.ctx == null) return;
 
             /// write image to context
             display.ctx.putImageData(img, 0, 0);
             
-            let ctx = this.outputCav.getContext("2d");
+            let ctx = this.stageCav.getContext("2d");
         
             //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;
@@ -90,8 +129,8 @@ module Lemmings {
             ctx.webkitImageSmoothingEnabled = false;
             ctx.imageSmoothingEnabled = false;
 
-            let outGameH = ctx.canvas.height;
-            let outW = ctx.canvas.width;
+            let outH = display.height;
+            let outW = display.width;
 
 
             //- Display Layers
@@ -101,12 +140,12 @@ module Lemmings {
             }
 
             var dH = img.height - display.viewPoint.y; //- display height
-            if ((dH * display.viewPoint.scale) > outGameH) {
-                dH = outGameH / display.viewPoint.scale;
+            if ((dH * display.viewPoint.scale) > outH) {
+                dH = outH / display.viewPoint.scale;
             }
 
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
-            ctx.drawImage(display.cav, display.viewPoint.x, display.viewPoint.y, dW, dH, 0, 0, Math.floor(dW * display.viewPoint.scale), Math.floor(dH * display.viewPoint.scale));
+            ctx.drawImage(display.cav, display.viewPoint.x, display.viewPoint.y, dW, dH, display.x, display.y, Math.floor(dW * display.viewPoint.scale), Math.floor(dH * display.viewPoint.scale));
 
         }
     }

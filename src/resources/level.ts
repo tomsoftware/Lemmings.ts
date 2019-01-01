@@ -97,6 +97,8 @@ module Lemmings {
 
         /** render ground to display */
         public render(gameDisplay:GameDisplay) {
+            gameDisplay.initSize(this.width, this.height);
+
             gameDisplay.setBackground(this.groundImage);
         }
 

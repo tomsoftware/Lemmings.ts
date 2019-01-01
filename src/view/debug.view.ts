@@ -74,7 +74,9 @@ module Lemmings {
                 .then(game => {
                     this.controller.setViewPoint(game.getScreenPositionX(), 0, 1);
 
-                    game.setDispaly(this.stage.getGameDisplay());
+                    game.setGameDispaly(this.stage.getGameDisplay());
+                    game.setGuiDisplay(this.stage.getGuiDisplay());
+
                     game.start();
 
                     this.game = game;

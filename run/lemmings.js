@@ -209,6 +209,7 @@ var Lemmings;
         constructor(gameResources) {
             this.error = new Lemmings.ErrorHandler("Game");
             this.gameResources = null;
+            this.guiDispaly = null;
             this.lemmingsLeft = 0;
             this.dispaly = null;
             this.gameTimer = 0;
@@ -217,11 +218,11 @@ var Lemmings;
             this.releaseTickIndex = 0;
             this.gameResources = gameResources;
         }
-        setDispaly(dispaly) {
+        setGameDispaly(dispaly) {
             this.dispaly = dispaly;
         }
-        getGui() {
-            return this.gameGui;
+        setGuiDisplay(dispaly) {
+            this.guiDispaly = dispaly;
         }
         /** load a new game/level */
         loadLevel(levelGroupIndex, levelIndex) {
@@ -276,12 +277,14 @@ var Lemmings;
         /** refresh display */
         render() {
             if (this.dispaly) {
-                this.dispaly.initSize(this.level.width, this.level.height);
                 this.level.render(this.dispaly);
                 this.lemmingManager.render(this.dispaly);
-                this.gameGui.render(this.dispaly);
-                this.dispaly.redraw();
+                //this.dispaly.redraw();
             }
+            if (this.guiDispaly) {
+                this.gameGui.render(this.guiDispaly);
+            }
+            this.guiDispaly.redraw();
         }
         /** run the game logic one step in time */
         tick() {
@@ -1300,6 +1303,7 @@ var Lemmings;
         }
         /** render ground to display */
         render(gameDisplay) {
+            gameDisplay.initSize(this.width, this.height);
             gameDisplay.setBackground(this.groundImage);
         }
     }
@@ -1327,12 +1331,12 @@ var Lemmings;
             /// read panel skill-count number letters
             fr2.setOffset(0x1900);
             for (let i = 0; i < 10; i++) {
-                let paletteImgRight = new Lemmings.PaletteImage(8, 16);
-                paletteImgRight.processImage(fr2, 2);
-                this.numberSpriteRight.push(paletteImgRight.createtFrame(colorPalette));
-                let paletteImgLeft = new Lemmings.PaletteImage(8, 16);
-                paletteImgLeft.processImage(fr2, 2);
-                this.numberSpriteLeft.push(paletteImgLeft.createtFrame(colorPalette));
+                let paletteImgRight = new Lemmings.PaletteImage(8, 8);
+                paletteImgRight.processImage(fr2, 1);
+                this.numberSpriteRight.push(paletteImgRight.createtFrame());
+                let paletteImgLeft = new Lemmings.PaletteImage(8, 8);
+                paletteImgLeft.processImage(fr2, 1);
+                this.numberSpriteLeft.push(paletteImgLeft.createtFrame());
             }
         }
         /** return the sprite for the skill panel */
@@ -1341,7 +1345,7 @@ var Lemmings;
         }
         /** return a green letter */
         getLetterSprite(letter) {
-            return this.letterSprite[letter];
+            return this.letterSprite[letter.toUpperCase()];
         }
         /** return a number letter */
         getNumberSpriteLeft(number) {
@@ -2358,11 +2362,19 @@ var Lemmings;
                     imgBuf[imgBufPos++] = 0;
                 }
                 else {
-                    let color = palette.getColor(colorIndex);
-                    imgBuf[imgBufPos++] = color[0];
-                    imgBuf[imgBufPos++] = color[1];
-                    imgBuf[imgBufPos++] = color[2];
-                    imgBuf[imgBufPos++] = 255;
+                    if (palette != null) {
+                        let color = palette.getColor(colorIndex);
+                        imgBuf[imgBufPos++] = color[0];
+                        imgBuf[imgBufPos++] = color[1];
+                        imgBuf[imgBufPos++] = color[2];
+                        imgBuf[imgBufPos++] = 255;
+                    }
+                    else {
+                        imgBuf[imgBufPos++] = 255;
+                        imgBuf[imgBufPos++] = 255;
+                        imgBuf[imgBufPos++] = 255;
+                        imgBuf[imgBufPos++] = 255;
+                    }
                 }
             }
             return resultFrame;
@@ -4631,7 +4643,8 @@ var Lemmings;
                 .then(game => game.loadLevel(this.levelGroupIndex, this.levelIndex))
                 .then(game => {
                 this.controller.setViewPoint(game.getScreenPositionX(), 0, 1);
-                game.setDispaly(this.stage.getGameDisplay());
+                game.setGameDispaly(this.stage.getGameDisplay());
+                game.setGuiDisplay(this.stage.getGuiDisplay());
                 game.start();
                 this.game = game;
             });
@@ -4894,7 +4907,7 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    /** handel the display of the game */
+    /** handel the display of the game images */
     class GameDisplay {
         constructor(stage) {
             this.stage = stage;
@@ -4903,6 +4916,16 @@ var Lemmings;
             /// create image data
             if ((this.imgData == null) || (this.imgData.width != width) || (this.imgData.height != height)) {
                 this.imgData = this.stage.createImage(this, width, height);
+                this.clear();
+            }
+        }
+        clear() {
+            let img = this.imgData.data;
+            for (let i = 0; i < img.length; i += 4) {
+                img[i] = 0;
+                img[i + 1] = 0;
+                img[i + 2] = 0;
+                img[i + 3] = 255;
             }
         }
         /** render the level-background to an image */
@@ -4912,6 +4935,7 @@ var Lemmings;
         }
         /** copy a frame to the display */
         drawFrame(frame, posX, posY) {
+            //if (this.imgData == null) return;
             let srcW = frame.width;
             let srcH = frame.height;
             let srcBuffer = frame.data;
@@ -4935,6 +4959,7 @@ var Lemmings;
                     destData[destIndex] = srcBuffer[srcIndex];
                     destData[destIndex + 1] = srcBuffer[srcIndex + 1];
                     destData[destIndex + 2] = srcBuffer[srcIndex + 2];
+                    destData[destIndex + 3] = 255;
                 }
             }
             this.setDebugPixel(posX, posY);
@@ -4964,16 +4989,44 @@ var Lemmings;
         getSelectedAction() {
             return this.selectedAction;
         }
-        render(gameDisplay) {
-            gameDisplay.drawFrame(this.skillPanelSprites.getPanelSprite(), 200, 120);
-            // gameDisplay.drawImage();
+        render(dispaly) {
+            let panelImage = this.skillPanelSprites.getPanelSprite();
+            dispaly.initSize(panelImage.width, panelImage.height);
+            dispaly.setBackground(panelImage.data);
+            this.drawGreenString(dispaly, "Out 1", 112, 0);
+            this.drawGreenString(dispaly, "In 0 %", 186, 0);
+            this.drawGreenString(dispaly, "Time 5-00", 248, 0);
+            this.drawPanelNumber(dispaly, 99, 0);
+            this.drawPanelNumber(dispaly, 88, 1);
+            this.drawPanelNumber(dispaly, 77, 2);
+        }
+        drawPanelNumber(dispaly, number, posIndex) {
+            this.drawNumber(dispaly, number, 4 + 16 * posIndex, 17);
+        }
+        drawNumber(dispaly, number, x, y) {
+            let num1Img = this.skillPanelSprites.getNumberSpriteLeft(Math.floor(number / 10));
+            let num2Img = this.skillPanelSprites.getNumberSpriteRight(number % 10);
+            dispaly.drawFrame(num1Img, x, y);
+            dispaly.drawFrame(num2Img, x, y);
+            return x + 8;
+        }
+        /** print out green letters */
+        drawGreenString(dispaly, text, x, y) {
+            for (let i = 0; i < text.length; i++) {
+                let letterImg = this.skillPanelSprites.getLetterSprite(text[i]);
+                if (letterImg != null) {
+                    dispaly.drawFrame(letterImg, x, y);
+                }
+                x += 8;
+            }
+            return x;
         }
     }
     Lemmings.GameGui = GameGui;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    class ContextImage {
+    class StageImage {
         constructor() {
             /** X position to display this Image */
             this.x = 0;
@@ -4992,13 +5045,27 @@ var Lemmings;
             return this.ctx.createImageData(width, height);
         }
     }
-    Lemmings.ContextImage = ContextImage;
+    Lemmings.StageImage = StageImage;
     /** handel the display / output of game, gui, ... */
     class Stage {
         constructor(canvasForOutput) {
-            this.outputCav = canvasForOutput;
-            this.gameDisplay = new ContextImage();
+            this.stageCav = canvasForOutput;
+            this.gameDisplay = new StageImage();
+            this.guiDisplay = new StageImage();
+            this.guiDisplay.viewPoint = new Lemmings.ViewPoint(0, 0, 2);
+            this.updateStageSize();
             this.clear();
+        }
+        updateStageSize() {
+            let ctx = this.stageCav.getContext("2d");
+            let stageHeight = ctx.canvas.height;
+            let stageWidth = ctx.canvas.width;
+            this.gameDisplay.y = 0;
+            this.gameDisplay.height = stageHeight - 100;
+            this.gameDisplay.width = stageWidth;
+            this.guiDisplay.y = stageHeight - 100;
+            this.guiDisplay.height = 100;
+            this.guiDisplay.width = stageWidth;
         }
         getGameDisplay() {
             if (this.gameDisplay.display != null)
@@ -5006,22 +5073,39 @@ var Lemmings;
             this.gameDisplay.display = new Lemmings.GameDisplay(this);
             return this.gameDisplay.display;
         }
+        getGuiDisplay() {
+            if (this.guiDisplay.display != null)
+                return this.guiDisplay.display;
+            this.guiDisplay.display = new Lemmings.GameDisplay(this);
+            return this.guiDisplay.display;
+        }
         setGameDisplayViewPoint(gameViewPoint) {
             this.gameDisplay.viewPoint = gameViewPoint;
             this.redraw();
         }
         redraw() {
-            if (this.gameDisplay == null)
-                return;
-            let gameImg = this.gameDisplay.display.getImageData();
-            this.draw(this.gameDisplay, gameImg);
+            if (this.gameDisplay.display != null) {
+                let gameImg = this.gameDisplay.display.getImageData();
+                this.draw(this.gameDisplay, gameImg);
+            }
+            ;
+            if (this.guiDisplay.display != null) {
+                let guiImg = this.guiDisplay.display.getImageData();
+                this.draw(this.guiDisplay, guiImg);
+            }
+            ;
         }
         createImage(display, width, height) {
-            return this.gameDisplay.createImage(width, height);
+            if (display == this.gameDisplay.display) {
+                return this.gameDisplay.createImage(width, height);
+            }
+            else {
+                return this.guiDisplay.createImage(width, height);
+            }
         }
         /** clear the stage/display/output */
         clear() {
-            var ctx = this.outputCav.getContext("2d");
+            var ctx = this.stageCav.getContext("2d");
             ctx.fillStyle = "#000000";
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         }
@@ -5031,25 +5115,25 @@ var Lemmings;
                 return;
             /// write image to context
             display.ctx.putImageData(img, 0, 0);
-            let ctx = this.outputCav.getContext("2d");
+            let ctx = this.stageCav.getContext("2d");
             //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;
             //@ts-ignore
             ctx.webkitImageSmoothingEnabled = false;
             ctx.imageSmoothingEnabled = false;
-            let outGameH = ctx.canvas.height;
-            let outW = ctx.canvas.width;
+            let outH = display.height;
+            let outW = display.width;
             //- Display Layers
             var dW = img.width - display.viewPoint.x; //- display width
             if ((dW * display.viewPoint.scale) > outW) {
                 dW = outW / display.viewPoint.scale;
             }
             var dH = img.height - display.viewPoint.y; //- display height
-            if ((dH * display.viewPoint.scale) > outGameH) {
-                dH = outGameH / display.viewPoint.scale;
+            if ((dH * display.viewPoint.scale) > outH) {
+                dH = outH / display.viewPoint.scale;
             }
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
-            ctx.drawImage(display.cav, display.viewPoint.x, display.viewPoint.y, dW, dH, 0, 0, Math.floor(dW * display.viewPoint.scale), Math.floor(dH * display.viewPoint.scale));
+            ctx.drawImage(display.cav, display.viewPoint.x, display.viewPoint.y, dW, dH, display.x, display.y, Math.floor(dW * display.viewPoint.scale), Math.floor(dH * display.viewPoint.scale));
         }
     }
     Lemmings.Stage = Stage;

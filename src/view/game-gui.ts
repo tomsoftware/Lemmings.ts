@@ -12,11 +12,58 @@ export class GameGui {
     this.selectedAction = ActionType.DIGG;
   }
 
-  public render(gameDisplay:GameDisplay) {
-    gameDisplay.drawFrame(this.skillPanelSprites.getPanelSprite(), 200, 120);
 
-   // gameDisplay.drawImage();
+
+  public render(dispaly:GameDisplay) {
+    let panelImage = this.skillPanelSprites.getPanelSprite();
+
+    dispaly.initSize(panelImage.width, panelImage.height);
+
+    dispaly.setBackground(panelImage.data);
+
+    this.drawGreenString(dispaly, "Out 1", 112, 0);
+    this.drawGreenString(dispaly, "In 0 %", 186, 0);
+
+    this.drawGreenString(dispaly, "Time 5-00", 248, 0);
+
+    this.drawPanelNumber(dispaly, 99, 0);
+    this.drawPanelNumber(dispaly, 88, 1);
+    this.drawPanelNumber(dispaly, 77, 2);
+
   }
+
+  private drawPanelNumber(dispaly:GameDisplay, number:number, posIndex:number) {
+    
+    this.drawNumber(dispaly, number, 4 + 16 * posIndex, 17);
+  }
+
+  private drawNumber(dispaly:GameDisplay, number:number, x:number, y:number) :number {
+    
+    let num1Img = this.skillPanelSprites.getNumberSpriteLeft(Math.floor(number / 10));
+    let num2Img = this.skillPanelSprites.getNumberSpriteRight(number % 10);
+
+    dispaly.drawFrame(num1Img, x, y);
+    dispaly.drawFrame(num2Img, x, y);
+
+    return x + 8;
+  }
+
+  /** print out green letters */
+  private drawGreenString(dispaly:GameDisplay, text:string, x:number, y:number):number {
+
+    for(let i=0; i<text.length;i++) {
+      let letterImg = this.skillPanelSprites.getLetterSprite(text[i]);
+
+      if (letterImg != null) {
+        dispaly.drawFrame(letterImg, x, y);
+      }
+
+      x+= 8;
+    }
+
+    return x;
+  }
+
 /*
   this.game = gameObject;
 

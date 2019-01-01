@@ -12,6 +12,7 @@ module Lemmings {
         private level: Level;
         private lemmingManager: LemmingManager;
         private gameGui: GameGui;
+        private guiDispaly: GameDisplay = null;
         private lemmingsLeft = 0;
         private dispaly: GameDisplay = null;
         private gameTimer: number = 0;
@@ -23,12 +24,12 @@ module Lemmings {
             this.gameResources = gameResources;
         }
 
-        public setDispaly(dispaly:GameDisplay){
+        public setGameDispaly(dispaly:GameDisplay){
             this.dispaly = dispaly;
         }
 
-        public getGui():GameGui {
-            return this.gameGui;
+        public setGuiDisplay(dispaly:GameDisplay) {
+            this.guiDispaly = dispaly;
         }
 
         /** load a new game/level */
@@ -101,18 +102,17 @@ module Lemmings {
 
         /** refresh display */ 
         private render() {
-          
             if (this.dispaly) {
-                this.dispaly.initSize(this.level.width, this.level.height);
-
-                this.level.render(this.dispaly);
-                
-                this.lemmingManager.render(this.dispaly);
-
-                this.gameGui.render(this.dispaly);
-                
-                this.dispaly.redraw();
+               this.level.render(this.dispaly);
+               this.lemmingManager.render(this.dispaly);
+               //this.dispaly.redraw();
             }
+
+            if (this.guiDispaly) {
+                this.gameGui.render(this.guiDispaly);
+            }
+            
+            this.guiDispaly.redraw();
         }
 
         

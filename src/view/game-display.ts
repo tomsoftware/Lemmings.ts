@@ -1,6 +1,6 @@
 module Lemmings {
 
-    /** handel the display of the game */
+    /** handel the display of the game images */
     export class GameDisplay {
 
         private imgData:ImageData;
@@ -14,6 +14,19 @@ module Lemmings {
             /// create image data
             if ((this.imgData == null) || (this.imgData.width != width) || (this.imgData.height != height)) {
                 this.imgData = this.stage.createImage(this, width, height); 
+
+                this.clear();
+            }
+        }
+
+        public clear() {
+            let img = this.imgData.data;
+
+            for(let i=0; i<img.length; i+=4){
+                img[i] = 0;
+                img[i+1] = 0;
+                img[i+2] = 0;
+                img[i+3] = 255;
             }
         }
 
@@ -29,6 +42,8 @@ module Lemmings {
         /** copy a frame to the display */
         public drawFrame(frame:Frame, posX:number, posY:number){
 
+            //if (this.imgData == null) return;
+
             let srcW = frame.width;
             let srcH = frame.height;
             let srcBuffer = frame.data;
@@ -36,7 +51,6 @@ module Lemmings {
             let destW = this.imgData.width;
             let destH = this.imgData.height;
             let destData = this.imgData.data;
-
 
             let destX = posX - frame.offsetX;
             let destY = posY - frame.offsetY;
@@ -58,6 +72,7 @@ module Lemmings {
                     destData[destIndex] = srcBuffer[srcIndex];
                     destData[destIndex + 1] = srcBuffer[srcIndex + 1];
                     destData[destIndex + 2] = srcBuffer[srcIndex + 2];
+                    destData[destIndex + 3] = 255;
                 }
             }
 

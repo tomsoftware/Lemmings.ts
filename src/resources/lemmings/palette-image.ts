@@ -18,7 +18,7 @@ module Lemmings {
         }
 
         /** convert to frame (collored image) */
-        public createtFrame(palette:ColorPalette,offsetX?:number, offsetY?:number):Frame {
+        public createtFrame(palette?:ColorPalette, offsetX?:number, offsetY?:number):Frame {
           
             /// convert color-index data to pixle image
             let pixBuf = this.pixBuf;;
@@ -38,12 +38,23 @@ module Lemmings {
                     imgBuf[imgBufPos++] = 0;
                 }
                 else {
-                    let color = palette.getColor(colorIndex);
+                    if (palette != null) {
+                        let color = palette.getColor(colorIndex);
 
-                    imgBuf[imgBufPos++] = color[0];
-                    imgBuf[imgBufPos++] = color[1];
-                    imgBuf[imgBufPos++] = color[2];
-                    imgBuf[imgBufPos++] = 255;
+                        imgBuf[imgBufPos++] = color[0];
+                        imgBuf[imgBufPos++] = color[1];
+                        imgBuf[imgBufPos++] = color[2];
+                        imgBuf[imgBufPos++] = 255;
+                    }
+                    else {
+
+                        imgBuf[imgBufPos++] = 255;
+                        imgBuf[imgBufPos++] = 255;
+                        imgBuf[imgBufPos++] = 255;
+                        imgBuf[imgBufPos++] = 255;
+                    }
+
+  
 
                 }
             }

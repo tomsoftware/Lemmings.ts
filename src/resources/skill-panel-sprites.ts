@@ -16,7 +16,7 @@ module Lemmings {
 
         /** return a green letter */
         public getLetterSprite(letter:string) : Frame {
-            return this.letterSprite[letter];
+            return this.letterSprite[letter.toUpperCase()];
         }
 
         /** return a number letter */
@@ -49,13 +49,13 @@ module Lemmings {
             /// read panel skill-count number letters
             fr2.setOffset(0x1900);
             for (let i = 0; i < 10; i++) {
-                let paletteImgRight = new PaletteImage(8, 16);
-                paletteImgRight.processImage(fr2, 2);
-                this.numberSpriteRight.push(paletteImgRight.createtFrame(colorPalette));
+                let paletteImgRight = new PaletteImage(8, 8);
+                paletteImgRight.processImage(fr2, 1);
+                this.numberSpriteRight.push(paletteImgRight.createtFrame());
 
-                let paletteImgLeft = new PaletteImage(8, 16);
-                paletteImgLeft.processImage(fr2, 2);
-                this.numberSpriteLeft.push(paletteImgLeft.createtFrame(colorPalette));
+                let paletteImgLeft = new PaletteImage(8, 8);
+                paletteImgLeft.processImage(fr2, 1);
+                this.numberSpriteLeft.push(paletteImgLeft.createtFrame());
             }
         }
 
