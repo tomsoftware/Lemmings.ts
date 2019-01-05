@@ -25,7 +25,8 @@ module Lemmings {
         } 
 
         export function isValid(type: SkillTypes) : boolean {
-            return ((type > SkillTypes.UNKNOWN) && (type < this.lenght()))
+            if (type == null) return false;
+            return ((type > SkillTypes.UNKNOWN) && (type < SkillTypes.length()))
         }
     }
 }

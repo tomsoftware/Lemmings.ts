@@ -15,10 +15,9 @@ module Lemmings {
         private guiDispaly: GameDisplay = null;
         private lemmingsLeft = 0;
         private dispaly: GameDisplay = null;
-        private gameTimer: number = 0;
-        /** the current game time in number of steps the game has made  */
-        private tickIndex : number = 0;
+        private gameTimer: GameTimer = null;
         private releaseTickIndex : number = 0;
+        private skills:GameSkills;
 
         constructor(gameResources: GameResources) {
             this.gameResources = gameResources;
@@ -43,6 +42,13 @@ module Lemmings {
                 this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
                 .then(level => {
 
+                    this.gameTimer = new GameTimer(level);
+                    this.gameTimer.onGameTick.on(() => {
+                         this.onGameTimerTick() 
+                    });
+
+                    this.skills = new GameSkills(level);
+
                     this.level = level;
                     return this.gameResources.getLemmingsSprite(level.colorPalette);
                 })
@@ -52,7 +58,6 @@ module Lemmings {
 
                     this.lemmingsLeft =  this.level.releaseCount;
                     
-                    this.tickIndex = 0;
                     this.releaseTickIndex = 99;
                
                     return this.gameResources.getSkillPanelSprite(this.level.colorPalette);
@@ -60,7 +65,7 @@ module Lemmings {
                 })
                 .then(skillPanelSprites => {
                     /// setup gui
-                    this.gameGui = new GameGui(skillPanelSprites);
+                    this.gameGui = new GameGui(skillPanelSprites, this.skills, this.gameTimer);
 
                     /// let's start!
                     resolve(this);
@@ -72,33 +77,35 @@ module Lemmings {
 
         /** run the game */
         public start() {
-            this.continue();
+            this.gameTimer.continue();
         }
 
-        /** Pause the game */
-        public suspend() {
-            if (this.gameTimer != 0)
-            clearInterval(this.gameTimer);
-            this.gameTimer = 0;
-        }
-
-
-        /** Run the game timer */
-        public continue() {
-            if (this.gameTimer != 0) return;
-
-            this.gameTimer = setInterval(()=>{
-
-                this.nextFrame();
-            }, 20);
+        /** return the game Timer for this game */
+        public getGameTimer():GameTimer {
+            return this.gameTimer;
         }
 
         /** run one step in game time and render the result */
-        public nextFrame() {
+        private onGameTimerTick() {
             /// run game logic
-            this.tick();
+            this.runGameLogic();
             this.render();
         }
+
+        
+        /** run the game logic one step in time */
+        public runGameLogic() {
+            if (this.level == null) {
+                this.error.log("level not loaded!");
+                return;
+            }
+
+            this.addNewLemmings();
+
+            this.lemmingManager.tick(this.level);
+
+        }
+
 
         /** refresh display */ 
         private render() {
@@ -113,22 +120,6 @@ module Lemmings {
             }
             
             this.guiDispaly.redraw();
-        }
-
-        
-        /** run the game logic one step in time */
-        public tick() {
-            if (this.level == null) {
-                this.error.log("level not loaded!");
-                return;
-            }
-
-            this.tickIndex++;
-
-            this.addNewLemmings();
-
-            this.lemmingManager.tick(this.level);
-
         }
 
         /** return the id of the lemming at a scene position */
@@ -160,16 +151,6 @@ module Lemmings {
             }
         }
 
-
-        /** return the past game time in seconds */
-        public getGameTime():number {
-            return Math.floor(this.tickIndex / 60);
-        }
-
-        /** return the maximum time in seconds to win the game  */
-        public getGameTimeLimit():number {
-            return this.level.timeLimit;
-        }
 
         public getScreenPositionX():number {
             return this.level.screenPositionX;

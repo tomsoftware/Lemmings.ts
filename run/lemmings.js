@@ -212,9 +212,7 @@ var Lemmings;
             this.guiDispaly = null;
             this.lemmingsLeft = 0;
             this.dispaly = null;
-            this.gameTimer = 0;
-            /** the current game time in number of steps the game has made  */
-            this.tickIndex = 0;
+            this.gameTimer = null;
             this.releaseTickIndex = 0;
             this.gameResources = gameResources;
         }
@@ -231,6 +229,11 @@ var Lemmings;
             return new Promise((resolve, reject) => {
                 this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
                     .then(level => {
+                    this.gameTimer = new Lemmings.GameTimer(level);
+                    this.gameTimer.onGameTick.on(() => {
+                        this.onGameTimerTick();
+                    });
+                    this.skills = new Lemmings.GameSkills(level);
                     this.level = level;
                     return this.gameResources.getLemmingsSprite(level.colorPalette);
                 })
@@ -238,13 +241,12 @@ var Lemmings;
                     /// setup Lemmings
                     this.lemmingManager = new Lemmings.LemmingManager(lemSprite);
                     this.lemmingsLeft = this.level.releaseCount;
-                    this.tickIndex = 0;
                     this.releaseTickIndex = 99;
                     return this.gameResources.getSkillPanelSprite(this.level.colorPalette);
                 })
                     .then(skillPanelSprites => {
                     /// setup gui
-                    this.gameGui = new Lemmings.GameGui(skillPanelSprites);
+                    this.gameGui = new Lemmings.GameGui(skillPanelSprites, this.skills, this.gameTimer);
                     /// let's start!
                     resolve(this);
                 });
@@ -252,27 +254,26 @@ var Lemmings;
         }
         /** run the game */
         start() {
-            this.continue();
+            this.gameTimer.continue();
         }
-        /** Pause the game */
-        suspend() {
-            if (this.gameTimer != 0)
-                clearInterval(this.gameTimer);
-            this.gameTimer = 0;
-        }
-        /** Run the game timer */
-        continue() {
-            if (this.gameTimer != 0)
-                return;
-            this.gameTimer = setInterval(() => {
-                this.nextFrame();
-            }, 20);
+        /** return the game Timer for this game */
+        getGameTimer() {
+            return this.gameTimer;
         }
         /** run one step in game time and render the result */
-        nextFrame() {
+        onGameTimerTick() {
             /// run game logic
-            this.tick();
+            this.runGameLogic();
             this.render();
+        }
+        /** run the game logic one step in time */
+        runGameLogic() {
+            if (this.level == null) {
+                this.error.log("level not loaded!");
+                return;
+            }
+            this.addNewLemmings();
+            this.lemmingManager.tick(this.level);
         }
         /** refresh display */
         render() {
@@ -285,16 +286,6 @@ var Lemmings;
                 this.gameGui.render(this.guiDispaly);
             }
             this.guiDispaly.redraw();
-        }
-        /** run the game logic one step in time */
-        tick() {
-            if (this.level == null) {
-                this.error.log("level not loaded!");
-                return;
-            }
-            this.tickIndex++;
-            this.addNewLemmings();
-            this.lemmingManager.tick(this.level);
         }
         /** return the id of the lemming at a scene position */
         getLemmingAt(x, y) {
@@ -317,14 +308,6 @@ var Lemmings;
                 this.lemmingManager.addLemming(entrance.x, entrance.y);
                 this.lemmingsLeft--;
             }
-        }
-        /** return the past game time in seconds */
-        getGameTime() {
-            return Math.floor(this.tickIndex / 60);
-        }
-        /** return the maximum time in seconds to win the game  */
-        getGameTimeLimit() {
-            return this.level.timeLimit;
         }
         getScreenPositionX() {
             return this.level.screenPositionX;
@@ -359,7 +342,9 @@ var Lemmings;
         }
         SkillTypes.length = length;
         function isValid(type) {
-            return ((type > SkillTypes.UNKNOWN) && (type < this.lenght()));
+            if (type == null)
+                return false;
+            return ((type > SkillTypes.UNKNOWN) && (type < SkillTypes.length()));
         }
         SkillTypes.isValid = isValid;
     })(SkillTypes = Lemmings.SkillTypes || (Lemmings.SkillTypes = {}));
@@ -686,6 +671,90 @@ var Lemmings;
         }
     }
     Lemmings.ActionWalkSystem = ActionWalkSystem;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class GameSkills {
+        constructor(level) {
+            this.selectedSkill = Lemmings.SkillTypes.CLIMBER;
+            this.onCountChanged = new Lemmings.EventHandler();
+            this.onSelectionChanged = new Lemmings.EventHandler();
+            this.skills = level.skills;
+        }
+        reduseSkill(type) {
+            this.skills[type]--;
+            this.onCountChanged.trigger(type);
+        }
+        getSkill(type) {
+            if (!Lemmings.SkillTypes.isValid(type))
+                return 0;
+            return this.skills[type];
+        }
+        getSelectedSkill() {
+            return this.selectedSkill;
+        }
+        setSelectetSkill(skill) {
+            this.selectedSkill = skill;
+            this.onSelectionChanged.trigger();
+        }
+    }
+    Lemmings.GameSkills = GameSkills;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class GameTimer {
+        constructor(level) {
+            this.gameTimerHandler = 0;
+            /** the current game time in number of steps the game has made  */
+            this.tickIndex = 0;
+            this.onGameTick = new Lemmings.EventHandler();
+            this.ticksTimeLimit = this.ticksSecondsTo(level.timeLimit * 60);
+        }
+        /** Pause the game */
+        suspend() {
+            if (this.gameTimerHandler != 0)
+                clearInterval(this.gameTimerHandler);
+            this.gameTimerHandler = 0;
+        }
+        /** Run the game timer */
+        continue() {
+            if (this.gameTimerHandler != 0)
+                return;
+            this.gameTimerHandler = setInterval(() => {
+                this.tick();
+            }, 20);
+        }
+        tick() {
+            this.tickIndex++;
+            if (this.onGameTick != null)
+                this.onGameTick.trigger();
+        }
+        /** return the past game time in seconds */
+        getGameTime() {
+            return Math.floor(this.ticksToSeconds(this.tickIndex));
+        }
+        /** return the past game time in seconds */
+        getGameLeftTimeString() {
+            let leftTicks = this.ticksTimeLimit - this.tickIndex;
+            if (leftTicks < 0)
+                leftTicks = 0;
+            let leftSeconds = Math.floor(this.ticksToSeconds(leftTicks));
+            let secondsStr = "0" + Math.floor(leftSeconds % 60);
+            return Math.floor(leftSeconds / 60) + "-" + secondsStr.substr(secondsStr.length - 2, 2);
+        }
+        /** convert a game-ticks-time to in game-seconds. Returns Float*/
+        ticksToSeconds(ticks) {
+            return ticks / 10;
+        }
+        ticksSecondsTo(seconds) {
+            return seconds * 10;
+        }
+        /** return the maximum time in seconds to win the game  */
+        getGameTimeLimit() {
+            return this.ticksTimeLimit;
+        }
+    }
+    Lemmings.GameTimer = GameTimer;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -4589,6 +4658,24 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    class EventHandler {
+        constructor() {
+            this.handlers = [];
+        }
+        on(handler) {
+            this.handlers.push(handler);
+        }
+        off(handler) {
+            this.handlers = this.handlers.filter(h => h !== handler);
+        }
+        trigger(data) {
+            this.handlers.slice(0).forEach(h => h(data));
+        }
+    }
+    Lemmings.EventHandler = EventHandler;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     class DebugView {
         constructor() {
             this.levelIndex = 0;
@@ -4651,14 +4738,14 @@ var Lemmings;
         }
         /** pause the game */
         suspend() {
-            this.game.suspend();
+            this.game.getGameTimer().suspend();
         }
         /** continue the game after pause/suspend */
         continue() {
-            this.game.continue();
+            this.game.getGameTimer().continue();
         }
         nextFrame() {
-            this.game.nextFrame();
+            this.game.getGameTimer().tick();
         }
         playMusic(moveInterval) {
             this.stopMusic();
@@ -4933,6 +5020,95 @@ var Lemmings;
             /// set pixels
             this.imgData.data.set(groundImage);
         }
+        uint8ClampedColor(colorValue) {
+            let c = Math.floor(colorValue);
+            return (c > 255) ? 255 : ((c < 0) ? 0 : c);
+        }
+        /** draw a rect to the display */
+        drawRect(x, y, width, height, red, green, blue) {
+            let x2 = x + width;
+            let y2 = y + height;
+            this.drawHorizontalLine(x, y, x2, red, green, blue);
+            this.drawHorizontalLine(x, y2, x2, red, green, blue);
+            this.drawVerticalLine(x, y, y2, red, green, blue);
+            this.drawVerticalLine(x2, y, y2, red, green, blue);
+        }
+        drawVerticalLine(x1, y1, y2, red, green, blue) {
+            red = this.uint8ClampedColor(red);
+            green = this.uint8ClampedColor(green);
+            blue = this.uint8ClampedColor(blue);
+            let destW = this.imgData.width;
+            let destH = this.imgData.height;
+            let destData = this.imgData.data;
+            x1 = (x1 >= destW) ? (destW - 1) : (x1 < 0) ? 0 : x1;
+            y1 = (y1 >= destH) ? (destH - 1) : (y1 < 0) ? 0 : y1;
+            y2 = (y2 >= destH) ? (destH - 1) : (y2 < 0) ? 0 : y2;
+            for (let y = y1; y <= y2; y += 1) {
+                let destIndex = ((destW * y) + x1) * 4;
+                destData[destIndex] = red;
+                destData[destIndex + 1] = green;
+                destData[destIndex + 2] = blue;
+                destData[destIndex + 3] = 255;
+            }
+        }
+        drawHorizontalLine(x1, y1, x2, red, green, blue) {
+            red = this.uint8ClampedColor(red);
+            green = this.uint8ClampedColor(green);
+            blue = this.uint8ClampedColor(blue);
+            let destW = this.imgData.width;
+            let destH = this.imgData.height;
+            let destData = this.imgData.data;
+            x1 = (x1 >= destW) ? (destW - 1) : (x1 < 0) ? 0 : x1;
+            y1 = (y1 >= destH) ? (destH - 1) : (y1 < 0) ? 0 : y1;
+            x2 = (x2 >= destW) ? (destW - 1) : (x2 < 0) ? 0 : x2;
+            for (let x = x1; x <= x2; x += 1) {
+                let destIndex = ((destW * y1) + x) * 4;
+                destData[destIndex] = red;
+                destData[destIndex + 1] = green;
+                destData[destIndex + 2] = blue;
+                destData[destIndex + 3] = 255;
+            }
+        }
+        /** copy a frame to the display - transparent color is changed to (r,g,b) */
+        drawFrameCovered(frame, posX, posY, red, green, blue) {
+            let srcW = frame.width;
+            let srcH = frame.height;
+            let srcBuffer = frame.data;
+            let destW = this.imgData.width;
+            let destH = this.imgData.height;
+            let destData = this.imgData.data;
+            let destX = posX - frame.offsetX;
+            let destY = posY - frame.offsetY;
+            red = this.uint8ClampedColor(red);
+            green = this.uint8ClampedColor(green);
+            blue = this.uint8ClampedColor(blue);
+            for (let y = 0; y < srcH; y++) {
+                let outY = y + destY;
+                if ((outY < 0) || (outY >= destH))
+                    continue;
+                for (let x = 0; x < srcW; x++) {
+                    let srcIndex = ((srcW * y) + x) * 4;
+                    let outX = x + destX;
+                    if ((outX < 0) || (outX >= destW))
+                        continue;
+                    let destIndex = ((destW * outY) + outX) * 4;
+                    if (srcBuffer[srcIndex + 3] == 0) {
+                        /// transparent pixle
+                        destData[destIndex] = red;
+                        destData[destIndex + 1] = green;
+                        destData[destIndex + 2] = blue;
+                        destData[destIndex + 3] = 255;
+                    }
+                    else {
+                        destData[destIndex] = srcBuffer[srcIndex];
+                        destData[destIndex + 1] = srcBuffer[srcIndex + 1];
+                        destData[destIndex + 2] = srcBuffer[srcIndex + 2];
+                        destData[destIndex + 3] = 255;
+                    }
+                }
+            }
+            this.setDebugPixel(posX, posY);
+        }
         /** copy a frame to the display */
         drawFrame(frame, posX, posY) {
             //if (this.imgData == null) return;
@@ -4982,9 +5158,23 @@ var Lemmings;
 var Lemmings;
 (function (Lemmings) {
     class GameGui {
-        constructor(skillPanelSprites) {
+        constructor(skillPanelSprites, skills, gameTimer) {
             this.skillPanelSprites = skillPanelSprites;
+            this.skills = skills;
+            this.gameTimer = gameTimer;
+            this.gameTimeChanged = true;
+            this.skillsCountChangd = true;
+            this.skillSelectionChanged = true;
             this.selectedAction = Lemmings.ActionType.DIGG;
+            gameTimer.onGameTick.on(() => {
+                this.gameTimeChanged = true;
+            });
+            skills.onCountChanged.on(() => {
+                this.skillsCountChangd = true;
+            });
+            skills.onSelectionChanged.on(() => {
+                this.skillSelectionChanged = true;
+            });
         }
         getSelectedAction() {
             return this.selectedAction;
@@ -4995,18 +5185,58 @@ var Lemmings;
             dispaly.setBackground(panelImage.data);
             this.drawGreenString(dispaly, "Out 1", 112, 0);
             this.drawGreenString(dispaly, "In 0 %", 186, 0);
-            this.drawGreenString(dispaly, "Time 5-00", 248, 0);
-            this.drawPanelNumber(dispaly, 99, 0);
+            if (this.gameTimeChanged) {
+                this.gameTimeChanged = false;
+                this.renderGameTime(dispaly, 248, 0);
+            }
             this.drawPanelNumber(dispaly, 88, 1);
             this.drawPanelNumber(dispaly, 77, 2);
+            if (this.skillsCountChangd) {
+                this.skillsCountChangd = false;
+                for (let i = 0; i < Lemmings.SkillTypes.length(); i++) {
+                    let count = this.skills.getSkill(i);
+                    this.drawPanelNumber(dispaly, count, this.getSkillPanelIndex(i));
+                }
+            }
+            if (this.skillSelectionChanged) {
+                this.skillSelectionChanged = false;
+                this.drawSelection(dispaly, this.getSkillPanelIndex(this.skills.getSelectedSkill()));
+            }
         }
-        drawPanelNumber(dispaly, number, posIndex) {
-            this.drawNumber(dispaly, number, 4 + 16 * posIndex, 17);
+        getSkillPanelIndex(skill) {
+            switch (skill) {
+                case Lemmings.SkillTypes.CLIMBER: return 2;
+                case Lemmings.SkillTypes.FLOATER: return 3;
+                case Lemmings.SkillTypes.BOMBER: return 4;
+                case Lemmings.SkillTypes.BLOCKER: return 5;
+                case Lemmings.SkillTypes.BUILDER: return 6;
+                case Lemmings.SkillTypes.BASHER: return 7;
+                case Lemmings.SkillTypes.MINER: return 8;
+                case Lemmings.SkillTypes.DIGGER: return 9;
+                default: return -1;
+            }
+        }
+        drawSelection(dispaly, panelIndex) {
+            /// clear selection
+            for (let i = 2; i < 10; i++) {
+                if (i == panelIndex)
+                    continue;
+                dispaly.drawRect(16 * i, 15, 16, 24, 255, 0, 0);
+            }
+            /// draw selection
+            dispaly.drawRect(16 * panelIndex, 15, 16, 24, 255, 255, 255);
+        }
+        renderGameTime(dispaly, x, y) {
+            let gameTime = this.gameTimer.getGameLeftTimeString();
+            this.drawGreenString(dispaly, "Time " + gameTime + "-00", x, y);
+        }
+        drawPanelNumber(dispaly, number, panelIndex) {
+            this.drawNumber(dispaly, number, 4 + 16 * panelIndex, 17);
         }
         drawNumber(dispaly, number, x, y) {
             let num1Img = this.skillPanelSprites.getNumberSpriteLeft(Math.floor(number / 10));
             let num2Img = this.skillPanelSprites.getNumberSpriteRight(number % 10);
-            dispaly.drawFrame(num1Img, x, y);
+            dispaly.drawFrameCovered(num1Img, x, y, 0, 0, 0);
             dispaly.drawFrame(num2Img, x, y);
             return x + 8;
         }
@@ -5015,7 +5245,7 @@ var Lemmings;
             for (let i = 0; i < text.length; i++) {
                 let letterImg = this.skillPanelSprites.getLetterSprite(text[i]);
                 if (letterImg != null) {
-                    dispaly.drawFrame(letterImg, x, y);
+                    dispaly.drawFrameCovered(letterImg, x, y, 0, 0, 0);
                 }
                 x += 8;
             }

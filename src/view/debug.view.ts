@@ -85,16 +85,16 @@ module Lemmings {
 
         /** pause the game */
         public suspend() {
-            this.game.suspend(); 
+            this.game.getGameTimer().suspend(); 
         }
 
         /** continue the game after pause/suspend */
         public continue() {
-            this.game.continue(); 
+            this.game.getGameTimer().continue(); 
         }
 
         public nextFrame() {
-            this.game.nextFrame();
+            this.game.getGameTimer().tick();
         }
 
         public playMusic(moveInterval: number) {
