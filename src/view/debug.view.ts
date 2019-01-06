@@ -15,7 +15,7 @@ module Lemmings {
 
         private stage : Stage = null;
         
-        private controller : GameController = null;
+
 
 
         public elementSoundNumber: HTMLElement = null;
@@ -30,32 +30,8 @@ module Lemmings {
 
         public set gameCanvas(el:HTMLCanvasElement){
             this._gameCanvas = el;
-
-            this.controller = new GameController(el);
-
+   
             this.stage = new Stage(el);
-
-            
-            this.controller.onViewPointChanged = (viewPoint: ViewPoint) => {
-                this.stage.setGameDisplayViewPoint(viewPoint);
-            };
-
-            this.controller.onMouseMove = (x: number, y:number) => {
-                
-            };
-
-            this.controller.onMouseClick = (x: number, y:number) => {
-                if(this.game == null) return;
-
-                let lem = this.game.getLemmingAt(x,y);
-                if (lem != null) {
-                    
-
-                    console.log("Mouse click ("+ x +" / "+ y +") lem: "+ lem.id);
-
-                    this.game.setLemmingAction(lem, ActionType.DIGG);
-                }
-            };
         }
             
         /** start or continue the game */
@@ -72,7 +48,6 @@ module Lemmings {
             this.gameFactory.getGame(this.gameType)
                 .then(game => game.loadLevel(this.levelGroupIndex, this.levelIndex))
                 .then(game => {
-                    this.controller.setViewPoint(game.getScreenPositionX(), 0, 1);
 
                     game.setGameDispaly(this.stage.getGameDisplay());
                     game.setGuiDisplay(this.stage.getGuiDisplay());
@@ -235,8 +210,6 @@ module Lemmings {
                         level.render(gameDisplay);
                         gameDisplay.redraw();
                     }
-
-                    this.controller.setViewRange(0, 0, level.width, level.height);
 
                     console.dir(level);
                 });

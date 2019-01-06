@@ -221,6 +221,9 @@ var Lemmings;
         }
         setGuiDisplay(dispaly) {
             this.guiDispaly = dispaly;
+            if (this.gameGui != null) {
+                this.gameGui.setGuiDisplay(dispaly);
+            }
         }
         /** load a new game/level */
         loadLevel(levelGroupIndex, levelIndex) {
@@ -247,6 +250,9 @@ var Lemmings;
                     .then(skillPanelSprites => {
                     /// setup gui
                     this.gameGui = new Lemmings.GameGui(skillPanelSprites, this.skills, this.gameTimer);
+                    if (this.dispaly != null) {
+                        this.gameGui.setGuiDisplay(this.dispaly);
+                    }
                     /// let's start!
                     resolve(this);
                 });
@@ -283,7 +289,7 @@ var Lemmings;
                 //this.dispaly.redraw();
             }
             if (this.guiDispaly) {
-                this.gameGui.render(this.guiDispaly);
+                this.gameGui.render();
             }
             this.guiDispaly.redraw();
         }
@@ -4668,8 +4674,8 @@ var Lemmings;
         off(handler) {
             this.handlers = this.handlers.filter(h => h !== handler);
         }
-        trigger(data) {
-            this.handlers.slice(0).forEach(h => h(data));
+        trigger(arg) {
+            this.handlers.slice(0).forEach(h => h(arg));
         }
     }
     Lemmings.EventHandler = EventHandler;
@@ -4688,7 +4694,6 @@ var Lemmings;
             this.game = null;
             this.gameFactory = new Lemmings.GameFactory("./");
             this.stage = null;
-            this.controller = null;
             this.elementSoundNumber = null;
             this.elementTrackNumber = null;
             this.elementLevelNumber = null;
@@ -4699,22 +4704,7 @@ var Lemmings;
         }
         set gameCanvas(el) {
             this._gameCanvas = el;
-            this.controller = new Lemmings.GameController(el);
             this.stage = new Lemmings.Stage(el);
-            this.controller.onViewPointChanged = (viewPoint) => {
-                this.stage.setGameDisplayViewPoint(viewPoint);
-            };
-            this.controller.onMouseMove = (x, y) => {
-            };
-            this.controller.onMouseClick = (x, y) => {
-                if (this.game == null)
-                    return;
-                let lem = this.game.getLemmingAt(x, y);
-                if (lem != null) {
-                    console.log("Mouse click (" + x + " / " + y + ") lem: " + lem.id);
-                    this.game.setLemmingAction(lem, Lemmings.ActionType.DIGG);
-                }
-            };
         }
         /** start or continue the game */
         start() {
@@ -4729,7 +4719,6 @@ var Lemmings;
             this.gameFactory.getGame(this.gameType)
                 .then(game => game.loadLevel(this.levelGroupIndex, this.levelIndex))
                 .then(game => {
-                this.controller.setViewPoint(game.getScreenPositionX(), 0, 1);
                 game.setGameDispaly(this.stage.getGameDisplay());
                 game.setGuiDisplay(this.stage.getGuiDisplay());
                 game.start();
@@ -4848,7 +4837,6 @@ var Lemmings;
                     level.render(gameDisplay);
                     gameDisplay.redraw();
                 }
-                this.controller.setViewRange(0, 0, level.width, level.height);
                 console.dir(level);
             });
         }
@@ -4857,23 +4845,51 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    class Vector2D {
+    class Position2D {
+        constructor(x = 0, y = 0) {
+            /** X position in the container */
+            this.x = 0;
+            /** Y position in the container */
+            this.y = 0;
+            this.x = x;
+            this.y = y;
+        }
     }
+    Lemmings.Position2D = Position2D;
+})(Lemmings || (Lemmings = {}));
+/// <reference path="position2d.ts"/>
+var Lemmings;
+(function (Lemmings) {
+    class MouseMoveEventArguemnts extends Lemmings.Position2D {
+        constructor(x = 0, y = 0, deltaX = 0, deltaY = 0, button = false) {
+            super(x, y);
+            /** delta the mouse move Y */
+            this.deltaX = 0;
+            /** delta the mouse move Y */
+            this.deltaY = 0;
+            this.button = false;
+            this.deltaX = deltaX;
+            this.deltaY = deltaY;
+            this.button = button;
+        }
+    }
+    Lemmings.MouseMoveEventArguemnts = MouseMoveEventArguemnts;
+    class ZoomEventArguemnts extends Lemmings.Position2D {
+        constructor(x = 0, y = 0, deltaZoom = 0) {
+            super(x, y);
+            this.deltaZoom = deltaZoom;
+        }
+    }
+    Lemmings.ZoomEventArguemnts = ZoomEventArguemnts;
     /** handel the display of the game */
     class GameController {
         constructor(listenElement) {
-            this.listenElement = listenElement;
-            this.mouseDownX = -1;
-            this.mouseDownY = -1;
-            this.mouseDownButton = -1;
-            this.mouseDownViewX = 0;
-            this.mouseDownViewY = 0;
-            this.minX = 0;
-            this.minY = 0;
-            this.maxX = 0;
-            this.maxY = 0;
-            this.currentViewPoint = null;
-            this.setViewPoint(0, 0, 1);
+            this.mouseDownX = 0;
+            this.mouseDownY = 0;
+            this.mouseButton = -1;
+            this.onMouseMove = new Lemmings.EventHandler();
+            this.onMouseClick = new Lemmings.EventHandler();
+            this.onZoom = new Lemmings.EventHandler();
             listenElement.addEventListener("mousemove", (e) => {
                 let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
                 this.handelMouseMove(relativePos);
@@ -4890,104 +4906,93 @@ var Lemmings;
             });
             listenElement.addEventListener("touchstart", (e) => {
                 let relativePos = this.getRelativePosition(listenElement, e.touches[0].clientX, e.touches[0].clientY);
-                this.handelMouseDown(relativePos, 0, e.currentTarget);
+                this.handelMouseDown(relativePos, 1);
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
             });
             listenElement.addEventListener("mousedown", (e) => {
                 let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
-                this.handelMouseDown(relativePos, e.button, e.currentTarget);
+                this.handelMouseDown(relativePos, e.button);
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
             });
             listenElement.addEventListener("mouseup", (e) => {
-                this.handelMouseUp();
+                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
+                this.handelMouseUp(relativePos);
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
             });
             listenElement.addEventListener("mouseleave", (e) => {
-                this.handelMouseUp();
+                this.handelMouseClear();
             });
             listenElement.addEventListener("touchend", (e) => {
-                this.handelMouseUp();
+                this.handelMouseClear();
                 return false;
             });
             listenElement.addEventListener("touchleave", (e) => {
-                this.handelMouseUp();
+                this.handelMouseClear();
                 return false;
             });
             listenElement.addEventListener("touchcancel", (e) => {
-                this.handelMouseUp();
+                this.handelMouseClear();
                 return false;
             });
             listenElement.addEventListener("wheel", (e) => {
-                this.handeWheel(e);
+                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
+                this.handeWheel(relativePos, e.deltaY);
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
             });
         }
-        setViewPoint(x, y, scale) {
-            x = Math.min(x, this.maxX);
-            x = Math.max(x, this.minX);
-            y = Math.min(y, this.maxY);
-            y = Math.max(y, this.minY);
-            this.currentViewPoint = new Lemmings.ViewPoint(x, y, scale);
-            if (this.onViewPointChanged) {
-                this.onViewPointChanged(this.currentViewPoint);
-            }
-        }
-        setViewRange(minX, minY, maxX, maxY) {
-            this.minX = minX;
-            this.minY = minY;
-            this.maxX = maxX;
-            this.maxY = maxY;
-        }
         getRelativePosition(element, clientX, clientY) {
             var rect = element.getBoundingClientRect();
-            return { x: clientX - rect.left, y: clientY - rect.top };
+            return new Lemmings.Position2D(clientX - rect.left, clientY - rect.top);
         }
         handelMouseMove(position) {
             //- Move Point of View
-            if (this.mouseDownButton == 0) {
-                let x = this.mouseDownViewX + (this.mouseDownX - position.x) / this.currentViewPoint.scale;
-                let y = this.mouseDownViewY + (this.mouseDownY - position.y) / this.currentViewPoint.scale;
-                this.setViewPoint(x, y, this.currentViewPoint.scale);
+            if (this.mouseButton == 0) {
+                let deltaX = (this.mouseDownX - position.x);
+                let deltaY = (this.mouseDownY - position.y);
+                //- save start of Mousedown
+                this.mouseDownX = position.x;
+                this.mouseDownY = position.y;
+                /// raise event
+                this.onMouseMove.trigger(new MouseMoveEventArguemnts(position.x, position.y, deltaX, deltaY, true));
             }
-            /// raise event
-            if (this.onMouseMove)
-                this.onMouseMove(this.currentViewPoint.getSceneX(position.x), this.currentViewPoint.getSceneY(position.y));
+            else {
+                /// raise event
+                this.onMouseMove.trigger(new MouseMoveEventArguemnts(position.x, position.y, 0, 0, false));
+            }
         }
-        handelMouseDown(position, button, currentTarget) {
+        handelMouseDown(position, button) {
             //- save start of Mousedown
-            this.mouseDownViewX = this.currentViewPoint.x;
-            this.mouseDownViewY = this.currentViewPoint.y;
+            this.mouseButton = button;
             this.mouseDownX = position.x;
             this.mouseDownY = position.y;
-            this.mouseDownButton = button;
-            /// raise event
-            if (this.onMouseClick)
-                this.onMouseClick(this.currentViewPoint.getSceneX(position.x), this.currentViewPoint.getSceneY(position.y));
         }
-        handelMouseUp() {
-            this.mouseDownX = -1;
-            this.mouseDownY = -1;
-            this.mouseDownButton = -1;
+        handelMouseClear() {
+            this.mouseButton = -1;
+            this.mouseDownX = 0;
+            this.mouseDownY = 0;
+        }
+        handelMouseUp(position) {
+            this.handelMouseClear();
+            /// raise event
+            this.onMouseClick.trigger(new Lemmings.Position2D(position.x, position.y));
         }
         /** Zoom view
          * todo: zoom to mouse pointer */
-        handeWheel(e) {
-            let scale = this.currentViewPoint.scale;
-            if (e.deltaY < 0) {
-                scale = Math.min(10, scale + 0.5);
+        handeWheel(position, deltaY) {
+            if (deltaY < 0) {
+                this.onZoom.trigger(new ZoomEventArguemnts(position.x, position.y, 1));
             }
-            if (e.deltaY > 0) {
-                scale = Math.max(0.5, scale - 0.5);
+            if (deltaY > 0) {
+                this.onZoom.trigger(new ZoomEventArguemnts(position.x, position.y, -1));
             }
-            this.setViewPoint(this.currentViewPoint.x, this.currentViewPoint.y, scale);
         }
     }
     Lemmings.GameController = GameController;
@@ -4998,6 +5003,8 @@ var Lemmings;
     class GameDisplay {
         constructor(stage) {
             this.stage = stage;
+            this.onMouseClick = new Lemmings.EventHandler();
+            this.onMouseMove = new Lemmings.EventHandler();
         }
         initSize(width, height) {
             /// create image data
@@ -5165,7 +5172,7 @@ var Lemmings;
             this.gameTimeChanged = true;
             this.skillsCountChangd = true;
             this.skillSelectionChanged = true;
-            this.selectedAction = Lemmings.ActionType.DIGG;
+            this.dispaly = null;
             gameTimer.onGameTick.on(() => {
                 this.gameTimeChanged = true;
             });
@@ -5176,10 +5183,23 @@ var Lemmings;
                 this.skillSelectionChanged = true;
             });
         }
-        getSelectedAction() {
-            return this.selectedAction;
+        setGuiDisplay(dispaly) {
+            this.dispaly = dispaly;
+            this.dispaly.onMouseClick.on((e) => {
+                if (e.y > 15) {
+                    let panelIndex = e.x / 16;
+                    let newSkill = this.getSkillByPanelIndex(panelIndex);
+                    if (newSkill == Lemmings.SkillTypes.UNKNOWN)
+                        return;
+                    this.skills.setSelectetSkill(newSkill);
+                    this.skillSelectionChanged = true;
+                }
+            });
         }
-        render(dispaly) {
+        render() {
+            if (this.dispaly == null)
+                return;
+            let dispaly = this.dispaly;
             let panelImage = this.skillPanelSprites.getPanelSprite();
             dispaly.initSize(panelImage.width, panelImage.height);
             dispaly.setBackground(panelImage.data);
@@ -5195,15 +5215,28 @@ var Lemmings;
                 this.skillsCountChangd = false;
                 for (let i = 0; i < Lemmings.SkillTypes.length(); i++) {
                     let count = this.skills.getSkill(i);
-                    this.drawPanelNumber(dispaly, count, this.getSkillPanelIndex(i));
+                    this.drawPanelNumber(dispaly, count, this.getPanelIndexBySkill(i));
                 }
             }
             if (this.skillSelectionChanged) {
                 this.skillSelectionChanged = false;
-                this.drawSelection(dispaly, this.getSkillPanelIndex(this.skills.getSelectedSkill()));
+                this.drawSelection(dispaly, this.getPanelIndexBySkill(this.skills.getSelectedSkill()));
             }
         }
-        getSkillPanelIndex(skill) {
+        getSkillByPanelIndex(panelIndex) {
+            switch (Math.floor(panelIndex)) {
+                case 2: return Lemmings.SkillTypes.CLIMBER;
+                case 3: return Lemmings.SkillTypes.FLOATER;
+                case 4: return Lemmings.SkillTypes.BOMBER;
+                case 5: return Lemmings.SkillTypes.BLOCKER;
+                case 6: return Lemmings.SkillTypes.BUILDER;
+                case 7: return Lemmings.SkillTypes.BASHER;
+                case 8: return Lemmings.SkillTypes.MINER;
+                case 9: return Lemmings.SkillTypes.DIGGER;
+                default: return Lemmings.SkillTypes.UNKNOWN;
+            }
+        }
+        getPanelIndexBySkill(skill) {
             switch (skill) {
                 case Lemmings.SkillTypes.CLIMBER: return 2;
                 case Lemmings.SkillTypes.FLOATER: return 3;
@@ -5221,10 +5254,10 @@ var Lemmings;
             for (let i = 2; i < 10; i++) {
                 if (i == panelIndex)
                     continue;
-                dispaly.drawRect(16 * i, 15, 16, 24, 255, 0, 0);
+                dispaly.drawRect(16 * i, 16, 16, 23, 0, 0, 0);
             }
             /// draw selection
-            dispaly.drawRect(16 * panelIndex, 15, 16, 24, 255, 255, 255);
+            dispaly.drawRect(16 * panelIndex, 16, 16, 23, 255, 255, 255);
         }
         renderGameTime(dispaly, x, y) {
             let gameTime = this.gameTimer.getGameLeftTimeString();
@@ -5279,12 +5312,54 @@ var Lemmings;
     /** handel the display / output of game, gui, ... */
     class Stage {
         constructor(canvasForOutput) {
+            this.controller = null;
+            this.controller = new Lemmings.GameController(canvasForOutput);
+            this.controller.onMouseClick.on((e) => {
+                let stageImage = this.getStageImageAt(e.x, e.y);
+                if (stageImage == null)
+                    return;
+                if (stageImage.display == null)
+                    return;
+                stageImage.display.onMouseClick.trigger(new Lemmings.Position2D(stageImage.viewPoint.getSceneX(e.x), stageImage.viewPoint.getSceneY(e.y)));
+            });
+            this.controller.onMouseMove.on((e) => {
+                let stageImage = this.getStageImageAt(e.x, e.y);
+                if (stageImage == null)
+                    return;
+                if (e.button) {
+                    this.updateViewPoint(stageImage, e.deltaX, e.deltaY, 0);
+                }
+                else {
+                    if (stageImage.display == null)
+                        return;
+                    stageImage.display.onMouseMove.trigger(new Lemmings.Position2D(stageImage.viewPoint.getSceneX(e.x), stageImage.viewPoint.getSceneY(e.y)));
+                }
+            });
+            this.controller.onZoom.on((e) => {
+                let stageImage = this.getStageImageAt(e.x, e.y);
+                if (stageImage == null)
+                    return;
+                this.updateViewPoint(stageImage, 0, 0, e.deltaZoom);
+            });
             this.stageCav = canvasForOutput;
             this.gameDisplay = new StageImage();
             this.guiDisplay = new StageImage();
             this.guiDisplay.viewPoint = new Lemmings.ViewPoint(0, 0, 2);
             this.updateStageSize();
             this.clear();
+        }
+        updateViewPoint(stageImage, deltaX, deltaY, deletaZoom) {
+            stageImage.viewPoint.x += deltaX;
+            stageImage.viewPoint.y += deltaY;
+            stageImage.viewPoint.scale += deletaZoom * 0.5;
+            stageImage.viewPoint.x = this.limitValue(0, stageImage.viewPoint.x, stageImage.width);
+            stageImage.viewPoint.y = this.limitValue(0, stageImage.viewPoint.y, stageImage.height);
+            stageImage.viewPoint.scale = this.limitValue(0.5, stageImage.viewPoint.scale, 10);
+            this.clear();
+            this.redraw();
+        }
+        limitValue(minLimit, value, maxLimit) {
+            return Math.min(Math.max(minLimit, value), maxLimit);
         }
         updateStageSize() {
             let ctx = this.stageCav.getContext("2d");
@@ -5296,6 +5371,17 @@ var Lemmings;
             this.guiDisplay.y = stageHeight - 100;
             this.guiDisplay.height = 100;
             this.guiDisplay.width = stageWidth;
+        }
+        getStageImageAt(x, y) {
+            if (this.isPositionInStageImage(this.gameDisplay, x, y))
+                return this.gameDisplay;
+            if (this.isPositionInStageImage(this.guiDisplay, x, y))
+                return this.guiDisplay;
+            return null;
+        }
+        isPositionInStageImage(stageImage, x, y) {
+            return ((stageImage.x <= x) && ((stageImage.x + stageImage.width) >= x)
+                && (stageImage.y <= y) && ((stageImage.y + stageImage.height) >= y));
         }
         getGameDisplay() {
             if (this.gameDisplay.display != null)

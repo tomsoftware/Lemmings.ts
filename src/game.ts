@@ -29,6 +29,10 @@ module Lemmings {
 
         public setGuiDisplay(dispaly:GameDisplay) {
             this.guiDispaly = dispaly;
+
+            if (this.gameGui != null) {
+                this.gameGui.setGuiDisplay(dispaly);
+            }
         }
 
         /** load a new game/level */
@@ -66,7 +70,11 @@ module Lemmings {
                 .then(skillPanelSprites => {
                     /// setup gui
                     this.gameGui = new GameGui(skillPanelSprites, this.skills, this.gameTimer);
-
+            
+                    if (this.dispaly != null) {
+                        this.gameGui.setGuiDisplay(this.dispaly);
+                    }
+                    
                     /// let's start!
                     resolve(this);
                 });
@@ -116,7 +124,7 @@ module Lemmings {
             }
 
             if (this.guiDispaly) {
-                this.gameGui.render(this.guiDispaly);
+                this.gameGui.render();
             }
             
             this.guiDispaly.redraw();

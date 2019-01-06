@@ -9,6 +9,10 @@ module Lemmings {
         }
 
 
+        public onMouseClick = new EventHandler<Position2D>();
+        public onMouseMove = new EventHandler<Position2D>();
+
+
 
         public initSize(width:number, height:number) {
             /// create image data

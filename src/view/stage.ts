@@ -34,7 +34,39 @@ module Lemmings {
         private gameDisplay : StageImage;
         private guiDisplay : StageImage;
 
+        private controller : GameController = null;
+
         constructor(canvasForOutput: HTMLCanvasElement) {
+            this.controller = new GameController(canvasForOutput);
+
+            this.controller.onMouseClick.on((e) => {
+                let stageImage = this.getStageImageAt(e.x, e.y);
+                if (stageImage == null) return;
+                if (stageImage.display == null) return;
+
+                stageImage.display.onMouseClick.trigger(new Position2D(stageImage.viewPoint.getSceneX(e.x), stageImage.viewPoint.getSceneY(e.y)));
+            });
+
+            this.controller.onMouseMove.on((e) => {
+                let stageImage = this.getStageImageAt(e.x, e.y);
+                if (stageImage == null) return;
+
+                if (e.button) {
+                    this.updateViewPoint(stageImage, e.deltaX, e.deltaY, 0);
+                }
+                else {
+                    if (stageImage.display == null) return;
+                    stageImage.display.onMouseMove.trigger(new Position2D(stageImage.viewPoint.getSceneX(e.x), stageImage.viewPoint.getSceneY(e.y)));
+                }
+            });
+
+            this.controller.onZoom.on((e) => {
+                let stageImage = this.getStageImageAt(e.x, e.y);
+                if (stageImage == null) return;
+                this.updateViewPoint(stageImage, 0, 0, e.deltaZoom);
+            });
+
+
             this.stageCav = canvasForOutput;
 
             this.gameDisplay = new StageImage();
@@ -46,6 +78,23 @@ module Lemmings {
             this.clear();
         }
 
+
+        private updateViewPoint(stageImage:StageImage, deltaX:number, deltaY:number, deletaZoom:number) {
+            stageImage.viewPoint.x += deltaX;
+            stageImage.viewPoint.y += deltaY;
+            stageImage.viewPoint.scale += deletaZoom * 0.5;
+
+            stageImage.viewPoint.x = this.limitValue(0, stageImage.viewPoint.x, stageImage.width);
+            stageImage.viewPoint.y = this.limitValue(0, stageImage.viewPoint.y, stageImage.height);
+            stageImage.viewPoint.scale = this.limitValue(0.5, stageImage.viewPoint.scale, 10);
+
+            this.clear();
+            this.redraw();
+        }
+
+        private limitValue(minLimit:number, value:number, maxLimit:number) :number {
+            return Math.min(Math.max(minLimit, value), maxLimit);
+        }
 
         public updateStageSize() {
 
@@ -62,6 +111,17 @@ module Lemmings {
             this.guiDisplay.height = 100;
             this.guiDisplay.width = stageWidth;
             
+        }
+
+        public getStageImageAt(x: number, y:number):StageImage {
+            if (this.isPositionInStageImage(this.gameDisplay, x, y)) return this.gameDisplay;
+            if (this.isPositionInStageImage(this.guiDisplay, x, y)) return this.guiDisplay;
+            return null;
+        }
+
+        private isPositionInStageImage(stageImage:StageImage, x: number, y:number) {
+            return ((stageImage.x <= x) && ((stageImage.x + stageImage.width) >= x)
+             && (stageImage.y <= y) && ((stageImage.y + stageImage.height) >= y));
         }
 
         public getGameDisplay():GameDisplay {

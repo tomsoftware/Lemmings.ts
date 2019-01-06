@@ -2,17 +2,30 @@ module Lemmings {
 
 export class GameGui {
 
-  private selectedAction:ActionType;
   private gameTimeChanged:boolean = true;
   private skillsCountChangd:boolean = true;
   private skillSelectionChanged:boolean = true;
 
-  public getSelectedAction():ActionType {
-    return this.selectedAction;
+
+  private dispaly: GameDisplay = null;
+
+  public setGuiDisplay(dispaly:GameDisplay) {
+      this.dispaly = dispaly;
+
+      this.dispaly.onMouseClick.on((e) => {
+        if(e.y > 15) {
+          let panelIndex = e.x / 16;
+          let newSkill = this.getSkillByPanelIndex(panelIndex);
+          if (newSkill == SkillTypes.UNKNOWN) return;
+
+          this.skills.setSelectetSkill(newSkill);
+          this.skillSelectionChanged = true;
+        }
+      });
   }
 
+
   constructor(private skillPanelSprites:SkillPanelSprites, private skills:GameSkills, private gameTimer:GameTimer) {
-    this.selectedAction = ActionType.DIGG;
 
     gameTimer.onGameTick.on(()=> {
         this.gameTimeChanged = true; 
@@ -29,7 +42,10 @@ export class GameGui {
 
 
 
-  public render(dispaly:GameDisplay) {
+  public render() {
+    if (this.dispaly == null) return;
+    let dispaly = this.dispaly;
+
     let panelImage = this.skillPanelSprites.getPanelSprite();
 
     dispaly.initSize(panelImage.width, panelImage.height);
@@ -54,25 +70,40 @@ export class GameGui {
       for(let i = 0; i < SkillTypes.length(); i++) {
         let count = this.skills.getSkill(i);
         
-        this.drawPanelNumber(dispaly, count, this.getSkillPanelIndex(i));
+        this.drawPanelNumber(dispaly, count, this.getPanelIndexBySkill(i));
       }
 
     }
     
     if (this.skillSelectionChanged) {
       this.skillSelectionChanged = false;
-      this.drawSelection(dispaly, this.getSkillPanelIndex(this.skills.getSelectedSkill()));
+      this.drawSelection(dispaly, this.getPanelIndexBySkill(this.skills.getSelectedSkill()));
     }
 
   }
 
-  private getSkillPanelIndex(skill:SkillTypes) {
+  
+  private getSkillByPanelIndex(panelIndex:number):SkillTypes {
+    switch(Math.floor(panelIndex)) {
+      case 2: return SkillTypes.CLIMBER;
+      case 3: return SkillTypes.FLOATER;
+      case 4: return SkillTypes.BOMBER;
+      case 5: return SkillTypes.BLOCKER;
+      case 6: return SkillTypes.BUILDER;
+      case 7: return SkillTypes.BASHER;
+      case 8: return SkillTypes.MINER;
+      case 9: return SkillTypes.DIGGER;
+      default: return SkillTypes.UNKNOWN;
+    } 
+  }
+
+
+  private getPanelIndexBySkill(skill:SkillTypes):number {
 
     switch(skill) {
       case SkillTypes.CLIMBER: return 2;
       case SkillTypes.FLOATER: return 3;
       case SkillTypes.BOMBER: return 4;
-
       case SkillTypes.BLOCKER: return 5;
       case SkillTypes.BUILDER: return 6;
       case SkillTypes.BASHER: return 7;
@@ -88,11 +119,11 @@ export class GameGui {
     /// clear selection
     for(let i=2; i<10;i++) {
       if (i == panelIndex) continue;
-      dispaly.drawRect(16 * i, 15, 16, 24, 255, 0, 0);
+      dispaly.drawRect(16 * i, 16, 16, 23, 0, 0, 0);
     }
     
     /// draw selection
-    dispaly.drawRect(16 * panelIndex, 15, 16, 24, 255, 255, 255);
+    dispaly.drawRect(16 * panelIndex, 16, 16, 23, 255, 255, 255);
   }
 
 
