@@ -1,6 +1,6 @@
 module Lemmings {
 
-    export class StageImage {
+    export class StageImageProperties {
         public ctx: CanvasRenderingContext2D;
         public cav: HTMLCanvasElement;
         /** X position to display this Image */
@@ -11,7 +11,7 @@ module Lemmings {
         public width:number = 0;
         public height:number = 0;
 
-        public display : GameDisplay = null;
+        public display : DisplayImage = null;
         public viewPoint: ViewPoint = new ViewPoint(0, 0, 1);
 
         public createImage(width:number, height:number) {
@@ -31,34 +31,47 @@ module Lemmings {
     export class Stage {
 
         private stageCav: HTMLCanvasElement;
-        private gameDisplay : StageImage;
-        private guiDisplay : StageImage;
+        private gameImgProps : StageImageProperties;
+        private guiImgProps : StageImageProperties;
 
-        private controller : GameController = null;
+        private controller : UserInputManager = null;
 
         constructor(canvasForOutput: HTMLCanvasElement) {
-            this.controller = new GameController(canvasForOutput);
+            this.controller = new UserInputManager(canvasForOutput);
 
             this.controller.onMouseClick.on((e) => {
                 let stageImage = this.getStageImageAt(e.x, e.y);
                 if (stageImage == null) return;
                 if (stageImage.display == null) return;
 
-                stageImage.display.onMouseClick.trigger(new Position2D(stageImage.viewPoint.getSceneX(e.x), stageImage.viewPoint.getSceneY(e.y)));
+                let x = (stageImage.viewPoint.getSceneX(e.x - stageImage.x));
+                let y = (stageImage.viewPoint.getSceneY(e.y - stageImage.y));
+
+                stageImage.display.onMouseClick.trigger(new Position2D(x, y));
             });
+
 
             this.controller.onMouseMove.on((e) => {
-                let stageImage = this.getStageImageAt(e.x, e.y);
-                if (stageImage == null) return;
-
                 if (e.button) {
-                    this.updateViewPoint(stageImage, e.deltaX, e.deltaY, 0);
+                    let stageImage = this.getStageImageAt(e.mouseDownX, e.mouseDownY);
+                    if (stageImage == null) return;
+
+                    if (stageImage == this.gameImgProps) {
+                        this.updateViewPoint(stageImage, e.deltaX, e.deltaY, 0);
+                    }
                 }
                 else {
+                    let stageImage = this.getStageImageAt(e.x, e.y);
+                    if (stageImage == null) return;
                     if (stageImage.display == null) return;
-                    stageImage.display.onMouseMove.trigger(new Position2D(stageImage.viewPoint.getSceneX(e.x), stageImage.viewPoint.getSceneY(e.y)));
+
+                    let x = e.x - stageImage.x;
+                    let y = e.y - stageImage.y;    
+
+                    stageImage.display.onMouseMove.trigger(new Position2D(stageImage.viewPoint.getSceneX(x), stageImage.viewPoint.getSceneY(y)));
                 }
             });
+
 
             this.controller.onZoom.on((e) => {
                 let stageImage = this.getStageImageAt(e.x, e.y);
@@ -69,19 +82,19 @@ module Lemmings {
 
             this.stageCav = canvasForOutput;
 
-            this.gameDisplay = new StageImage();
+            this.gameImgProps = new StageImageProperties();
 
-            this.guiDisplay = new StageImage();
-            this.guiDisplay.viewPoint = new ViewPoint(0,0,2);
+            this.guiImgProps = new StageImageProperties();
+            this.guiImgProps.viewPoint = new ViewPoint(0,0,2);
             this.updateStageSize();
 
             this.clear();
         }
 
 
-        private updateViewPoint(stageImage:StageImage, deltaX:number, deltaY:number, deletaZoom:number) {
-            stageImage.viewPoint.x += deltaX;
-            stageImage.viewPoint.y += deltaY;
+        private updateViewPoint(stageImage:StageImageProperties, deltaX:number, deltaY:number, deletaZoom:number) {
+            stageImage.viewPoint.x += deltaX / stageImage.viewPoint.scale;
+            stageImage.viewPoint.y += deltaY / stageImage.viewPoint.scale;
             stageImage.viewPoint.scale += deletaZoom * 0.5;
 
             stageImage.viewPoint.x = this.limitValue(0, stageImage.viewPoint.x, stageImage.width);
@@ -103,64 +116,64 @@ module Lemmings {
             let stageHeight = ctx.canvas.height;
             let stageWidth = ctx.canvas.width;
 
-            this.gameDisplay.y = 0;
-            this.gameDisplay.height = stageHeight - 100;
-            this.gameDisplay.width = stageWidth;
+            this.gameImgProps.y = 0;
+            this.gameImgProps.height = stageHeight - 100;
+            this.gameImgProps.width = stageWidth;
 
-            this.guiDisplay.y = stageHeight - 100;
-            this.guiDisplay.height = 100;
-            this.guiDisplay.width = stageWidth;
+            this.guiImgProps.y = stageHeight - 100;
+            this.guiImgProps.height = 100;
+            this.guiImgProps.width = stageWidth;
             
         }
 
-        public getStageImageAt(x: number, y:number):StageImage {
-            if (this.isPositionInStageImage(this.gameDisplay, x, y)) return this.gameDisplay;
-            if (this.isPositionInStageImage(this.guiDisplay, x, y)) return this.guiDisplay;
+        public getStageImageAt(x: number, y:number):StageImageProperties {
+            if (this.isPositionInStageImage(this.gameImgProps, x, y)) return this.gameImgProps;
+            if (this.isPositionInStageImage(this.guiImgProps, x, y)) return this.guiImgProps;
             return null;
         }
 
-        private isPositionInStageImage(stageImage:StageImage, x: number, y:number) {
+        private isPositionInStageImage(stageImage:StageImageProperties, x: number, y:number) {
             return ((stageImage.x <= x) && ((stageImage.x + stageImage.width) >= x)
              && (stageImage.y <= y) && ((stageImage.y + stageImage.height) >= y));
         }
 
-        public getGameDisplay():GameDisplay {
-            if (this.gameDisplay.display != null) return this.gameDisplay.display;
-            this.gameDisplay.display = new GameDisplay(this);
-            return this.gameDisplay.display;
+        public getGameDisplay():DisplayImage {
+            if (this.gameImgProps.display != null) return this.gameImgProps.display;
+            this.gameImgProps.display = new DisplayImage(this);
+            return this.gameImgProps.display;
         }
 
-        public getGuiDisplay():GameDisplay {
-            if (this.guiDisplay.display != null) return this.guiDisplay.display;
-            this.guiDisplay.display = new GameDisplay(this);
-            return this.guiDisplay.display;
+        public getGuiDisplay():DisplayImage {
+            if (this.guiImgProps.display != null) return this.guiImgProps.display;
+            this.guiImgProps.display = new DisplayImage(this);
+            return this.guiImgProps.display;
         }
 
         public setGameDisplayViewPoint(gameViewPoint:ViewPoint) {
-            this.gameDisplay.viewPoint = gameViewPoint;
+            this.gameImgProps.viewPoint = gameViewPoint;
             this.redraw();
         }
 
 
         public redraw() {
-            if (this.gameDisplay.display != null) {
-                let gameImg = this.gameDisplay.display.getImageData();
-                this.draw(this.gameDisplay, gameImg);
+            if (this.gameImgProps.display != null) {
+                let gameImg = this.gameImgProps.display.getImageData();
+                this.draw(this.gameImgProps, gameImg);
             };
 
-            if (this.guiDisplay.display != null) {
-                let guiImg = this.guiDisplay.display.getImageData();
-                this.draw(this.guiDisplay, guiImg);
+            if (this.guiImgProps.display != null) {
+                let guiImg = this.guiImgProps.display.getImageData();
+                this.draw(this.guiImgProps, guiImg);
             };
         }
 
 
-        public createImage(display:GameDisplay, width:number, height:number): ImageData {
-            if (display == this.gameDisplay.display) {
-                return this.gameDisplay.createImage(width, height);
+        public createImage(display:DisplayImage, width:number, height:number): ImageData {
+            if (display == this.gameImgProps.display) {
+                return this.gameImgProps.createImage(width, height);
             }
             else {
-                return this.guiDisplay.createImage(width, height);
+                return this.guiImgProps.createImage(width, height);
             }
         }
 
@@ -174,7 +187,7 @@ module Lemmings {
 
 
         /** draw everything to the stage/display */
-        private draw(display:StageImage, img:ImageData) {
+        private draw(display:StageImageProperties, img:ImageData) {
             
             if (display.ctx == null) return;
 

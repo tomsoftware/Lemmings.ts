@@ -12,9 +12,10 @@ module Lemmings {
         private level: Level;
         private lemmingManager: LemmingManager;
         private gameGui: GameGui;
-        private guiDispaly: GameDisplay = null;
+        private guiDispaly: DisplayImage = null;
         private lemmingsLeft = 0;
-        private dispaly: GameDisplay = null;
+        private dispaly: DisplayImage = null;
+        private gameDispaly: GameDisplay = null;
         private gameTimer: GameTimer = null;
         private releaseTickIndex : number = 0;
         private skills:GameSkills;
@@ -23,11 +24,15 @@ module Lemmings {
             this.gameResources = gameResources;
         }
 
-        public setGameDispaly(dispaly:GameDisplay){
+        public setGameDispaly(dispaly:DisplayImage){
             this.dispaly = dispaly;
+
+            if (this.gameDispaly != null) {
+                this.gameDispaly.setGuiDisplay(dispaly);
+            }
         }
 
-        public setGuiDisplay(dispaly:GameDisplay) {
+        public setGuiDisplay(dispaly:DisplayImage) {
             this.guiDispaly = dispaly;
 
             if (this.gameGui != null) {
@@ -71,10 +76,15 @@ module Lemmings {
                     /// setup gui
                     this.gameGui = new GameGui(skillPanelSprites, this.skills, this.gameTimer);
             
-                    if (this.dispaly != null) {
-                        this.gameGui.setGuiDisplay(this.dispaly);
+                    if (this.guiDispaly != null) {
+                        this.gameGui.setGuiDisplay(this.guiDispaly);
                     }
-                    
+
+                    this.gameDispaly = new GameDisplay(this.skills, this.level, this.lemmingManager);
+                    if (this.dispaly != null) {
+                        this.gameDispaly.setGuiDisplay(this.dispaly);
+                    }
+
                     /// let's start!
                     resolve(this);
                 });
@@ -117,10 +127,8 @@ module Lemmings {
 
         /** refresh display */ 
         private render() {
-            if (this.dispaly) {
-               this.level.render(this.dispaly);
-               this.lemmingManager.render(this.dispaly);
-               //this.dispaly.redraw();
+            if (this.gameDispaly) {
+                this.gameDispaly.render();
             }
 
             if (this.guiDispaly) {
@@ -131,17 +139,20 @@ module Lemmings {
         }
 
         /** return the id of the lemming at a scene position */
+        /*
         public getLemmingAt(x: number, y:number):Lemming {
             if (this.lemmingManager == null) return null;
             return this.lemmingManager.getLemmingAt(x, y);
         }
+        */
 
+        /*
         public setLemmingAction(lem: Lemming, action:ActionType){
             if (this.lemmingManager == null) return null;
 
             this.lemmingManager.setLemmingAction(lem, ActionType.DIGG);
         }
-
+        */
 
         private addNewLemmings() {
             if (this.lemmingsLeft <= 0) return;

@@ -56,7 +56,7 @@ module Lemmings {
 
 
         /** render all Lemmings to the GameDisplay */
-        public render(gameDisplay:GameDisplay) {
+        public render(gameDisplay:DisplayImage) {
             let lems = this.lemmings;
 
             for(let i = 0; i < lems.length; i++){

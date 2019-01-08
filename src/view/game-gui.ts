@@ -7,9 +7,9 @@ export class GameGui {
   private skillSelectionChanged:boolean = true;
 
 
-  private dispaly: GameDisplay = null;
+  private dispaly: DisplayImage = null;
 
-  public setGuiDisplay(dispaly:GameDisplay) {
+  public setGuiDisplay(dispaly:DisplayImage) {
       this.dispaly = dispaly;
 
       this.dispaly.onMouseClick.on((e) => {
@@ -114,7 +114,7 @@ export class GameGui {
   }
 
 
-  private drawSelection(dispaly:GameDisplay, panelIndex:number) {
+  private drawSelection(dispaly:DisplayImage, panelIndex:number) {
 
     /// clear selection
     for(let i=2; i<10;i++) {
@@ -127,18 +127,18 @@ export class GameGui {
   }
 
 
-  private renderGameTime(dispaly:GameDisplay, x: number, y:number) {
+  private renderGameTime(dispaly:DisplayImage, x: number, y:number) {
     let gameTime = this.gameTimer.getGameLeftTimeString();
 
     this.drawGreenString(dispaly, "Time "+ gameTime +"-00", x, y);
   }
 
-  private drawPanelNumber(dispaly:GameDisplay, number:number, panelIndex:number) {
+  private drawPanelNumber(dispaly:DisplayImage, number:number, panelIndex:number) {
     
     this.drawNumber(dispaly, number, 4 + 16 * panelIndex, 17);
   }
 
-  private drawNumber(dispaly:GameDisplay, number:number, x:number, y:number) :number {
+  private drawNumber(dispaly:DisplayImage, number:number, x:number, y:number) :number {
     
     let num1Img = this.skillPanelSprites.getNumberSpriteLeft(Math.floor(number / 10));
     let num2Img = this.skillPanelSprites.getNumberSpriteRight(number % 10);
@@ -150,7 +150,7 @@ export class GameGui {
   }
 
   /** print out green letters */
-  private drawGreenString(dispaly:GameDisplay, text:string, x:number, y:number):number {
+  private drawGreenString(dispaly:DisplayImage, text:string, x:number, y:number):number {
 
     for(let i = 0; i < text.length; i++) {
       let letterImg = this.skillPanelSprites.getLetterSprite(text[i]);

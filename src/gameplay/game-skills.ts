@@ -10,9 +10,13 @@ module Lemmings {
 
         public onCountChanged = new EventHandler<SkillTypes>();
 
-        public reduseSkill(type:SkillTypes) {
+        public reduseSkill(type:SkillTypes):boolean {
+            if (this.skills[type] <= 0) return false;
+
             this.skills[type]--;
             this.onCountChanged.trigger(type);
+
+            return true;
         }
 
         public getSkill(type:SkillTypes) {

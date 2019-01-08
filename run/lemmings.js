@@ -212,12 +212,16 @@ var Lemmings;
             this.guiDispaly = null;
             this.lemmingsLeft = 0;
             this.dispaly = null;
+            this.gameDispaly = null;
             this.gameTimer = null;
             this.releaseTickIndex = 0;
             this.gameResources = gameResources;
         }
         setGameDispaly(dispaly) {
             this.dispaly = dispaly;
+            if (this.gameDispaly != null) {
+                this.gameDispaly.setGuiDisplay(dispaly);
+            }
         }
         setGuiDisplay(dispaly) {
             this.guiDispaly = dispaly;
@@ -250,8 +254,12 @@ var Lemmings;
                     .then(skillPanelSprites => {
                     /// setup gui
                     this.gameGui = new Lemmings.GameGui(skillPanelSprites, this.skills, this.gameTimer);
+                    if (this.guiDispaly != null) {
+                        this.gameGui.setGuiDisplay(this.guiDispaly);
+                    }
+                    this.gameDispaly = new Lemmings.GameDisplay(this.skills, this.level, this.lemmingManager);
                     if (this.dispaly != null) {
-                        this.gameGui.setGuiDisplay(this.dispaly);
+                        this.gameDispaly.setGuiDisplay(this.dispaly);
                     }
                     /// let's start!
                     resolve(this);
@@ -283,10 +291,8 @@ var Lemmings;
         }
         /** refresh display */
         render() {
-            if (this.dispaly) {
-                this.level.render(this.dispaly);
-                this.lemmingManager.render(this.dispaly);
-                //this.dispaly.redraw();
+            if (this.gameDispaly) {
+                this.gameDispaly.render();
             }
             if (this.guiDispaly) {
                 this.gameGui.render();
@@ -294,16 +300,19 @@ var Lemmings;
             this.guiDispaly.redraw();
         }
         /** return the id of the lemming at a scene position */
-        getLemmingAt(x, y) {
-            if (this.lemmingManager == null)
-                return null;
+        /*
+        public getLemmingAt(x: number, y:number):Lemming {
+            if (this.lemmingManager == null) return null;
             return this.lemmingManager.getLemmingAt(x, y);
         }
-        setLemmingAction(lem, action) {
-            if (this.lemmingManager == null)
-                return null;
-            this.lemmingManager.setLemmingAction(lem, Lemmings.ActionType.DIGG);
+        */
+        /*
+        public setLemmingAction(lem: Lemming, action:ActionType){
+            if (this.lemmingManager == null) return null;
+
+            this.lemmingManager.setLemmingAction(lem, ActionType.DIGG);
         }
+        */
         addNewLemmings() {
             if (this.lemmingsLeft <= 0)
                 return;
@@ -688,8 +697,11 @@ var Lemmings;
             this.skills = level.skills;
         }
         reduseSkill(type) {
+            if (this.skills[type] <= 0)
+                return false;
             this.skills[type]--;
             this.onCountChanged.trigger(type);
+            return true;
         }
         getSkill(type) {
             if (!Lemmings.SkillTypes.isValid(type))
@@ -4845,162 +4857,8 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    class Position2D {
-        constructor(x = 0, y = 0) {
-            /** X position in the container */
-            this.x = 0;
-            /** Y position in the container */
-            this.y = 0;
-            this.x = x;
-            this.y = y;
-        }
-    }
-    Lemmings.Position2D = Position2D;
-})(Lemmings || (Lemmings = {}));
-/// <reference path="position2d.ts"/>
-var Lemmings;
-(function (Lemmings) {
-    class MouseMoveEventArguemnts extends Lemmings.Position2D {
-        constructor(x = 0, y = 0, deltaX = 0, deltaY = 0, button = false) {
-            super(x, y);
-            /** delta the mouse move Y */
-            this.deltaX = 0;
-            /** delta the mouse move Y */
-            this.deltaY = 0;
-            this.button = false;
-            this.deltaX = deltaX;
-            this.deltaY = deltaY;
-            this.button = button;
-        }
-    }
-    Lemmings.MouseMoveEventArguemnts = MouseMoveEventArguemnts;
-    class ZoomEventArguemnts extends Lemmings.Position2D {
-        constructor(x = 0, y = 0, deltaZoom = 0) {
-            super(x, y);
-            this.deltaZoom = deltaZoom;
-        }
-    }
-    Lemmings.ZoomEventArguemnts = ZoomEventArguemnts;
-    /** handel the display of the game */
-    class GameController {
-        constructor(listenElement) {
-            this.mouseDownX = 0;
-            this.mouseDownY = 0;
-            this.mouseButton = -1;
-            this.onMouseMove = new Lemmings.EventHandler();
-            this.onMouseClick = new Lemmings.EventHandler();
-            this.onZoom = new Lemmings.EventHandler();
-            listenElement.addEventListener("mousemove", (e) => {
-                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
-                this.handelMouseMove(relativePos);
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            });
-            listenElement.addEventListener("touchmove", (e) => {
-                let relativePos = this.getRelativePosition(listenElement, e.touches[0].clientX, e.touches[0].clientY);
-                this.handelMouseMove(relativePos);
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            });
-            listenElement.addEventListener("touchstart", (e) => {
-                let relativePos = this.getRelativePosition(listenElement, e.touches[0].clientX, e.touches[0].clientY);
-                this.handelMouseDown(relativePos, 1);
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            });
-            listenElement.addEventListener("mousedown", (e) => {
-                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
-                this.handelMouseDown(relativePos, e.button);
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            });
-            listenElement.addEventListener("mouseup", (e) => {
-                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
-                this.handelMouseUp(relativePos);
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            });
-            listenElement.addEventListener("mouseleave", (e) => {
-                this.handelMouseClear();
-            });
-            listenElement.addEventListener("touchend", (e) => {
-                this.handelMouseClear();
-                return false;
-            });
-            listenElement.addEventListener("touchleave", (e) => {
-                this.handelMouseClear();
-                return false;
-            });
-            listenElement.addEventListener("touchcancel", (e) => {
-                this.handelMouseClear();
-                return false;
-            });
-            listenElement.addEventListener("wheel", (e) => {
-                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
-                this.handeWheel(relativePos, e.deltaY);
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            });
-        }
-        getRelativePosition(element, clientX, clientY) {
-            var rect = element.getBoundingClientRect();
-            return new Lemmings.Position2D(clientX - rect.left, clientY - rect.top);
-        }
-        handelMouseMove(position) {
-            //- Move Point of View
-            if (this.mouseButton == 0) {
-                let deltaX = (this.mouseDownX - position.x);
-                let deltaY = (this.mouseDownY - position.y);
-                //- save start of Mousedown
-                this.mouseDownX = position.x;
-                this.mouseDownY = position.y;
-                /// raise event
-                this.onMouseMove.trigger(new MouseMoveEventArguemnts(position.x, position.y, deltaX, deltaY, true));
-            }
-            else {
-                /// raise event
-                this.onMouseMove.trigger(new MouseMoveEventArguemnts(position.x, position.y, 0, 0, false));
-            }
-        }
-        handelMouseDown(position, button) {
-            //- save start of Mousedown
-            this.mouseButton = button;
-            this.mouseDownX = position.x;
-            this.mouseDownY = position.y;
-        }
-        handelMouseClear() {
-            this.mouseButton = -1;
-            this.mouseDownX = 0;
-            this.mouseDownY = 0;
-        }
-        handelMouseUp(position) {
-            this.handelMouseClear();
-            /// raise event
-            this.onMouseClick.trigger(new Lemmings.Position2D(position.x, position.y));
-        }
-        /** Zoom view
-         * todo: zoom to mouse pointer */
-        handeWheel(position, deltaY) {
-            if (deltaY < 0) {
-                this.onZoom.trigger(new ZoomEventArguemnts(position.x, position.y, 1));
-            }
-            if (deltaY > 0) {
-                this.onZoom.trigger(new ZoomEventArguemnts(position.x, position.y, -1));
-            }
-        }
-    }
-    Lemmings.GameController = GameController;
-})(Lemmings || (Lemmings = {}));
-var Lemmings;
-(function (Lemmings) {
     /** handel the display of the game images */
-    class GameDisplay {
+    class DisplayImage {
         constructor(stage) {
             this.stage = stage;
             this.onMouseClick = new Lemmings.EventHandler();
@@ -5160,6 +5018,38 @@ var Lemmings;
             this.stage.redraw();
         }
     }
+    Lemmings.DisplayImage = DisplayImage;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class GameDisplay {
+        constructor(gameSkills, level, lemmingManager) {
+            this.gameSkills = gameSkills;
+            this.level = level;
+            this.lemmingManager = lemmingManager;
+            this.dispaly = null;
+        }
+        setGuiDisplay(dispaly) {
+            this.dispaly = dispaly;
+            this.dispaly.onMouseClick.on((e) => {
+                let lem = this.lemmingManager.getLemmingAt(e.x, e.y);
+                if (lem == null)
+                    return;
+                let selectedSkill = this.gameSkills.getSelectedSkill();
+                if (this.gameSkills.reduseSkill(selectedSkill)) {
+                    this.lemmingManager.setLemmingAction(lem, Lemmings.ActionType.DIGG);
+                }
+            });
+        }
+        render() {
+            if (this.dispaly == null)
+                return;
+            let dispaly = this.dispaly;
+            this.level.render(this.dispaly);
+            this.lemmingManager.render(this.dispaly);
+            //this.dispaly.redraw();
+        }
+    }
     Lemmings.GameDisplay = GameDisplay;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
@@ -5289,7 +5179,21 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    class StageImage {
+    class Position2D {
+        constructor(x = 0, y = 0) {
+            /** X position in the container */
+            this.x = 0;
+            /** Y position in the container */
+            this.y = 0;
+            this.x = x;
+            this.y = y;
+        }
+    }
+    Lemmings.Position2D = Position2D;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class StageImageProperties {
         constructor() {
             /** X position to display this Image */
             this.x = 0;
@@ -5308,31 +5212,40 @@ var Lemmings;
             return this.ctx.createImageData(width, height);
         }
     }
-    Lemmings.StageImage = StageImage;
+    Lemmings.StageImageProperties = StageImageProperties;
     /** handel the display / output of game, gui, ... */
     class Stage {
         constructor(canvasForOutput) {
             this.controller = null;
-            this.controller = new Lemmings.GameController(canvasForOutput);
+            this.controller = new Lemmings.UserInputManager(canvasForOutput);
             this.controller.onMouseClick.on((e) => {
                 let stageImage = this.getStageImageAt(e.x, e.y);
                 if (stageImage == null)
                     return;
                 if (stageImage.display == null)
                     return;
-                stageImage.display.onMouseClick.trigger(new Lemmings.Position2D(stageImage.viewPoint.getSceneX(e.x), stageImage.viewPoint.getSceneY(e.y)));
+                let x = (stageImage.viewPoint.getSceneX(e.x - stageImage.x));
+                let y = (stageImage.viewPoint.getSceneY(e.y - stageImage.y));
+                stageImage.display.onMouseClick.trigger(new Lemmings.Position2D(x, y));
             });
             this.controller.onMouseMove.on((e) => {
-                let stageImage = this.getStageImageAt(e.x, e.y);
-                if (stageImage == null)
-                    return;
                 if (e.button) {
-                    this.updateViewPoint(stageImage, e.deltaX, e.deltaY, 0);
+                    let stageImage = this.getStageImageAt(e.mouseDownX, e.mouseDownY);
+                    if (stageImage == null)
+                        return;
+                    if (stageImage == this.gameImgProps) {
+                        this.updateViewPoint(stageImage, e.deltaX, e.deltaY, 0);
+                    }
                 }
                 else {
+                    let stageImage = this.getStageImageAt(e.x, e.y);
+                    if (stageImage == null)
+                        return;
                     if (stageImage.display == null)
                         return;
-                    stageImage.display.onMouseMove.trigger(new Lemmings.Position2D(stageImage.viewPoint.getSceneX(e.x), stageImage.viewPoint.getSceneY(e.y)));
+                    let x = e.x - stageImage.x;
+                    let y = e.y - stageImage.y;
+                    stageImage.display.onMouseMove.trigger(new Lemmings.Position2D(stageImage.viewPoint.getSceneX(x), stageImage.viewPoint.getSceneY(y)));
                 }
             });
             this.controller.onZoom.on((e) => {
@@ -5342,15 +5255,15 @@ var Lemmings;
                 this.updateViewPoint(stageImage, 0, 0, e.deltaZoom);
             });
             this.stageCav = canvasForOutput;
-            this.gameDisplay = new StageImage();
-            this.guiDisplay = new StageImage();
-            this.guiDisplay.viewPoint = new Lemmings.ViewPoint(0, 0, 2);
+            this.gameImgProps = new StageImageProperties();
+            this.guiImgProps = new StageImageProperties();
+            this.guiImgProps.viewPoint = new Lemmings.ViewPoint(0, 0, 2);
             this.updateStageSize();
             this.clear();
         }
         updateViewPoint(stageImage, deltaX, deltaY, deletaZoom) {
-            stageImage.viewPoint.x += deltaX;
-            stageImage.viewPoint.y += deltaY;
+            stageImage.viewPoint.x += deltaX / stageImage.viewPoint.scale;
+            stageImage.viewPoint.y += deltaY / stageImage.viewPoint.scale;
             stageImage.viewPoint.scale += deletaZoom * 0.5;
             stageImage.viewPoint.x = this.limitValue(0, stageImage.viewPoint.x, stageImage.width);
             stageImage.viewPoint.y = this.limitValue(0, stageImage.viewPoint.y, stageImage.height);
@@ -5365,18 +5278,18 @@ var Lemmings;
             let ctx = this.stageCav.getContext("2d");
             let stageHeight = ctx.canvas.height;
             let stageWidth = ctx.canvas.width;
-            this.gameDisplay.y = 0;
-            this.gameDisplay.height = stageHeight - 100;
-            this.gameDisplay.width = stageWidth;
-            this.guiDisplay.y = stageHeight - 100;
-            this.guiDisplay.height = 100;
-            this.guiDisplay.width = stageWidth;
+            this.gameImgProps.y = 0;
+            this.gameImgProps.height = stageHeight - 100;
+            this.gameImgProps.width = stageWidth;
+            this.guiImgProps.y = stageHeight - 100;
+            this.guiImgProps.height = 100;
+            this.guiImgProps.width = stageWidth;
         }
         getStageImageAt(x, y) {
-            if (this.isPositionInStageImage(this.gameDisplay, x, y))
-                return this.gameDisplay;
-            if (this.isPositionInStageImage(this.guiDisplay, x, y))
-                return this.guiDisplay;
+            if (this.isPositionInStageImage(this.gameImgProps, x, y))
+                return this.gameImgProps;
+            if (this.isPositionInStageImage(this.guiImgProps, x, y))
+                return this.guiImgProps;
             return null;
         }
         isPositionInStageImage(stageImage, x, y) {
@@ -5384,39 +5297,39 @@ var Lemmings;
                 && (stageImage.y <= y) && ((stageImage.y + stageImage.height) >= y));
         }
         getGameDisplay() {
-            if (this.gameDisplay.display != null)
-                return this.gameDisplay.display;
-            this.gameDisplay.display = new Lemmings.GameDisplay(this);
-            return this.gameDisplay.display;
+            if (this.gameImgProps.display != null)
+                return this.gameImgProps.display;
+            this.gameImgProps.display = new Lemmings.DisplayImage(this);
+            return this.gameImgProps.display;
         }
         getGuiDisplay() {
-            if (this.guiDisplay.display != null)
-                return this.guiDisplay.display;
-            this.guiDisplay.display = new Lemmings.GameDisplay(this);
-            return this.guiDisplay.display;
+            if (this.guiImgProps.display != null)
+                return this.guiImgProps.display;
+            this.guiImgProps.display = new Lemmings.DisplayImage(this);
+            return this.guiImgProps.display;
         }
         setGameDisplayViewPoint(gameViewPoint) {
-            this.gameDisplay.viewPoint = gameViewPoint;
+            this.gameImgProps.viewPoint = gameViewPoint;
             this.redraw();
         }
         redraw() {
-            if (this.gameDisplay.display != null) {
-                let gameImg = this.gameDisplay.display.getImageData();
-                this.draw(this.gameDisplay, gameImg);
+            if (this.gameImgProps.display != null) {
+                let gameImg = this.gameImgProps.display.getImageData();
+                this.draw(this.gameImgProps, gameImg);
             }
             ;
-            if (this.guiDisplay.display != null) {
-                let guiImg = this.guiDisplay.display.getImageData();
-                this.draw(this.guiDisplay, guiImg);
+            if (this.guiImgProps.display != null) {
+                let guiImg = this.guiImgProps.display.getImageData();
+                this.draw(this.guiImgProps, guiImg);
             }
             ;
         }
         createImage(display, width, height) {
-            if (display == this.gameDisplay.display) {
-                return this.gameDisplay.createImage(width, height);
+            if (display == this.gameImgProps.display) {
+                return this.gameImgProps.createImage(width, height);
             }
             else {
-                return this.guiDisplay.createImage(width, height);
+                return this.guiImgProps.createImage(width, height);
             }
         }
         /** clear the stage/display/output */
@@ -5453,6 +5366,159 @@ var Lemmings;
         }
     }
     Lemmings.Stage = Stage;
+})(Lemmings || (Lemmings = {}));
+/// <reference path="position2d.ts"/>
+var Lemmings;
+(function (Lemmings) {
+    class MouseMoveEventArguemnts extends Lemmings.Position2D {
+        constructor(x = 0, y = 0, deltaX = 0, deltaY = 0, button = false) {
+            super(x, y);
+            /** delta the mouse move Y */
+            this.deltaX = 0;
+            /** delta the mouse move Y */
+            this.deltaY = 0;
+            this.button = false;
+            /** position the user starts pressed the mouse */
+            this.mouseDownX = 0;
+            /** position the user starts pressed the mouse */
+            this.mouseDownY = 0;
+            this.deltaX = deltaX;
+            this.deltaY = deltaY;
+            this.button = button;
+        }
+    }
+    Lemmings.MouseMoveEventArguemnts = MouseMoveEventArguemnts;
+    class ZoomEventArguemnts extends Lemmings.Position2D {
+        constructor(x = 0, y = 0, deltaZoom = 0) {
+            super(x, y);
+            this.deltaZoom = deltaZoom;
+        }
+    }
+    Lemmings.ZoomEventArguemnts = ZoomEventArguemnts;
+    /** handel the user events on the stage */
+    class UserInputManager {
+        constructor(listenElement) {
+            this.mouseDownX = 0;
+            this.mouseDownY = 0;
+            this.lastMouseX = 0;
+            this.lastMouseY = 0;
+            this.mouseButton = -1;
+            this.onMouseMove = new Lemmings.EventHandler();
+            this.onMouseClick = new Lemmings.EventHandler();
+            this.onZoom = new Lemmings.EventHandler();
+            listenElement.addEventListener("mousemove", (e) => {
+                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
+                this.handelMouseMove(relativePos);
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            });
+            listenElement.addEventListener("touchmove", (e) => {
+                let relativePos = this.getRelativePosition(listenElement, e.touches[0].clientX, e.touches[0].clientY);
+                this.handelMouseMove(relativePos);
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            });
+            listenElement.addEventListener("touchstart", (e) => {
+                let relativePos = this.getRelativePosition(listenElement, e.touches[0].clientX, e.touches[0].clientY);
+                this.handelMouseDown(relativePos, 1);
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            });
+            listenElement.addEventListener("mousedown", (e) => {
+                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
+                this.handelMouseDown(relativePos, e.button);
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            });
+            listenElement.addEventListener("mouseup", (e) => {
+                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
+                this.handelMouseUp(relativePos);
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            });
+            listenElement.addEventListener("mouseleave", (e) => {
+                this.handelMouseClear();
+            });
+            listenElement.addEventListener("touchend", (e) => {
+                this.handelMouseClear();
+                return false;
+            });
+            listenElement.addEventListener("touchleave", (e) => {
+                this.handelMouseClear();
+                return false;
+            });
+            listenElement.addEventListener("touchcancel", (e) => {
+                this.handelMouseClear();
+                return false;
+            });
+            listenElement.addEventListener("wheel", (e) => {
+                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
+                this.handeWheel(relativePos, e.deltaY);
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            });
+        }
+        getRelativePosition(element, clientX, clientY) {
+            var rect = element.getBoundingClientRect();
+            return new Lemmings.Position2D(clientX - rect.left, clientY - rect.top);
+        }
+        handelMouseMove(position) {
+            //- Move Point of View
+            if (this.mouseButton == 0) {
+                let deltaX = (this.lastMouseX - position.x);
+                let deltaY = (this.lastMouseY - position.y);
+                //- save start of Mousedown
+                this.lastMouseX = position.x;
+                this.lastMouseY = position.y;
+                let mouseDragArguments = new MouseMoveEventArguemnts(position.x, position.y, deltaX, deltaY, true);
+                mouseDragArguments.mouseDownX = this.mouseDownX;
+                mouseDragArguments.mouseDownY = this.mouseDownY;
+                /// raise event
+                this.onMouseMove.trigger(mouseDragArguments);
+            }
+            else {
+                /// raise event
+                this.onMouseMove.trigger(new MouseMoveEventArguemnts(position.x, position.y, 0, 0, false));
+            }
+        }
+        handelMouseDown(position, button) {
+            //- save start of Mousedown
+            this.mouseButton = button;
+            this.mouseDownX = position.x;
+            this.mouseDownY = position.y;
+            this.lastMouseX = position.x;
+            this.lastMouseY = position.y;
+        }
+        handelMouseClear() {
+            this.mouseButton = -1;
+            this.mouseDownX = 0;
+            this.mouseDownY = 0;
+            this.lastMouseX = 0;
+            this.lastMouseY = 0;
+        }
+        handelMouseUp(position) {
+            this.handelMouseClear();
+            /// raise event
+            this.onMouseClick.trigger(new Lemmings.Position2D(position.x, position.y));
+        }
+        /** Zoom view
+         * todo: zoom to mouse pointer */
+        handeWheel(position, deltaY) {
+            if (deltaY < 0) {
+                this.onZoom.trigger(new ZoomEventArguemnts(position.x, position.y, 1));
+            }
+            if (deltaY > 0) {
+                this.onZoom.trigger(new ZoomEventArguemnts(position.x, position.y, -1));
+            }
+        }
+    }
+    Lemmings.UserInputManager = UserInputManager;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {

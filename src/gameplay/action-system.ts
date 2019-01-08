@@ -9,7 +9,7 @@ module Lemmings {
         getActionName() : string;
 
         /** render a Lemmings to the GameDisplay */
-        draw(gameDisplay:GameDisplay, lem: Lemming):void;
+        draw(gameDisplay:DisplayImage, lem: Lemming):void;
     }
 
 }

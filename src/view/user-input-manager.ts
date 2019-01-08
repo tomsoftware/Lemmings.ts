@@ -10,6 +10,11 @@ module Lemmings {
 
         public button:boolean = false;
 
+        /** position the user starts pressed the mouse */
+        public mouseDownX:number = 0;
+        /** position the user starts pressed the mouse */
+        public mouseDownY:number = 0;
+
         constructor(x:number = 0, y:number = 0, deltaX:number = 0, deltaY:number = 0, button:boolean = false) { 
             super(x, y);
             this.deltaX = deltaX;
@@ -28,11 +33,15 @@ module Lemmings {
     }
 
 
-    /** handel the display of the game */
-    export class GameController {
+    /** handel the user events on the stage */
+    export class UserInputManager {
 
         private mouseDownX = 0;
         private mouseDownY = 0;
+
+        private lastMouseX = 0;
+        private lastMouseY = 0;
+
         private mouseButton = -1;
 
         public onMouseMove = new EventHandler<MouseMoveEventArguemnts>();
@@ -133,38 +142,42 @@ module Lemmings {
             //- Move Point of View
             if (this.mouseButton == 0) {
                 
-                let deltaX = (this.mouseDownX - position.x);
-                let deltaY = (this.mouseDownY - position.y);
+                let deltaX = (this.lastMouseX - position.x);
+                let deltaY = (this.lastMouseY - position.y);
 
                 //- save start of Mousedown
-                this.mouseDownX = position.x;
-                this.mouseDownY = position.y;
+                this.lastMouseX = position.x;
+                this.lastMouseY = position.y;
+
+                let mouseDragArguments = new MouseMoveEventArguemnts(position.x, position.y, deltaX, deltaY, true)
+                mouseDragArguments.mouseDownX = this.mouseDownX;
+                mouseDragArguments.mouseDownY = this.mouseDownY;
 
                 /// raise event
-                this.onMouseMove.trigger(new MouseMoveEventArguemnts(position.x, position.y, deltaX, deltaY, true));
+                this.onMouseMove.trigger(mouseDragArguments);
             }
             else {
                 /// raise event
                 this.onMouseMove.trigger(new MouseMoveEventArguemnts(position.x, position.y, 0, 0, false));
             }
-            
         }
 
-
         private handelMouseDown(position:Position2D, button:number) {
-  
             //- save start of Mousedown
             this.mouseButton = button;
             this.mouseDownX = position.x;
             this.mouseDownY = position.y;
+            this.lastMouseX = position.x;
+            this.lastMouseY = position.y;
         }
         
         private handelMouseClear() {
             this.mouseButton = -1;
             this.mouseDownX = 0;
             this.mouseDownY = 0;
+            this.lastMouseX = 0;
+            this.lastMouseY = 0;
         }
-
 
         private handelMouseUp(position:Position2D) {
             this.handelMouseClear();
@@ -172,8 +185,6 @@ module Lemmings {
             /// raise event
             this.onMouseClick.trigger(new Position2D(position.x, position.y));
         }
-
-
 
         /** Zoom view 
          * todo: zoom to mouse pointer */ 

@@ -14,7 +14,7 @@ module Lemmings {
         }
 
 
-        public draw(gameDisplay:GameDisplay, lem: Lemming) {
+        public draw(gameDisplay:DisplayImage, lem: Lemming) {
             let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
 
             let frame = ani.getFrame(lem.frameIndex);
