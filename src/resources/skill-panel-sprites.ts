@@ -46,6 +46,12 @@ module Lemmings {
                 this.letterSprite[letters[l]] = paletteImg.createtFrame(colorPalette);
             }
 
+            /// add space
+            let emptyFrame = new Frame(8, 16);
+            emptyFrame.clear();
+            this.letterSprite[" "] = emptyFrame;
+
+
             /// read panel skill-count number letters
             fr2.setOffset(0x1900);
             for (let i = 0; i < 10; i++) {

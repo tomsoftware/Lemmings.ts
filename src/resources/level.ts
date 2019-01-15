@@ -15,6 +15,9 @@ module Lemmings {
 
         public entrances:LevelElement[] = [];
 
+        public triggers:Trigger[] = [];
+
+        /** detailed information about the object image mainly animation and trap details */
         public objectImg:ObjectImageInfo[] = [];
 
        // public terrain: Uint8ClampedArray;
@@ -45,11 +48,27 @@ module Lemmings {
         public setMapObjects(objects:LevelElement[], objectImg:ObjectImageInfo[]):void {
             this.mapObjects = objects;
             this.entrances = [];
+            this.objectImg = objectImg;
+            this.triggers = [];
 
-            for(let i = 0; i<objects.length; i++){
+            for(let i = 0; i < objects.length; i++){
                 let ob = objects[i];
 
                 if (ob.id == 0) this.entrances.push(ob);
+
+                let objectInfo = objectImg[ob.id];
+                if (objectInfo.trigger_effect_id != 0) {
+                    let x1 = ob.x + objectInfo.trigger_left;
+                    let y1 = ob.y + objectInfo.trigger_top;
+
+                    let x2 = x1 + objectInfo.trigger_width;
+                    let y2 = y1 + objectInfo.trigger_height;
+
+                    let newTrigger = new Trigger(objectInfo.trigger_effect_id, x1, y1, x2, y2, 0, objectInfo.trap_sound_effect_id);
+
+                    this.triggers.push(newTrigger);
+                }
+                
             }
         }
 

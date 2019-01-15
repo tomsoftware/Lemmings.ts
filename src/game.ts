@@ -10,14 +10,16 @@ module Lemmings {
         private levelGroupIndex: number;
         private levelIndex: number;
         private level: Level;
+        private triggerManager : TriggerManager;
+        private gameVictoryCondition : GameVictoryCondition;
         private lemmingManager: LemmingManager;
         private gameGui: GameGui;
         private guiDispaly: DisplayImage = null;
-        private lemmingsLeft = 0;
+
         private dispaly: DisplayImage = null;
         private gameDispaly: GameDisplay = null;
         private gameTimer: GameTimer = null;
-        private releaseTickIndex : number = 0;
+
         private skills:GameSkills;
 
         constructor(gameResources: GameResources) {
@@ -59,22 +61,24 @@ module Lemmings {
                     this.skills = new GameSkills(level);
 
                     this.level = level;
+                    
+                    this.gameVictoryCondition = new GameVictoryCondition(level);
+
+                    this.triggerManager = new TriggerManager(this.gameTimer);
+                    this.triggerManager.addRange(level.triggers);
+
                     return this.gameResources.getLemmingsSprite(level.colorPalette);
                 })
                 .then(lemSprite => {
                     /// setup Lemmings
-                    this.lemmingManager = new LemmingManager(lemSprite);
+                    this.lemmingManager = new LemmingManager(this.level, lemSprite, this.triggerManager, this.gameVictoryCondition);
 
-                    this.lemmingsLeft =  this.level.releaseCount;
-                    
-                    this.releaseTickIndex = 99;
-               
                     return this.gameResources.getSkillPanelSprite(this.level.colorPalette);
 
                 })
                 .then(skillPanelSprites => {
                     /// setup gui
-                    this.gameGui = new GameGui(skillPanelSprites, this.skills, this.gameTimer);
+                    this.gameGui = new GameGui(skillPanelSprites, this.skills, this.gameTimer, this.gameVictoryCondition);
             
                     if (this.guiDispaly != null) {
                         this.gameGui.setGuiDisplay(this.guiDispaly);
@@ -118,9 +122,7 @@ module Lemmings {
                 return;
             }
 
-            this.addNewLemmings();
-
-            this.lemmingManager.tick(this.level);
+            this.lemmingManager.tick();
 
         }
 
@@ -154,21 +156,6 @@ module Lemmings {
         }
         */
 
-        private addNewLemmings() {
-            if (this.lemmingsLeft <= 0) return;
-
-            this.releaseTickIndex++;
-
-            if (this.releaseTickIndex >=  (100 - this.level.releaseRate)) {
-                this.releaseTickIndex = 0;
-
-                let entrance = this.level.mapObjects[0];
-            
-                this.lemmingManager.addLemming(entrance.x, entrance.y);
-
-                this.lemmingsLeft--;
-            }
-        }
 
 
         public getScreenPositionX():number {

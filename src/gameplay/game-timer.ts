@@ -42,6 +42,11 @@ module Lemmings {
             return Math.floor(this.ticksToSeconds(this.tickIndex));
         }
 
+        /** return the past game time in ticks */
+        public getGameTicks():number {
+            return this.tickIndex;
+        }
+
         /** return the past game time in seconds */
         public getGameLeftTimeString():string {
             let leftTicks = this.ticksTimeLimit  - this.tickIndex;

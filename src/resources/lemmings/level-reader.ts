@@ -67,12 +67,10 @@ module Lemmings {
       this.graphicSet2 = fr.readWord();
 
       this.isSuperLemming = (fr.readWord() != 0);
-
-
     }
 
 
-    /** read the Level Obejcts */
+    /** read the level objects */
     private readLevelObjects(fr: BinaryReader) {
 
       /// reset array
@@ -93,6 +91,7 @@ module Lemmings {
         newOb.noOverwrite = ((flags & 0x8000) > 0);
         newOb.onlyOverwrite = ((flags & 0x4000) > 0);
 
+        /// ignore empty items/objects
         if (flags == 0) continue;
 
         this.objects.push(newOb);
