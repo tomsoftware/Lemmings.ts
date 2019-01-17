@@ -1,4 +1,3 @@
-/// <reference path="../../skill-types.ts"/>
 
 module Lemmings {
     

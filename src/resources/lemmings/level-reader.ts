@@ -1,5 +1,4 @@
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="../../skill-types.ts"/>
 /// <reference path="./range.ts"/>
 /// <reference path="./level-properties.ts"/>
 

@@ -6,7 +6,7 @@ module Lemmings {
 
         private sprite: Animation;
 
-        constructor(sprites: LemmingsSprite) {
+        constructor(sprites: LemmingsSprite, private gameVictoryCondition:GameVictoryCondition) {
             this.sprite = sprites.getAnimation(SpriteType.EXITING, false);
         }
 
@@ -29,6 +29,7 @@ module Lemmings {
             lem.frameIndex++;
 
             if (lem.frameIndex >= 8) {
+                this.gameVictoryCondition.AddSurvivor();
                 return LemmingStateType.OUT_OFF_LEVEL;
             }
 

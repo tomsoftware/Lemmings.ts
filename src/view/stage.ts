@@ -100,9 +100,13 @@ module Lemmings {
             stageImage.viewPoint.x = this.limitValue(0, stageImage.viewPoint.x, stageImage.width);
             stageImage.viewPoint.y = this.limitValue(0, stageImage.viewPoint.y, stageImage.height);
             stageImage.viewPoint.scale = this.limitValue(0.5, stageImage.viewPoint.scale, 10);
-
-            this.clear();
-            this.redraw();
+            
+            /// redraw
+            if (stageImage.display != null) {
+                this.clear(stageImage);
+                let gameImg = stageImage.display.getImageData();
+                this.draw(stageImage, gameImg);
+            };
         }
 
         private limitValue(minLimit:number, value:number, maxLimit:number) :number {
@@ -149,11 +153,6 @@ module Lemmings {
             return this.guiImgProps.display;
         }
 
-        public setGameDisplayViewPoint(gameViewPoint:ViewPoint) {
-            this.gameImgProps.viewPoint = gameViewPoint;
-            this.redraw();
-        }
-
 
         public redraw() {
             if (this.gameImgProps.display != null) {
@@ -178,12 +177,17 @@ module Lemmings {
         }
 
         /** clear the stage/display/output */
-        public clear() {
+        public clear(stageImage?:StageImageProperties) {
             var ctx = this.stageCav.getContext("2d");
             ctx.fillStyle = "#000000";
-            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        }
 
+            if (stageImage == null) {
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            }
+            else {
+                ctx.fillRect(stageImage.x, stageImage.y, stageImage.width, stageImage.height);
+            }
+        }
 
 
         /** draw everything to the stage/display */

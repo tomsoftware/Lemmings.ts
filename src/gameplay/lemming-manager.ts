@@ -22,7 +22,7 @@ module Lemmings {
             this.actions[LemmingStateType.FALLING] = new ActionFallSystem(lemingsSprite);
             this.actions[LemmingStateType.JUMPING] = new ActionJumpSystem(lemingsSprite);
             this.actions[LemmingStateType.DIGGING] = new ActionDiggSystem(lemingsSprite);
-            this.actions[LemmingStateType.EXITING] = new ActionExitingSystem(lemingsSprite);
+            this.actions[LemmingStateType.EXITING] = new ActionExitingSystem(lemingsSprite, gameVictoryCondition);
             
             this.releaseTickIndex = 99;
         }
@@ -105,7 +105,6 @@ module Lemmings {
                 case TriggerTypes.DROWN:
                     return LemmingStateType.DROWNING;
                 case TriggerTypes.EXIT_LEVEL:
-                    this.gameVictoryCondition.AddSurvivor();
                     return LemmingStateType.EXITING;
                 case TriggerTypes.KILL:
                     return LemmingStateType.EXPLODING;

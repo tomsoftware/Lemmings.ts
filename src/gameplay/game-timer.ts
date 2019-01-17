@@ -1,6 +1,10 @@
 module Lemmings {
 
     export class GameTimer {
+        readonly TIME_PER_FRAME_MS:number = 60;
+
+        private speedFactor:number = 0.5;
+
         private gameTimerHandler: number = 0;
         /** the current game time in number of steps the game has made  */
         private tickIndex : number = 0;
@@ -26,9 +30,9 @@ module Lemmings {
         public continue() {
             if (this.gameTimerHandler != 0) return;
 
-            this.gameTimerHandler = setInterval(()=>{
+            this.gameTimerHandler = setInterval(() => {
                 this.tick();
-            }, 20);
+            }, (this.TIME_PER_FRAME_MS * this.speedFactor));
         }
 
         public tick() {
@@ -60,11 +64,11 @@ module Lemmings {
 
         /** convert a game-ticks-time to in game-seconds. Returns Float*/
         public ticksToSeconds(ticks: number):number {
-            return ticks / 10;
+            return ticks * (this.TIME_PER_FRAME_MS / 1000);
         }
 
         public ticksSecondsTo(seconds:number):number {
-            return seconds * 10;
+            return seconds * (1000 / this.TIME_PER_FRAME_MS);
         }
 
         /** return the maximum time in seconds to win the game  */
