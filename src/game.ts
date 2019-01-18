@@ -11,8 +11,11 @@ module Lemmings {
         private levelIndex: number;
         private level: Level;
         private triggerManager : TriggerManager;
-        private gameVictoryCondition : GameVictoryCondition;
         private lemmingManager: LemmingManager;
+        private objectManager: ObjectManager;
+
+        private gameVictoryCondition : GameVictoryCondition;
+        
         private gameGui: GameGui;
         private guiDispaly: DisplayImage = null;
 
@@ -84,7 +87,10 @@ module Lemmings {
                         this.gameGui.setGuiDisplay(this.guiDispaly);
                     }
 
-                    this.gameDispaly = new GameDisplay(this.skills, this.level, this.lemmingManager);
+                    this.objectManager = new ObjectManager(this.gameTimer);
+                    this.objectManager.addRange(this.level.objects);
+
+                    this.gameDispaly = new GameDisplay(this.skills, this.level, this.lemmingManager, this.objectManager);
                     if (this.dispaly != null) {
                         this.gameDispaly.setGuiDisplay(this.dispaly);
                     }
@@ -123,7 +129,6 @@ module Lemmings {
             }
 
             this.lemmingManager.tick();
-
         }
 
 

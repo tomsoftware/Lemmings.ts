@@ -3,9 +3,12 @@ module Lemmings {
     export class Animation {
         public frames:Frame[] = [];
         public isPingPong:boolean = false;
-
+        public isRepeat :boolean = true;
+        public firstFrameIndex:number = 0;
 
         public getFrame(frameIndex:number):Frame {
+            
+            frameIndex = frameIndex + this.firstFrameIndex - 1;
 
             let frame = 0;
 
@@ -28,14 +31,15 @@ module Lemmings {
                     frame = frames.length - (frame % frames.length) - 2;
                 }
             }
-            else {
+            else if (this.isRepeat) {
                 frame = frameIndex % this.frames.length;
+            } else {
+                if (frameIndex < this.frames.length) frame = frameIndex;
             }
 
             return this.frames[frame];
-
-            
         }
+
 
         public loadFromFile(fr: BinaryReader, bitsPerPixle: number, width: number, height: number, frames: number, palette:ColorPalette, offsetX:number=null, offsetY:number=null) {
 

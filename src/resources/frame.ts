@@ -71,8 +71,8 @@ module Lemmings {
                     
                 }
             }
-
         }
+
 
         /** set the color of a pixle */
         public setPixel(x: number, y:number, color:number, noOverwrite:boolean = false, onlyOverwrite:boolean=false) {

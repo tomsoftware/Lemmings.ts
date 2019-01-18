@@ -25,7 +25,6 @@ module Lemmings {
     /** the color palette stored in this file */
     public groundPalette = new ColorPalette();
     public colorPalette = new ColorPalette();
-    public previewPalette = new ColorPalette();
 
 
     private error = new ErrorHandler("GroundReader");
@@ -52,8 +51,8 @@ module Lemmings {
       this.readObjectImages(groundFile, 0, this.colorPalette);
       this.readTerrainImages(groundFile, BYTE_SIZE_OF_OBJECTS, this.groundPalette);
 
-      this.readImages(this.imgObjects, vgaObject);
-      this.readImages(this.imgTerrar, vgaTerrar);
+      this.readImages(this.imgObjects, vgaObject, 4);
+      this.readImages(this.imgTerrar, vgaTerrar, 3);
 
     }
 
@@ -71,7 +70,7 @@ module Lemmings {
 
 
     /** loads all images of imgList from the VGAGx file */
-    private readImages(imgList: BaseImageInfo[], vga: BinaryReader) {
+    private readImages(imgList: BaseImageInfo[], vga: BinaryReader, bitPerPixle:number) {
 
       imgList.map((img) => {      
 
@@ -84,7 +83,7 @@ module Lemmings {
           var bitImage = new PaletteImage(img.width, img.height);
 
           //// read image
-          bitImage.processImage(vga, 3, filePos);
+          bitImage.processImage(vga, bitPerPixle, filePos);
           bitImage.processTransparentData(vga, img.maskLoc);
 
           img.frames.push(bitImage.getImageBuffer());
@@ -174,8 +173,8 @@ module Lemmings {
       /// jump over the EGA palettes
       frO.setOffset(offset + 3 * 8);
 
-      this.colorPalette.initLockedValues();
-      this.previewPalette.initLockedValues();
+      //this.colorPalette.initLockedValues();
+      //this.previewPalette.initLockedValues();
 
       /// read the VGA palette index 8..15
       for (let i = 0; i < 8; i++) {
@@ -190,7 +189,6 @@ module Lemmings {
         let r = frO.readByte() << 2;
         let g = frO.readByte() << 2;
         let b = frO.readByte() << 2;
-        this.previewPalette.setColorRGB(i, r, g, b);
         this.colorPalette.setColorRGB(i, r, g, b);
       }
 
@@ -199,7 +197,7 @@ module Lemmings {
         let r = frO.readByte() << 2;
         let g = frO.readByte() << 2;
         let b = frO.readByte() << 2;
-        this.previewPalette.setColorRGB(i, r, g, b);
+        this.colorPalette.setColorRGB(i, r, g, b);
       }
 
     }

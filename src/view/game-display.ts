@@ -20,7 +20,11 @@ module Lemmings {
       }
     
     
-      constructor(private gameSkills:GameSkills, private level:Level, private lemmingManager:LemmingManager) {
+      constructor(
+          private gameSkills:GameSkills,
+          private level:Level,
+          private lemmingManager:LemmingManager,
+          private objectManager:ObjectManager) {
     
       }
     
@@ -28,10 +32,13 @@ module Lemmings {
     
       public render() {
         if (this.dispaly == null) return;
-        let dispaly = this.dispaly;
     
         this.level.render(this.dispaly);
+
+        this.objectManager.render(this.dispaly);
+
         this.lemmingManager.render(this.dispaly);
+        
         //this.dispaly.redraw();
     
       }

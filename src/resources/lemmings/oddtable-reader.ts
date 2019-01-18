@@ -1,6 +1,5 @@
 /// <reference path="../file/binary-reader.ts" />
 /// <reference path="../file/file-container.ts" />
-/// <reference path="../../skill-types.ts"/>
 
 module Lemmings {
 

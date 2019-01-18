@@ -84,7 +84,7 @@ module Lemmings {
             if (this.releaseTickIndex >=  (100 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
                 this.releaseTickIndex = 0;
 
-                let entrance = this.level.mapObjects[0];
+                let entrance = this.level.entrances[0];
             
                 this.addLemming(entrance.x, entrance.y);
 

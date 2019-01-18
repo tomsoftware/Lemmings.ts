@@ -3,7 +3,7 @@ module Lemmings {
     export class GameTimer {
         readonly TIME_PER_FRAME_MS:number = 60;
 
-        private speedFactor:number = 0.5;
+        private speedFactor:number = 1;
 
         private gameTimerHandler: number = 0;
         /** the current game time in number of steps the game has made  */

@@ -11,14 +11,15 @@ module Lemmings {
         public groundMask : Int8Array;
 
         /** objects on the map: entrance/exit/traps */
-        public mapObjects:LevelElement[] = [];
+        //public mapObjects:LevelElement[] = [];
+        public objects: MapObject[] = [];
 
         public entrances:LevelElement[] = [];
 
         public triggers:Trigger[] = [];
 
         /** detailed information about the object image mainly animation and trap details */
-        public objectImg:ObjectImageInfo[] = [];
+        //public objectImg:ObjectImageInfo[] = [];
 
        // public terrain: Uint8ClampedArray;
         
@@ -44,19 +45,27 @@ module Lemmings {
 
 
 
-        /** set the map objects of this level */
+        /** set the map objects of this level and update trigger */
         public setMapObjects(objects:LevelElement[], objectImg:ObjectImageInfo[]):void {
-            this.mapObjects = objects;
+            //this.mapObjects = objects;
             this.entrances = [];
-            this.objectImg = objectImg;
+            //this.objectImg = objectImg;
             this.triggers = [];
+            this.objects = [];
 
+            /// process all objects
             for(let i = 0; i < objects.length; i++){
                 let ob = objects[i];
-
-                if (ob.id == 0) this.entrances.push(ob);
-
                 let objectInfo = objectImg[ob.id];
+
+                /// add object
+                let newMapObject = new MapObject(ob, objectInfo);
+                this.objects.push(newMapObject);
+
+                /// add entrances
+                if (ob.id == 1) this.entrances.push(ob);
+
+                /// add triggers
                 if (objectInfo.trigger_effect_id != 0) {
                     let x1 = ob.x + objectInfo.trigger_left;
                     let y1 = ob.y + objectInfo.trigger_top;
@@ -103,10 +112,9 @@ module Lemmings {
         }
 
         /** set the color palettes for this level */
-        public setPalettes(colorPalette:ColorPalette, groundPalette:ColorPalette, previewPalette:ColorPalette) {
+        public setPalettes(colorPalette:ColorPalette, groundPalette:ColorPalette) {
             this.colorPalette = colorPalette;
             this.groundPalette = groundPalette;
-            this.previewPalette = previewPalette;
         }
         
 

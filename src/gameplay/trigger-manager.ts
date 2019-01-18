@@ -17,7 +17,6 @@ module Lemmings {
             for (let i = 0; i < triggers.length; i++) {
                 this.triggers.push(triggers[i]);
             }
-
         }
 
         /** test all triggers. Returns the triggered type that matches */
