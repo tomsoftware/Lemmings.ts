@@ -8,23 +8,15 @@ module Lemmings {
 
         public getFrame(frameIndex:number):Frame {
             
-            frameIndex = frameIndex + this.firstFrameIndex - 1;
+            frameIndex = frameIndex + this.firstFrameIndex;
 
             let frame = 0;
 
             if (this.isPingPong) {
 
                 /// 0 1 2 3 => size: 4
-
-                /// 0 => 0
-                /// 1 => 1
-                /// 2 => 2
-                /// 3 => 3
-                /// 4 => 2
-                /// 5 => 1
-
-                /// 6 => 0
-                /// 7 => 1
+                ///   0 => 0   1 => 1    2 => 2
+                ///   3 => 3   4 => 2    5 => 1
 
                 frame = frameIndex % (this.frames.length * 2 - 2);
                 if (frame >= frames.length) {
@@ -33,7 +25,8 @@ module Lemmings {
             }
             else if (this.isRepeat) {
                 frame = frameIndex % this.frames.length;
-            } else {
+            }
+            else {
                 if (frameIndex < this.frames.length) frame = frameIndex;
             }
 

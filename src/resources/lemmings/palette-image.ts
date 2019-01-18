@@ -54,8 +54,6 @@ module Lemmings {
                         imgBuf[imgBufPos++] = 255;
                     }
 
-  
-
                 }
             }
 
@@ -77,7 +75,7 @@ module Lemmings {
             
             /// read image
 
-            //-  3 bit per Pixel - bits of byte are stored separately
+            //- bits of byte are stored separately
             for (var i = 0; i < bitsPerPixle; i++) {
 
                 for (var p = 0; p < pixCount; p++) {

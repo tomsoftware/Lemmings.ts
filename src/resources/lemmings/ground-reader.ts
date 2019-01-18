@@ -84,7 +84,7 @@ module Lemmings {
 
           //// read image
           bitImage.processImage(vga, bitPerPixle, filePos);
-          bitImage.processTransparentData(vga, img.maskLoc);
+          bitImage.processTransparentData(vga, filePos + img.maskLoc);
 
           img.frames.push(bitImage.getImageBuffer());
 
@@ -150,7 +150,8 @@ module Lemmings {
         img.width = frO.readByte();
         img.height = frO.readByte();
         img.imageLoc = frO.readWordBE();
-        img.maskLoc = frO.readWordBE();
+        /// use the delta offset to be compatible with the 'ObjectImageInfo.maskLoc'
+        img.maskLoc = frO.readWordBE() - img.imageLoc;
         img.vgaLoc = frO.readWordBE();
         img.palette = colorPalette;
         img.frameCount = 1;
@@ -172,9 +173,6 @@ module Lemmings {
 
       /// jump over the EGA palettes
       frO.setOffset(offset + 3 * 8);
-
-      //this.colorPalette.initLockedValues();
-      //this.previewPalette.initLockedValues();
 
       /// read the VGA palette index 8..15
       for (let i = 0; i < 8; i++) {

@@ -8,8 +8,8 @@ module Lemmings {
         private sprite:Animation[] = [];
 
         constructor(sprites:LemmingsSprite){
-            this.sprite.push(sprites.getAnimation(SpriteType.DIGGING, false));
-            this.sprite.push(sprites.getAnimation(SpriteType.DIGGING, true));
+            this.sprite.push(sprites.getAnimation(SpriteTypes.DIGGING, false));
+            this.sprite.push(sprites.getAnimation(SpriteTypes.DIGGING, true));
 
         }
 

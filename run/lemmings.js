@@ -367,36 +367,36 @@ var Lemmings;
         constructor(fr, colorPalette) {
             this.lemmingAnimation = []; //- Loockup table from ActionType -> this.animations(); First Element: left-move, Second: right-move
             this.colorPalette = colorPalette;
-            this.registerAnimation(Lemmings.SpriteType.WALKING, 1, fr, 2, 16, 10, -8, -10, 8); //- walking (r)
-            this.registerAnimation(Lemmings.SpriteType.JUMPING, 1, fr, 2, 16, 10, -8, -10, 1); //- jumping (r)
-            this.registerAnimation(Lemmings.SpriteType.WALKING, -1, fr, 2, 16, 10, -8, -10, 8); //- walking (l)
-            this.registerAnimation(Lemmings.SpriteType.JUMPING, -1, fr, 2, 16, 10, -8, -10, 1); //- jumping (l)
-            this.registerAnimation(Lemmings.SpriteType.DIGGING, 0, fr, 3, 16, 14, -8, -12, 16); //- digging
-            this.registerAnimation(Lemmings.SpriteType.CLIMBING, 1, fr, 2, 16, 12, -8, -10, 8); //- climbing (r)
-            this.registerAnimation(Lemmings.SpriteType.CLIMBING, -1, fr, 2, 16, 12, -8, -10, 8); //- climbing (l)
-            this.registerAnimation(Lemmings.SpriteType.DROWNING, 0, fr, 2, 16, 10, -8, -10, 16); //- drowning
-            this.registerAnimation(Lemmings.SpriteType.POSTCLIMBING, 1, fr, 2, 16, 12, -8, -10, 8); //- post-climb (r)
-            this.registerAnimation(Lemmings.SpriteType.POSTCLIMBING, -1, fr, 2, 16, 12, -8, -10, 8); //- post-climb (l)
-            this.registerAnimation(Lemmings.SpriteType.BUILDING, 1, fr, 3, 16, 13, -8, -10, 16); //- brick-laying (r)
-            this.registerAnimation(Lemmings.SpriteType.BUILDING, -1, fr, 3, 16, 13, -8, -10, 16); //- brick-laying (l)
-            this.registerAnimation(Lemmings.SpriteType.BASHING, 1, fr, 3, 16, 10, -8, -10, 32); //- bashing (r)
-            this.registerAnimation(Lemmings.SpriteType.BASHING, -1, fr, 3, 16, 10, -8, -10, 32); //- bashing (l)
-            this.registerAnimation(Lemmings.SpriteType.MINEING, 1, fr, 3, 16, 13, -8, -10, 24); //- mining (r)
-            this.registerAnimation(Lemmings.SpriteType.MINEING, -1, fr, 3, 16, 13, -8, -10, 24); //- mining (l)
-            this.registerAnimation(Lemmings.SpriteType.FALLING, 1, fr, 2, 16, 10, -8, -10, 4); //- falling (r)
-            this.registerAnimation(Lemmings.SpriteType.FALLING, -1, fr, 2, 16, 10, -8, -10, 4); //- falling (l)
-            this.registerAnimation(Lemmings.SpriteType.PREUMBRELLA, 1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (r)
-            this.registerAnimation(Lemmings.SpriteType.UMBRELLA, 1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (r)
-            this.registerAnimation(Lemmings.SpriteType.PREUMBRELLA, -1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (l)
-            this.registerAnimation(Lemmings.SpriteType.UMBRELLA, -1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (l)
-            this.registerAnimation(Lemmings.SpriteType.SPLATTING, 0, fr, 2, 16, 10, -8, -10, 16); //- splatting
-            this.registerAnimation(Lemmings.SpriteType.EXITING, 0, fr, 2, 16, 13, -8, -10, 8); //- exiting
-            this.registerAnimation(Lemmings.SpriteType.FRYING, 1, fr, 4, 16, 14, -8, -10, 14); //- fried
-            this.registerAnimation(Lemmings.SpriteType.BLOCKING, 0, fr, 2, 16, 10, -8, -10, 16); //- blocking
-            this.registerAnimation(Lemmings.SpriteType.SHRUGGING, 1, fr, 2, 16, 10, -8, -10, 8); //- shrugging (r)
-            this.registerAnimation(Lemmings.SpriteType.SHRUGGING, 0, fr, 2, 16, 10, -8, -10, 8); //- shrugging (l)
-            this.registerAnimation(Lemmings.SpriteType.OHNO, 0, fr, 2, 16, 10, -8, -10, 16); //- oh-no-ing
-            this.registerAnimation(Lemmings.SpriteType.EXPLODING, 0, fr, 3, 32, 32, -8, -10, 1); //- explosion
+            this.registerAnimation(Lemmings.SpriteTypes.WALKING, 1, fr, 2, 16, 10, -8, -10, 8); //- walking (r)
+            this.registerAnimation(Lemmings.SpriteTypes.JUMPING, 1, fr, 2, 16, 10, -8, -10, 1); //- jumping (r)
+            this.registerAnimation(Lemmings.SpriteTypes.WALKING, -1, fr, 2, 16, 10, -8, -10, 8); //- walking (l)
+            this.registerAnimation(Lemmings.SpriteTypes.JUMPING, -1, fr, 2, 16, 10, -8, -10, 1); //- jumping (l)
+            this.registerAnimation(Lemmings.SpriteTypes.DIGGING, 0, fr, 3, 16, 14, -8, -12, 16); //- digging
+            this.registerAnimation(Lemmings.SpriteTypes.CLIMBING, 1, fr, 2, 16, 12, -8, -10, 8); //- climbing (r)
+            this.registerAnimation(Lemmings.SpriteTypes.CLIMBING, -1, fr, 2, 16, 12, -8, -10, 8); //- climbing (l)
+            this.registerAnimation(Lemmings.SpriteTypes.DROWNING, 0, fr, 2, 16, 10, -8, -10, 16); //- drowning
+            this.registerAnimation(Lemmings.SpriteTypes.POSTCLIMBING, 1, fr, 2, 16, 12, -8, -10, 8); //- post-climb (r)
+            this.registerAnimation(Lemmings.SpriteTypes.POSTCLIMBING, -1, fr, 2, 16, 12, -8, -10, 8); //- post-climb (l)
+            this.registerAnimation(Lemmings.SpriteTypes.BUILDING, 1, fr, 3, 16, 13, -8, -10, 16); //- brick-laying (r)
+            this.registerAnimation(Lemmings.SpriteTypes.BUILDING, -1, fr, 3, 16, 13, -8, -10, 16); //- brick-laying (l)
+            this.registerAnimation(Lemmings.SpriteTypes.BASHING, 1, fr, 3, 16, 10, -8, -10, 32); //- bashing (r)
+            this.registerAnimation(Lemmings.SpriteTypes.BASHING, -1, fr, 3, 16, 10, -8, -10, 32); //- bashing (l)
+            this.registerAnimation(Lemmings.SpriteTypes.MINEING, 1, fr, 3, 16, 13, -8, -10, 24); //- mining (r)
+            this.registerAnimation(Lemmings.SpriteTypes.MINEING, -1, fr, 3, 16, 13, -8, -10, 24); //- mining (l)
+            this.registerAnimation(Lemmings.SpriteTypes.FALLING, 1, fr, 2, 16, 10, -8, -10, 4); //- falling (r)
+            this.registerAnimation(Lemmings.SpriteTypes.FALLING, -1, fr, 2, 16, 10, -8, -10, 4); //- falling (l)
+            this.registerAnimation(Lemmings.SpriteTypes.PREUMBRELLA, 1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (r)
+            this.registerAnimation(Lemmings.SpriteTypes.UMBRELLA, 1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (r)
+            this.registerAnimation(Lemmings.SpriteTypes.PREUMBRELLA, -1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (l)
+            this.registerAnimation(Lemmings.SpriteTypes.UMBRELLA, -1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (l)
+            this.registerAnimation(Lemmings.SpriteTypes.SPLATTING, 0, fr, 2, 16, 10, -8, -10, 16); //- splatting
+            this.registerAnimation(Lemmings.SpriteTypes.EXITING, 0, fr, 2, 16, 13, -8, -10, 8); //- exiting
+            this.registerAnimation(Lemmings.SpriteTypes.FRYING, 1, fr, 4, 16, 14, -8, -10, 14); //- fried
+            this.registerAnimation(Lemmings.SpriteTypes.BLOCKING, 0, fr, 2, 16, 10, -8, -10, 16); //- blocking
+            this.registerAnimation(Lemmings.SpriteTypes.SHRUGGING, 1, fr, 2, 16, 10, -8, -10, 8); //- shrugging (r)
+            this.registerAnimation(Lemmings.SpriteTypes.SHRUGGING, 0, fr, 2, 16, 10, -8, -10, 8); //- shrugging (l)
+            this.registerAnimation(Lemmings.SpriteTypes.OHNO, 0, fr, 2, 16, 10, -8, -10, 16); //- oh-no-ing
+            this.registerAnimation(Lemmings.SpriteTypes.EXPLODING, 0, fr, 3, 32, 32, -8, -10, 1); //- explosion
         }
         /** return the animation for a given animation type */
         getAnimation(state, right) {
@@ -428,8 +428,8 @@ var Lemmings;
         constructor(sprites) {
             this.soundSystem = new Lemmings.SoundSystem();
             this.sprite = [];
-            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.DIGGING, false));
-            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.DIGGING, true));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.DIGGING, false));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.DIGGING, true));
         }
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
@@ -486,7 +486,7 @@ var Lemmings;
         constructor(sprites, gameVictoryCondition) {
             this.gameVictoryCondition = gameVictoryCondition;
             this.soundSystem = new Lemmings.SoundSystem();
-            this.sprite = sprites.getAnimation(Lemmings.SpriteType.EXITING, false);
+            this.sprite = sprites.getAnimation(Lemmings.SpriteTypes.EXITING, false);
         }
         getActionName() {
             return "exiting";
@@ -513,8 +513,8 @@ var Lemmings;
         constructor(sprites) {
             this.soundSystem = new Lemmings.SoundSystem();
             this.sprite = [];
-            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, false));
-            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, true));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.FALLING, false));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.FALLING, true));
         }
         getActionName() {
             return "fall";
@@ -559,8 +559,8 @@ var Lemmings;
         constructor(sprites) {
             this.soundSystem = new Lemmings.SoundSystem();
             this.sprite = [];
-            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, false));
-            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.FALLING, true));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.FALLING, false));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.FALLING, true));
         }
         getActionName() {
             return "jump";
@@ -593,8 +593,8 @@ var Lemmings;
     class ActionWalkSystem {
         constructor(sprites) {
             this.sprite = [];
-            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.WALKING, false));
-            this.sprite.push(sprites.getAnimation(Lemmings.SpriteType.WALKING, true));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.WALKING, false));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.WALKING, true));
         }
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
@@ -999,6 +999,7 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    /** represent a object (e.g. Exit, Entry, Trap, ...) */
     class MapObject {
         constructor(ob, objectImg) {
             this.x = ob.x;
@@ -1015,7 +1016,10 @@ var Lemmings;
         }
     }
     Lemmings.MapObject = MapObject;
-    /** manages all triggers */
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    /** manages all objects on the map */
     class ObjectManager {
         constructor(gameTimer) {
             this.gameTimer = gameTimer;
@@ -1159,18 +1163,12 @@ var Lemmings;
             this.firstFrameIndex = 0;
         }
         getFrame(frameIndex) {
-            frameIndex = frameIndex + this.firstFrameIndex - 1;
+            frameIndex = frameIndex + this.firstFrameIndex;
             let frame = 0;
             if (this.isPingPong) {
                 /// 0 1 2 3 => size: 4
-                /// 0 => 0
-                /// 1 => 1
-                /// 2 => 2
-                /// 3 => 3
-                /// 4 => 2
-                /// 5 => 1
-                /// 6 => 0
-                /// 7 => 1
+                ///   0 => 0   1 => 1    2 => 2
+                ///   3 => 3   4 => 2    5 => 1
                 frame = frameIndex % (this.frames.length * 2 - 2);
                 if (frame >= frames.length) {
                     frame = frames.length - (frame % frames.length) - 2;
@@ -1575,7 +1573,6 @@ var Lemmings;
     class Level {
         constructor() {
             /** objects on the map: entrance/exit/traps */
-            //public mapObjects:LevelElement[] = [];
             this.objects = [];
             this.entrances = [];
             this.triggers = [];
@@ -1592,9 +1589,7 @@ var Lemmings;
         }
         /** set the map objects of this level and update trigger */
         setMapObjects(objects, objectImg) {
-            //this.mapObjects = objects;
             this.entrances = [];
-            //this.objectImg = objectImg;
             this.triggers = [];
             this.objects = [];
             /// process all objects
@@ -1710,30 +1705,30 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    var SpriteType;
-    (function (SpriteType) {
-        SpriteType[SpriteType["WALKING"] = 0] = "WALKING";
-        SpriteType[SpriteType["EXPLODING"] = 1] = "EXPLODING";
-        SpriteType[SpriteType["JUMPING"] = 2] = "JUMPING";
-        SpriteType[SpriteType["DIGGING"] = 3] = "DIGGING";
-        SpriteType[SpriteType["CLIMBING"] = 4] = "CLIMBING";
-        SpriteType[SpriteType["POSTCLIMBING"] = 5] = "POSTCLIMBING";
-        SpriteType[SpriteType["BUILDING"] = 6] = "BUILDING";
-        SpriteType[SpriteType["BLOCKING"] = 7] = "BLOCKING";
-        SpriteType[SpriteType["BASHING"] = 8] = "BASHING";
-        SpriteType[SpriteType["FALLING"] = 9] = "FALLING";
-        SpriteType[SpriteType["UMBRELLA"] = 10] = "UMBRELLA";
-        SpriteType[SpriteType["PREUMBRELLA"] = 11] = "PREUMBRELLA";
-        SpriteType[SpriteType["SPLATTING"] = 12] = "SPLATTING";
-        SpriteType[SpriteType["MINEING"] = 13] = "MINEING";
-        SpriteType[SpriteType["DROWNING"] = 14] = "DROWNING";
-        SpriteType[SpriteType["EXITING"] = 15] = "EXITING";
-        SpriteType[SpriteType["FRYING"] = 16] = "FRYING";
-        SpriteType[SpriteType["OHNO"] = 17] = "OHNO";
-        SpriteType[SpriteType["LEMACTION_SHRUG"] = 18] = "LEMACTION_SHRUG";
-        SpriteType[SpriteType["SHRUGGING"] = 19] = "SHRUGGING";
-        SpriteType[SpriteType["OUT_OFF_LEVEL"] = 20] = "OUT_OFF_LEVEL";
-    })(SpriteType = Lemmings.SpriteType || (Lemmings.SpriteType = {}));
+    var SpriteTypes;
+    (function (SpriteTypes) {
+        SpriteTypes[SpriteTypes["WALKING"] = 0] = "WALKING";
+        SpriteTypes[SpriteTypes["EXPLODING"] = 1] = "EXPLODING";
+        SpriteTypes[SpriteTypes["JUMPING"] = 2] = "JUMPING";
+        SpriteTypes[SpriteTypes["DIGGING"] = 3] = "DIGGING";
+        SpriteTypes[SpriteTypes["CLIMBING"] = 4] = "CLIMBING";
+        SpriteTypes[SpriteTypes["POSTCLIMBING"] = 5] = "POSTCLIMBING";
+        SpriteTypes[SpriteTypes["BUILDING"] = 6] = "BUILDING";
+        SpriteTypes[SpriteTypes["BLOCKING"] = 7] = "BLOCKING";
+        SpriteTypes[SpriteTypes["BASHING"] = 8] = "BASHING";
+        SpriteTypes[SpriteTypes["FALLING"] = 9] = "FALLING";
+        SpriteTypes[SpriteTypes["UMBRELLA"] = 10] = "UMBRELLA";
+        SpriteTypes[SpriteTypes["PREUMBRELLA"] = 11] = "PREUMBRELLA";
+        SpriteTypes[SpriteTypes["SPLATTING"] = 12] = "SPLATTING";
+        SpriteTypes[SpriteTypes["MINEING"] = 13] = "MINEING";
+        SpriteTypes[SpriteTypes["DROWNING"] = 14] = "DROWNING";
+        SpriteTypes[SpriteTypes["EXITING"] = 15] = "EXITING";
+        SpriteTypes[SpriteTypes["FRYING"] = 16] = "FRYING";
+        SpriteTypes[SpriteTypes["OHNO"] = 17] = "OHNO";
+        SpriteTypes[SpriteTypes["LEMACTION_SHRUG"] = 18] = "LEMACTION_SHRUG";
+        SpriteTypes[SpriteTypes["SHRUGGING"] = 19] = "SHRUGGING";
+        SpriteTypes[SpriteTypes["OUT_OFF_LEVEL"] = 20] = "OUT_OFF_LEVEL";
+    })(SpriteTypes = Lemmings.SpriteTypes || (Lemmings.SpriteTypes = {}));
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -2366,7 +2361,7 @@ var Lemmings;
                     var bitImage = new Lemmings.PaletteImage(img.width, img.height);
                     //// read image
                     bitImage.processImage(vga, bitPerPixle, filePos);
-                    bitImage.processTransparentData(vga, img.maskLoc);
+                    bitImage.processTransparentData(vga, filePos + img.maskLoc);
                     img.frames.push(bitImage.getImageBuffer());
                     /// move to the next frame data
                     filePos += img.frameDataSize;
@@ -2415,7 +2410,8 @@ var Lemmings;
                 img.width = frO.readByte();
                 img.height = frO.readByte();
                 img.imageLoc = frO.readWordBE();
-                img.maskLoc = frO.readWordBE();
+                /// use the delta offset to be compatible with the 'ObjectImageInfo.maskLoc'
+                img.maskLoc = frO.readWordBE() - img.imageLoc;
                 img.vgaLoc = frO.readWordBE();
                 img.palette = colorPalette;
                 img.frameCount = 1;
@@ -2431,8 +2427,6 @@ var Lemmings;
         readPalettes(frO, offset) {
             /// jump over the EGA palettes
             frO.setOffset(offset + 3 * 8);
-            //this.colorPalette.initLockedValues();
-            //this.previewPalette.initLockedValues();
             /// read the VGA palette index 8..15
             for (let i = 0; i < 8; i++) {
                 let r = frO.readByte() << 2;
@@ -2735,7 +2729,7 @@ var Lemmings;
                 src.setOffset(startPos);
             }
             /// read image
-            //-  3 bit per Pixel - bits of byte are stored separately
+            //- bits of byte are stored separately
             for (var i = 0; i < bitsPerPixle; i++) {
                 for (var p = 0; p < pixCount; p++) {
                     if (bitBufLen <= 0) {
@@ -2868,7 +2862,7 @@ var Lemmings;
                 }
             }
         }
-        /** loads the palettes  */
+        /** load the palettes  */
         readPalettes(fr, offset) {
             /// read the VGA palette index 0..8
             for (let i = 0; i < 8; i++) {

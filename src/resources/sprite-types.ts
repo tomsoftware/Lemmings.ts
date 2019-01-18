@@ -1,7 +1,7 @@
 
 module Lemmings {
     
-        export enum SpriteType {
+        export enum SpriteTypes {
             WALKING,
  
             EXPLODING, // fire ball and explosion particles

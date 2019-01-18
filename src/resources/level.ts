@@ -11,17 +11,12 @@ module Lemmings {
         public groundMask : Int8Array;
 
         /** objects on the map: entrance/exit/traps */
-        //public mapObjects:LevelElement[] = [];
         public objects: MapObject[] = [];
 
         public entrances:LevelElement[] = [];
 
         public triggers:Trigger[] = [];
 
-        /** detailed information about the object image mainly animation and trap details */
-        //public objectImg:ObjectImageInfo[] = [];
-
-       // public terrain: Uint8ClampedArray;
         
         public gameType: GameTypes;
         public levelMode: number;
@@ -47,9 +42,7 @@ module Lemmings {
 
         /** set the map objects of this level and update trigger */
         public setMapObjects(objects:LevelElement[], objectImg:ObjectImageInfo[]):void {
-            //this.mapObjects = objects;
             this.entrances = [];
-            //this.objectImg = objectImg;
             this.triggers = [];
             this.objects = [];
 

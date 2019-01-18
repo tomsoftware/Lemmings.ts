@@ -110,7 +110,7 @@ module Lemmings {
 
 
 
-          /** loads the palettes  */
+        /** load the palettes  */
         private readPalettes(fr: BinaryReader, offset: number): void {
 
             /// read the VGA palette index 0..8

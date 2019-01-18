@@ -7,8 +7,8 @@ module Lemmings {
         private sprite:Animation[] = [];
         
         constructor(sprites:LemmingsSprite){
-            this.sprite.push(sprites.getAnimation(SpriteType.FALLING, false));
-            this.sprite.push(sprites.getAnimation(SpriteType.FALLING, true));
+            this.sprite.push(sprites.getAnimation(SpriteTypes.FALLING, false));
+            this.sprite.push(sprites.getAnimation(SpriteTypes.FALLING, true));
         }
 
         public getActionName() : string {

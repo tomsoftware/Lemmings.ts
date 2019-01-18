@@ -7,7 +7,7 @@ module Lemmings {
         private sprite: Animation;
 
         constructor(sprites: LemmingsSprite, private gameVictoryCondition:GameVictoryCondition) {
-            this.sprite = sprites.getAnimation(SpriteType.EXITING, false);
+            this.sprite = sprites.getAnimation(SpriteTypes.EXITING, false);
         }
 
         public getActionName(): string {
