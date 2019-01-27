@@ -47,10 +47,10 @@ module Lemmings {
             var destX = destConfig.x;
             var destY = destConfig.y;
 
-            var upsideDown = destConfig.isUpsideDown;
-            var noOverwrite = destConfig.noOverwrite;
-            var isErase = destConfig.isErase;
-            var onlyOverwrite = destConfig.onlyOverwrite;
+            var upsideDown = destConfig.drawProperties.isUpsideDown;
+            var noOverwrite = destConfig.drawProperties.noOverwrite;
+            var isErase = destConfig.drawProperties.isErase;
+            var onlyOverwrite = destConfig.drawProperties.onlyOverwrite;
 
             for (var y = 0; y < h; y++) {
 

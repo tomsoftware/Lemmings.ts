@@ -86,9 +86,11 @@ module Lemmings {
         newOb.id = fr.readWord();
 
         var flags = fr.readWord();
-        newOb.isUpsideDown = ((flags & 0x0080) > 0);
-        newOb.noOverwrite = ((flags & 0x8000) > 0);
-        newOb.onlyOverwrite = ((flags & 0x4000) > 0);
+        let isUpsideDown = ((flags & 0x0080) > 0);
+        let noOverwrite = ((flags & 0x8000) > 0);
+        let onlyOverwrite = ((flags & 0x4000) > 0);
+
+        newOb.drawProperties = new DrawProperties(isUpsideDown, noOverwrite, onlyOverwrite, false);
 
         /// ignore empty items/objects
         if (flags == 0) continue;
@@ -120,12 +122,11 @@ module Lemmings {
         newOb.id = (v & 0x003F);
 
         var flags = ((v >> 29) & 0x000F);
-        newOb.isUpsideDown = ((flags & 2) > 0);
-        newOb.noOverwrite = ((flags & 4) > 0);
-        newOb.isErase = ((flags & 1) > 0);
+        let isUpsideDown = ((flags & 2) > 0);
+        let noOverwrite = ((flags & 4) > 0);
+        let isErase = ((flags & 1) > 0);
 
-        //- the original game does not allow the combination: (noOverwrite | isErase)
-        if (newOb.noOverwrite) newOb.isErase = false;
+        newOb.drawProperties = new DrawProperties(isUpsideDown, noOverwrite, false, isErase);
 
         this.terrains.push(newOb);
       }

@@ -17,7 +17,7 @@
         /** return the map and it's config */
         public getLevel(levelMode:number, levelIndex:number):Promise<Level> {
 
-            let level = new Level();
+            let level:Level;
 
             let levelReader:LevelReader;
 
@@ -48,12 +48,11 @@
                         let levelsContainer = new FileContainer(files[0]);
                         levelReader = new LevelReader(levelsContainer.getPart(levelInfo.partIndex));
 
+                        level = new Level(levelReader.levelWidth, levelReader.levelHeight);
+
                         level.gameType = this.config.gametype;
                         level.levelIndex = levelIndex;
                         level.levelMode = levelMode;
-
-                        level.width = levelReader.levelWidth;
-                        level.height = levelReader.levelHeight;
 
                         level.screenPositionX = levelReader.screenPositionX;
                         level.isSuperLemming = levelReader.isSuperLemming;
@@ -109,13 +108,9 @@
                             render.createGroundMap(levelReader, groundReader.getTerraImages());
                         }
 
-                        
                         level.setGroundImage(render.img.data);
-                        level.groundMask = render.img.mask
+                        level.setGroundMaskLayer(new SolidLayer(level.width, level.height, render.img.mask));
 
-                        level.width = render.img.width;
-                        level.height = render.img.height;
-                        
                         level.setMapObjects(levelReader.objects, groundReader.getObjectImages());
                         level.setPalettes(groundReader.colorPalette, groundReader.groundPalette);
 

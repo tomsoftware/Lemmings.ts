@@ -7,10 +7,7 @@ module Lemmings {
     public id: number = 0;
     public frameIndex: number = 0;
 
-    public isUpsideDown: boolean = false;
-    public noOverwrite: boolean = false;
-    public onlyOverwrite: boolean = false;
-    public isErase: boolean = false;
+    public drawProperties : DrawProperties;
   }
 
 }

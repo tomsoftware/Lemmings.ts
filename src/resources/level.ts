@@ -8,16 +8,16 @@ module Lemmings {
         private groundImage: Uint8ClampedArray;//ImageData;
 
         /** the background mask 0=noGround / 1=ground*/
-        public groundMask : Int8Array;
+        public groundMask: SolidLayer = null;
 
         /** objects on the map: entrance/exit/traps */
         public objects: MapObject[] = [];
 
-        public entrances:LevelElement[] = [];
+        public entrances: LevelElement[] = [];
 
-        public triggers:Trigger[] = [];
+        public triggers: Trigger[] = [];
 
-        
+
         public gameType: GameTypes;
         public levelMode: number;
         public levelIndex: number;
@@ -34,20 +34,20 @@ module Lemmings {
 
         public isSuperLemming = false;
 
-        public colorPalette:ColorPalette;
-        public groundPalette:ColorPalette;
-        public previewPalette:ColorPalette;
+        public colorPalette: ColorPalette;
+        public groundPalette: ColorPalette;
+        public previewPalette: ColorPalette;
 
 
 
         /** set the map objects of this level and update trigger */
-        public setMapObjects(objects:LevelElement[], objectImg:ObjectImageInfo[]):void {
+        public setMapObjects(objects: LevelElement[], objectImg: ObjectImageInfo[]): void {
             this.entrances = [];
             this.triggers = [];
             this.objects = [];
 
             /// process all objects
-            for(let i = 0; i < objects.length; i++){
+            for (let i = 0; i < objects.length; i++) {
                 let ob = objects[i];
                 let objectInfo = objectImg[ob.id];
 
@@ -70,56 +70,63 @@ module Lemmings {
 
                     this.triggers.push(newTrigger);
                 }
-                
+
             }
         }
 
         /** check if a y-position is out of the level */
-        public isOutOfLevel(y:number):boolean {
+        public isOutOfLevel(y: number): boolean {
             return ((y >= this.height) || (y <= 0));
         }
 
-        /** check if a point is solid */
-        public hasGroundAt(x:number, y:number):boolean {
-            if ((x < 0) || (x >= this.width)) return false;
-            if ((y < 0) || (y >= this.height)) return false;
+        /** return the layer that defines if a pixel in the level is solid */
+        public getGroundMaskLayer(): SolidLayer {
+            if (this.groundMask == null) {
+                this.groundMask = new SolidLayer(this.width, this.height);
+            }
 
-            return (this.groundMask[x + y * this.width] != 0);
+            return this.groundMask;
         }
-        
+
+
+        /** set the GroundMaskLayer */
+        public setGroundMaskLayer(solidLayer: SolidLayer): void {
+            this.groundMask = solidLayer;
+        }
+
         /** clear a point  */
-        public clearGroundAt(x:number, y:number) {
-            let index = x + y * this.width;
+        public clearGroundAt(x: number, y: number) {
 
-            this.groundMask[index] = 0;
+            this.groundMask.clearGroundAt(x, y);
 
-            index = index * 4;
-            this.groundImage[index + 0] = 0;
-            this.groundImage[index + 1] = 0;
-            this.groundImage[index + 2] = 0;
+            let index = (x + y * this.width) * 4;
+
+            this.groundImage[index + 0] = 0; // R
+            this.groundImage[index + 1] = 0; // G
+            this.groundImage[index + 2] = 0; // B
         }
-
 
         public setGroundImage(img: Uint8ClampedArray) {
             this.groundImage = new Uint8ClampedArray(img);
         }
 
         /** set the color palettes for this level */
-        public setPalettes(colorPalette:ColorPalette, groundPalette:ColorPalette) {
+        public setPalettes(colorPalette: ColorPalette, groundPalette: ColorPalette) {
             this.colorPalette = colorPalette;
             this.groundPalette = groundPalette;
         }
-        
 
-        constructor() {
-           
+
+        constructor(width: number, height: number) {
+            this.width = width;
+            this.height = height;
         }
 
         /** render ground to display */
-        public render(gameDisplay:DisplayImage) {
+        public render(gameDisplay: DisplayImage) {
             gameDisplay.initSize(this.width, this.height);
 
-            gameDisplay.setBackground(this.groundImage);
+            gameDisplay.setBackground(this.groundImage, this.groundMask);
         }
 
     }

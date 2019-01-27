@@ -47,9 +47,7 @@ module Lemmings {
                 /// set r,g,b = 0 and alpha=FF
                 buffer32[len] = 0xFF000000;
 
-                /// for debugging
-                //buffer32[len] = 0xFFCBC0FF;
-
+                /// clear mask
                 this.mask[len] = 0;
         }
 
@@ -97,6 +95,7 @@ module Lemmings {
             this.data[i + 0] = color[0]; //- R
             this.data[i + 1] = color[1]; //- G
             this.data[i + 2] = color[2]; //- B
+            this.data[i + 3] = 255 //- Alpha
 
             this.mask[destPixelPos] = 1;
         }
@@ -114,6 +113,7 @@ module Lemmings {
             this.data[i + 0] = 0; //- R
             this.data[i + 1] = 0; //- G
             this.data[i + 2] = 0; //- B
+            this.data[i + 3] = 0 //- Alpha
 
             this.mask[destPixelPos] = 0;
         }

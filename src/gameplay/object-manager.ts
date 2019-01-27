@@ -19,7 +19,7 @@ module Lemmings {
 
             for (let i = 0; i < objs.length; i++) {
                 let obj = objs[i];
-                gameDisplay.drawFrame(obj.animation.getFrame(tick), obj.x, obj.y);
+                gameDisplay.drawFrameFlags(obj.animation.getFrame(tick), obj.x, obj.y, obj.drawProperties);
             }
         }
 

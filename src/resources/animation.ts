@@ -39,7 +39,7 @@ module Lemmings {
             for (let f = 0; f < frames; f++) {
                 let paletteImg = new PaletteImage(width, height);
                 paletteImg.processImage(fr, bitsPerPixle);
-                this.frames.push(paletteImg.createtFrame(palette, offsetX, offsetY));
+                this.frames.push(paletteImg.createFrame(palette, offsetX, offsetY));
             }
 
         }

@@ -55,7 +55,6 @@ module Lemmings {
 
       dispaly.setBackground(panelImage.data);
 
-
       this.drawGreenString(dispaly, "Out " + this.gameVictoryCondition.GetOutCount() + "  ", 112, 0);
       this.drawGreenString(dispaly, "In" + this.stringPad(this.gameVictoryCondition.GetSurvivorPercentage() + "", 3) + "%", 186, 0);
 

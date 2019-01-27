@@ -469,8 +469,9 @@ var Lemmings;
         }
         digRow(level, lem, y) {
             let removeCount = 0;
+            let groundMask = level.getGroundMaskLayer();
             for (let x = lem.x - 4; x < lem.x + 5; x++) {
-                if (level.hasGroundAt(x, y)) {
+                if (groundMask.hasGroundAt(x, y)) {
                     level.clearGroundAt(x, y);
                     removeCount++;
                 }
@@ -526,14 +527,15 @@ var Lemmings;
             gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
         process(level, lem) {
+            let groundMask = level.getGroundMaskLayer();
             lem.frameIndex++;
             if (lem.state > 16 && (lem.hasParachute)) {
                 return Lemmings.LemmingStateType.FLOATING;
             }
             // fall down!
-            let i;
-            for (i = 0; i < 3; i++) {
-                if (level.hasGroundAt(lem.x, lem.y + i)) {
+            let i = 0;
+            for (; i < 3; i++) {
+                if (groundMask.hasGroundAt(lem.x, lem.y + i)) {
                     break;
                 }
             }
@@ -572,9 +574,10 @@ var Lemmings;
         }
         process(level, lem) {
             lem.frameIndex++;
+            let ground = level.getGroundMaskLayer();
             let i = 0;
             for (; i < 2; i++) {
-                if (!level.hasGroundAt(lem.x, lem.y + i - 1)) {
+                if (!ground.hasGroundAt(lem.x, lem.y + i - 1)) {
                     break;
                 }
             }
@@ -607,16 +610,17 @@ var Lemmings;
         process(level, lem) {
             lem.frameIndex++;
             lem.x += (lem.lookRight ? 1 : -1);
+            let groundMask = level.getGroundMaskLayer();
             let newAction = Lemmings.LemmingStateType.NO_STATE_TYPE;
             if (lem.x < 0) {
                 lem.lookRight = true;
                 return Lemmings.LemmingStateType.NO_STATE_TYPE;
             }
-            if (level.hasGroundAt(lem.x, lem.y)) {
+            if (groundMask.hasGroundAt(lem.x, lem.y)) {
                 // walk, jump, climb, or turn
                 let i;
                 for (i = 1; i < 8; i++) {
-                    if (!level.hasGroundAt(lem.x, lem.y - i)) {
+                    if (!groundMask.hasGroundAt(lem.x, lem.y - i)) {
                         break;
                     }
                 }
@@ -649,7 +653,7 @@ var Lemmings;
                 // walk or fall
                 let i;
                 for (i = 1; i < 4; i++) {
-                    if (level.hasGroundAt(lem.x, lem.y + i)) {
+                    if (groundMask.hasGroundAt(lem.x, lem.y + i)) {
                         break;
                     }
                 }
@@ -1004,12 +1008,13 @@ var Lemmings;
         constructor(ob, objectImg) {
             this.x = ob.x;
             this.y = ob.y;
+            this.drawProperties = ob.drawProperties;
             this.animation = new Lemmings.Animation();
             this.animation.isRepeat = objectImg.animationLoop;
             this.animation.firstFrameIndex = objectImg.firstFrameIndex;
             for (let i = 0; i < objectImg.frames.length; i++) {
                 let newFrame = new Lemmings.Frame(objectImg.width, objectImg.height);
-                newFrame.clear();
+                //newFrame.clear();
                 newFrame.drawPaletteImage(objectImg.frames[i], objectImg.width, objectImg.height, objectImg.palette, 0, 0);
                 this.animation.frames.push(newFrame);
             }
@@ -1031,7 +1036,7 @@ var Lemmings;
             let tick = this.gameTimer.getGameTicks();
             for (let i = 0; i < objs.length; i++) {
                 let obj = objs[i];
-                gameDisplay.drawFrame(obj.animation.getFrame(tick), obj.x, obj.y);
+                gameDisplay.drawFrameFlags(obj.animation.getFrame(tick), obj.x, obj.y, obj.drawProperties);
             }
         }
         /** add map objects to manager */
@@ -1187,7 +1192,7 @@ var Lemmings;
             for (let f = 0; f < frames; f++) {
                 let paletteImg = new Lemmings.PaletteImage(width, height);
                 paletteImg.processImage(fr, bitsPerPixle);
-                this.frames.push(paletteImg.createtFrame(palette, offsetX, offsetY));
+                this.frames.push(paletteImg.createFrame(palette, offsetX, offsetY));
             }
         }
     }
@@ -1264,6 +1269,22 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    /** defines the way a image is drawn to the stage */
+    class DrawProperties {
+        constructor(isUpsideDown, noOverwrite, onlyOverwrite, isErase) {
+            this.isUpsideDown = isUpsideDown;
+            this.noOverwrite = noOverwrite;
+            this.onlyOverwrite = onlyOverwrite;
+            this.isErase = isErase;
+            //- the original game does not allow the combination: (noOverwrite | isErase)
+            if (noOverwrite)
+                this.isErase = false;
+        }
+    }
+    Lemmings.DrawProperties = DrawProperties;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     /** handel error logging */
     class ErrorHandler {
         constructor(moduleName) {
@@ -1322,8 +1343,7 @@ var Lemmings;
             while (len--)
                 /// set r,g,b = 0 and alpha=FF
                 buffer32[len] = 0xFF000000;
-            /// for debugging
-            //buffer32[len] = 0xFFCBC0FF;
+            /// clear mask
             this.mask[len] = 0;
         }
         /** draw a palette Image to this frame */
@@ -1363,6 +1383,7 @@ var Lemmings;
             this.data[i + 0] = color[0]; //- R
             this.data[i + 1] = color[1]; //- G
             this.data[i + 2] = color[2]; //- B
+            this.data[i + 3] = 255; //- Alpha
             this.mask[destPixelPos] = 1;
         }
         /** set a pixle to back */
@@ -1376,6 +1397,7 @@ var Lemmings;
             this.data[i + 0] = 0; //- R
             this.data[i + 1] = 0; //- G
             this.data[i + 2] = 0; //- B
+            this.data[i + 3] = 0; //- Alpha
             this.mask[destPixelPos] = 0;
         }
     }
@@ -1410,10 +1432,10 @@ var Lemmings;
             var pal = srcImg.palette;
             var destX = destConfig.x;
             var destY = destConfig.y;
-            var upsideDown = destConfig.isUpsideDown;
-            var noOverwrite = destConfig.noOverwrite;
-            var isErase = destConfig.isErase;
-            var onlyOverwrite = destConfig.onlyOverwrite;
+            var upsideDown = destConfig.drawProperties.isUpsideDown;
+            var noOverwrite = destConfig.drawProperties.noOverwrite;
+            var isErase = destConfig.drawProperties.isErase;
+            var onlyOverwrite = destConfig.drawProperties.onlyOverwrite;
             for (var y = 0; y < h; y++) {
                 for (var x = 0; x < w; x++) {
                     let sourceY = upsideDown ? (h - y - 1) : y;
@@ -1487,7 +1509,7 @@ var Lemmings;
         }
         /** return the map and it's config */
         getLevel(levelMode, levelIndex) {
-            let level = new Lemmings.Level();
+            let level;
             let levelReader;
             return new Promise((resolve, reject) => {
                 let levelInfo = this.levelIndexResolve.resolve(levelMode, levelIndex);
@@ -1508,11 +1530,10 @@ var Lemmings;
                     /// read the level meta data
                     let levelsContainer = new Lemmings.FileContainer(files[0]);
                     levelReader = new Lemmings.LevelReader(levelsContainer.getPart(levelInfo.partIndex));
+                    level = new Lemmings.Level(levelReader.levelWidth, levelReader.levelHeight);
                     level.gameType = this.config.gametype;
                     level.levelIndex = levelIndex;
                     level.levelMode = levelMode;
-                    level.width = levelReader.levelWidth;
-                    level.height = levelReader.levelHeight;
                     level.screenPositionX = levelReader.screenPositionX;
                     level.isSuperLemming = levelReader.isSuperLemming;
                     /// default level properties
@@ -1555,9 +1576,7 @@ var Lemmings;
                         render.createGroundMap(levelReader, groundReader.getTerraImages());
                     }
                     level.setGroundImage(render.img.data);
-                    level.groundMask = render.img.mask;
-                    level.width = render.img.width;
-                    level.height = render.img.height;
+                    level.setGroundMaskLayer(new Lemmings.SolidLayer(level.width, level.height, render.img.mask));
                     level.setMapObjects(levelReader.objects, groundReader.getObjectImages());
                     level.setPalettes(groundReader.colorPalette, groundReader.groundPalette);
                     resolve(level);
@@ -1571,7 +1590,9 @@ var Lemmings;
 (function (Lemmings) {
     /** Level Data */
     class Level {
-        constructor() {
+        constructor(width, height) {
+            /** the background mask 0=noGround / 1=ground*/
+            this.groundMask = null;
             /** objects on the map: entrance/exit/traps */
             this.objects = [];
             this.entrances = [];
@@ -1586,6 +1607,8 @@ var Lemmings;
             this.skills = new Array(Lemmings.SkillTypes.length());
             this.screenPositionX = 0;
             this.isSuperLemming = false;
+            this.width = width;
+            this.height = height;
         }
         /** set the map objects of this level and update trigger */
         setMapObjects(objects, objectImg) {
@@ -1617,22 +1640,24 @@ var Lemmings;
         isOutOfLevel(y) {
             return ((y >= this.height) || (y <= 0));
         }
-        /** check if a point is solid */
-        hasGroundAt(x, y) {
-            if ((x < 0) || (x >= this.width))
-                return false;
-            if ((y < 0) || (y >= this.height))
-                return false;
-            return (this.groundMask[x + y * this.width] != 0);
+        /** return the layer that defines if a pixel in the level is solid */
+        getGroundMaskLayer() {
+            if (this.groundMask == null) {
+                this.groundMask = new Lemmings.SolidLayer(this.width, this.height);
+            }
+            return this.groundMask;
+        }
+        /** set the GroundMaskLayer */
+        setGroundMaskLayer(solidLayer) {
+            this.groundMask = solidLayer;
         }
         /** clear a point  */
         clearGroundAt(x, y) {
-            let index = x + y * this.width;
-            this.groundMask[index] = 0;
-            index = index * 4;
-            this.groundImage[index + 0] = 0;
-            this.groundImage[index + 1] = 0;
-            this.groundImage[index + 2] = 0;
+            this.groundMask.clearGroundAt(x, y);
+            let index = (x + y * this.width) * 4;
+            this.groundImage[index + 0] = 0; // R
+            this.groundImage[index + 1] = 0; // G
+            this.groundImage[index + 2] = 0; // B
         }
         setGroundImage(img) {
             this.groundImage = new Uint8ClampedArray(img);
@@ -1645,7 +1670,7 @@ var Lemmings;
         /** render ground to display */
         render(gameDisplay) {
             gameDisplay.initSize(this.width, this.height);
-            gameDisplay.setBackground(this.groundImage);
+            gameDisplay.setBackground(this.groundImage, this.groundMask);
         }
     }
     Lemmings.Level = Level;
@@ -1661,13 +1686,13 @@ var Lemmings;
             /// read skill panel
             let paletteImg = new Lemmings.PaletteImage(320, 40);
             paletteImg.processImage(fr6, 4);
-            this.panelSprite = paletteImg.createtFrame(colorPalette);
+            this.panelSprite = paletteImg.createFrame(colorPalette);
             /// read green panel letters
             let letters = ["%", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
             for (let l = 0; l < letters.length; l++) {
                 let paletteImg = new Lemmings.PaletteImage(8, 16);
                 paletteImg.processImage(fr6, 3);
-                this.letterSprite[letters[l]] = paletteImg.createtFrame(colorPalette);
+                this.letterSprite[letters[l]] = paletteImg.createFrame(colorPalette);
             }
             /// add space
             let emptyFrame = new Lemmings.Frame(8, 16);
@@ -1678,10 +1703,10 @@ var Lemmings;
             for (let i = 0; i < 10; i++) {
                 let paletteImgRight = new Lemmings.PaletteImage(8, 8);
                 paletteImgRight.processImage(fr2, 1);
-                this.numberSpriteRight.push(paletteImgRight.createtFrame());
+                this.numberSpriteRight.push(paletteImgRight.createFrame());
                 let paletteImgLeft = new Lemmings.PaletteImage(8, 8);
                 paletteImgLeft.processImage(fr2, 1);
-                this.numberSpriteLeft.push(paletteImgLeft.createtFrame());
+                this.numberSpriteLeft.push(paletteImgLeft.createFrame());
             }
         }
         /** return the sprite for the skill panel */
@@ -1702,6 +1727,39 @@ var Lemmings;
         }
     }
     Lemmings.SkillPanelSprites = SkillPanelSprites;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    /** Handels a mask of points for the level background
+     *   that defines the solid points of the level */
+    class SolidLayer {
+        constructor(width, height, mask = null) {
+            this.width = 1600;
+            this.height = 160;
+            this.width = width;
+            this.height = height;
+            if (mask != null) {
+                this.groundMask = mask;
+            }
+            else {
+                //this.groundMask = new Int8Array(width * height);
+            }
+        }
+        /** check if a point is solid */
+        hasGroundAt(x, y) {
+            if ((x < 0) || (x >= this.width))
+                return false;
+            if ((y < 0) || (y >= this.height))
+                return false;
+            return (this.groundMask[x + y * this.width] != 0);
+        }
+        /** clear a point  */
+        clearGroundAt(x, y) {
+            let index = x + y * this.width;
+            this.groundMask[index] = 0;
+        }
+    }
+    Lemmings.SolidLayer = SolidLayer;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -2461,10 +2519,6 @@ var Lemmings;
             this.y = 0;
             this.id = 0;
             this.frameIndex = 0;
-            this.isUpsideDown = false;
-            this.noOverwrite = false;
-            this.onlyOverwrite = false;
-            this.isErase = false;
         }
     }
     Lemmings.LevelElement = LevelElement;
@@ -2557,9 +2611,10 @@ var Lemmings;
                 newOb.y = fr.readWord();
                 newOb.id = fr.readWord();
                 var flags = fr.readWord();
-                newOb.isUpsideDown = ((flags & 0x0080) > 0);
-                newOb.noOverwrite = ((flags & 0x8000) > 0);
-                newOb.onlyOverwrite = ((flags & 0x4000) > 0);
+                let isUpsideDown = ((flags & 0x0080) > 0);
+                let noOverwrite = ((flags & 0x8000) > 0);
+                let onlyOverwrite = ((flags & 0x4000) > 0);
+                newOb.drawProperties = new Lemmings.DrawProperties(isUpsideDown, noOverwrite, onlyOverwrite, false);
                 /// ignore empty items/objects
                 if (flags == 0)
                     continue;
@@ -2581,12 +2636,10 @@ var Lemmings;
                 newOb.y = y - ((y > 256) ? 516 : 4);
                 newOb.id = (v & 0x003F);
                 var flags = ((v >> 29) & 0x000F);
-                newOb.isUpsideDown = ((flags & 2) > 0);
-                newOb.noOverwrite = ((flags & 4) > 0);
-                newOb.isErase = ((flags & 1) > 0);
-                //- the original game does not allow the combination: (noOverwrite | isErase)
-                if (newOb.noOverwrite)
-                    newOb.isErase = false;
+                let isUpsideDown = ((flags & 2) > 0);
+                let noOverwrite = ((flags & 4) > 0);
+                let isErase = ((flags & 1) > 0);
+                newOb.drawProperties = new Lemmings.DrawProperties(isUpsideDown, noOverwrite, false, isErase);
                 this.terrains.push(newOb);
             }
         }
@@ -2686,7 +2739,7 @@ var Lemmings;
             return this.pixBuf;
         }
         /** convert to frame (collored image) */
-        createtFrame(palette, offsetX, offsetY) {
+        createFrame(palette, offsetX, offsetY) {
             /// convert color-index data to pixle image
             let pixBuf = this.pixBuf;
             ;
@@ -5127,16 +5180,17 @@ var Lemmings;
         clear() {
             let img = this.imgData.data;
             for (let i = 0; i < img.length; i += 4) {
-                img[i] = 0;
-                img[i + 1] = 0;
-                img[i + 2] = 0;
-                img[i + 3] = 255;
+                img[i] = 0; // red
+                img[i + 1] = 0; // green
+                img[i + 2] = 0; // blue
+                img[i + 3] = 255; // alpha
             }
         }
         /** render the level-background to an image */
-        setBackground(groundImage) {
+        setBackground(groundImage, groundMask = null) {
             /// set pixels
             this.imgData.data.set(groundImage);
+            this.groundMask = groundMask;
         }
         uint8ClampedColor(colorValue) {
             let c = Math.floor(colorValue);
@@ -5229,7 +5283,6 @@ var Lemmings;
         }
         /** copy a frame to the display */
         drawFrame(frame, posX, posY) {
-            //if (this.imgData == null) return;
             let srcW = frame.width;
             let srcH = frame.height;
             let srcBuffer = frame.data;
@@ -5244,6 +5297,7 @@ var Lemmings;
                     continue;
                 for (let x = 0; x < srcW; x++) {
                     let srcIndex = ((srcW * y) + x) * 4;
+                    /// ignore transparent pixels
                     if (srcBuffer[srcIndex + 3] == 0)
                         continue;
                     let outX = x + destX;
@@ -5253,10 +5307,54 @@ var Lemmings;
                     destData[destIndex] = srcBuffer[srcIndex];
                     destData[destIndex + 1] = srcBuffer[srcIndex + 1];
                     destData[destIndex + 2] = srcBuffer[srcIndex + 2];
-                    destData[destIndex + 3] = 255;
                 }
             }
-            this.setDebugPixel(posX, posY);
+            //this.setDebugPixel(posX, posY);
+        }
+        /** copy a frame to the display */
+        drawFrameFlags(frame, posX, posY, destConfig) {
+            let srcW = frame.width;
+            let srcH = frame.height;
+            let srcBuffer = frame.data;
+            let destW = this.imgData.width;
+            let destH = this.imgData.height;
+            let destData = this.imgData.data;
+            let destX = posX - frame.offsetX;
+            let destY = posY - frame.offsetY;
+            var upsideDown = destConfig.isUpsideDown;
+            var noOverwrite = destConfig.noOverwrite;
+            var onlyOverwrite = destConfig.onlyOverwrite;
+            var mask = this.groundMask;
+            for (let srcY = 0; srcY < srcH; srcY++) {
+                let outY = srcY + destY;
+                if ((outY < 0) || (outY >= destH))
+                    continue;
+                for (let srcX = 0; srcX < srcW; srcX++) {
+                    let sourceY = upsideDown ? (srcH - srcY - 1) : srcY;
+                    let srcIndex = ((srcW * sourceY) + srcX) * 4;
+                    /// ignore transparent pixels
+                    if (srcBuffer[srcIndex + 3] == 0)
+                        continue;
+                    let outX = srcX + destX;
+                    if ((outX < 0) || (outX >= destW))
+                        continue;
+                    /// check flags
+                    if (noOverwrite) {
+                        if (mask.hasGroundAt(outX, outY))
+                            continue;
+                    }
+                    if (onlyOverwrite) {
+                        if (!mask.hasGroundAt(outX, outY))
+                            continue;
+                    }
+                    /// draw
+                    let destIndex = ((destW * outY) + outX) * 4;
+                    destData[destIndex] = srcBuffer[srcIndex];
+                    destData[destIndex + 1] = srcBuffer[srcIndex + 1];
+                    destData[destIndex + 2] = srcBuffer[srcIndex + 2];
+                }
+            }
+            //this.setDebugPixel(posX, posY);
         }
         setDebugPixel(x, y) {
             let pointIndex = (this.imgData.width * (y) + x) * 4;

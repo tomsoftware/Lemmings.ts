@@ -1,14 +1,19 @@
 module Lemmings {
 
+
+
     /** represent a object (e.g. Exit, Entry, Trap, ...) */
     export class MapObject {
+        public animation: Animation;
         public x: number;
         public y: number;
-        public animation: Animation;
+        public drawProperties : DrawProperties;
 
         constructor(ob: LevelElement, objectImg: ObjectImageInfo) {
             this.x = ob.x;
             this.y = ob.y;
+
+            this.drawProperties = ob.drawProperties;
 
             this.animation = new Animation();
 
@@ -17,8 +22,8 @@ module Lemmings {
 
             for (let i = 0; i < objectImg.frames.length; i++) {
                 let newFrame = new Frame(objectImg.width, objectImg.height);
-                
-                newFrame.clear();
+
+                //newFrame.clear();
                 newFrame.drawPaletteImage(objectImg.frames[i], objectImg.width, objectImg.height, objectImg.palette, 0, 0);
 
                 this.animation.frames.push(newFrame);

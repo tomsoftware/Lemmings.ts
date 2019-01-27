@@ -34,6 +34,7 @@ module Lemmings {
             lem.frameIndex++;
             lem.x += (lem.lookRight ? 1 : -1);
 
+            let groundMask = level.getGroundMaskLayer();
             let newAction:LemmingStateType = LemmingStateType.NO_STATE_TYPE;
 
             if (lem.x < 0) {
@@ -41,11 +42,11 @@ module Lemmings {
                 return LemmingStateType.NO_STATE_TYPE;
             }
 
-            if (level.hasGroundAt(lem.x, lem.y)) {
+            if (groundMask.hasGroundAt(lem.x, lem.y)) {
                 // walk, jump, climb, or turn
                 let i;
                 for (i = 1; i < 8; i++) {
-                    if (!level.hasGroundAt(lem.x, lem.y - i)) {
+                    if (!groundMask.hasGroundAt(lem.x, lem.y - i)) {
                         break;
                     }
                 }
@@ -78,7 +79,7 @@ module Lemmings {
                 // walk or fall
                 let i;
                 for (i = 1; i < 4; i++) {
-                    if (level.hasGroundAt(lem.x, lem.y + i)) {
+                    if (groundMask.hasGroundAt(lem.x, lem.y + i)) {
                         break;
                     }
                 }

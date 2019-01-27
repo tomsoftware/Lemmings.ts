@@ -32,7 +32,7 @@ module Lemmings {
     
       public render() {
         if (this.dispaly == null) return;
-    
+
         this.level.render(this.dispaly);
 
         this.objectManager.render(this.dispaly);

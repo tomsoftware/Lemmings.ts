@@ -35,7 +35,7 @@ module Lemmings {
             /// read skill panel
             let paletteImg = new PaletteImage(320, 40);
             paletteImg.processImage(fr6, 4);
-            this.panelSprite = paletteImg.createtFrame(colorPalette);
+            this.panelSprite = paletteImg.createFrame(colorPalette);
 
             /// read green panel letters
             let letters:string[] = ["%", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
@@ -43,7 +43,7 @@ module Lemmings {
             for (let l = 0; l < letters.length; l++) {
                 let paletteImg = new PaletteImage(8, 16);
                 paletteImg.processImage(fr6, 3);
-                this.letterSprite[letters[l]] = paletteImg.createtFrame(colorPalette);
+                this.letterSprite[letters[l]] = paletteImg.createFrame(colorPalette);
             }
 
             /// add space
@@ -57,11 +57,11 @@ module Lemmings {
             for (let i = 0; i < 10; i++) {
                 let paletteImgRight = new PaletteImage(8, 8);
                 paletteImgRight.processImage(fr2, 1);
-                this.numberSpriteRight.push(paletteImgRight.createtFrame());
+                this.numberSpriteRight.push(paletteImgRight.createFrame());
 
                 let paletteImgLeft = new PaletteImage(8, 8);
                 paletteImgLeft.processImage(fr2, 1);
-                this.numberSpriteLeft.push(paletteImgLeft.createtFrame());
+                this.numberSpriteLeft.push(paletteImgLeft.createFrame());
             }
         }
 
