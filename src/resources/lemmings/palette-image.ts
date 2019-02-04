@@ -17,21 +17,20 @@ module Lemmings {
             return this.pixBuf;
         }
 
-        /** convert to frame (collored image) */
+        /** convert to frame (colored image) */
         public createFrame(palette?:ColorPalette, offsetX?:number, offsetY?:number):Frame {
           
             /// convert color-index data to pixle image
             let pixBuf = this.pixBuf;;
             let resultFrame = new Frame(this.width, this.height, offsetX, offsetY);
 
-            let imgBuf = resultFrame.data;
+            let imgBuf = resultFrame.getData();
             let imgBufPos = 0;
 
             for (var i = 0; i < pixBuf.length; i++) {
                 let colorIndex = pixBuf[i];
                 
                 if (colorIndex == 0) {
-                    
                     imgBuf[imgBufPos++] = 0;
                     imgBuf[imgBufPos++] = 0;
                     imgBuf[imgBufPos++] = 0;
@@ -47,7 +46,6 @@ module Lemmings {
                         imgBuf[imgBufPos++] = 255;
                     }
                     else {
-
                         imgBuf[imgBufPos++] = 255;
                         imgBuf[imgBufPos++] = 255;
                         imgBuf[imgBufPos++] = 255;

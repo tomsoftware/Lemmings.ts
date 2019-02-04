@@ -1318,33 +1318,32 @@ var Lemmings;
             this.height = 0;
             this.offsetX = 0;
             this.offsetY = 0;
-            this.width = Math.floor(width);
-            this.height = Math.floor(height);
+            this.width = Math.trunc(width);
+            this.height = Math.trunc(height);
             if (offsetX == null) {
                 this.offsetX = 0;
             }
             else {
-                this.offsetX = Math.floor(offsetX);
+                this.offsetX = Math.trunc(offsetX);
             }
             if (offsetY == null) {
                 this.offsetY = 0;
             }
             else {
-                this.offsetY = Math.floor(offsetY);
+                this.offsetY = Math.trunc(offsetY);
             }
             let pixCount = this.width * this.height;
-            this.data = new Uint8ClampedArray(pixCount * 4);
+            this.data = new Uint32Array(pixCount);
             this.mask = new Int8Array(pixCount);
+            this.clear();
         }
-        /** set the image to color=black / alpha=1 */
+        getData() {
+            return new Uint8ClampedArray(this.data.buffer);
+        }
+        /** set the image to color=black / alpha=255 / mask=0 */
         clear() {
-            let buffer32 = new Uint32Array(this.data.buffer);
-            let len = buffer32.length;
-            while (len--)
-                /// set r,g,b = 0 and alpha=FF
-                buffer32[len] = 0xFF000000;
-            /// clear mask
-            this.mask[len] = 0;
+            this.data.fill(0xFF000000);
+            this.mask.fill(0);
         }
         /** draw a palette Image to this frame */
         drawPaletteImage(srcImg, srcWidth, srcHeight, palette, left, top) {
@@ -1379,11 +1378,7 @@ var Lemmings;
                 if (this.mask[destPixelPos] == 0)
                     return;
             }
-            let i = destPixelPos * 4;
-            this.data[i + 0] = color[0]; //- R
-            this.data[i + 1] = color[1]; //- G
-            this.data[i + 2] = color[2]; //- B
-            this.data[i + 3] = 255; //- Alpha
+            this.data[destPixelPos] = (0xFF << 24) | (color[2] << 16) | (color[1] << 8) | (color[0]); //- R
             this.mask[destPixelPos] = 1;
         }
         /** set a pixle to back */
@@ -1393,11 +1388,7 @@ var Lemmings;
             if ((y < 0) || (y >= this.height))
                 return;
             let destPixelPos = y * this.width + x;
-            let i = destPixelPos * 4;
-            this.data[i + 0] = 0; //- R
-            this.data[i + 1] = 0; //- G
-            this.data[i + 2] = 0; //- B
-            this.data[i + 3] = 0; //- Alpha
+            this.data[destPixelPos] = 0xFF000000;
             this.mask[destPixelPos] = 0;
         }
     }
@@ -1415,7 +1406,6 @@ var Lemmings;
         /** create the ground image from the level definition and the Terrain images */
         createGroundMap(lr, terrarImg) {
             this.img = new Lemmings.Frame(lr.levelWidth, lr.levelHeight);
-            this.img.clear();
             let terrarObjects = lr.terrains;
             for (let i = 0; i < terrarObjects.length; i++) {
                 let tOb = terrarObjects[i];
@@ -1575,7 +1565,7 @@ var Lemmings;
                         /// this is a normal map background
                         render.createGroundMap(levelReader, groundReader.getTerraImages());
                     }
-                    level.setGroundImage(render.img.data);
+                    level.setGroundImage(render.img.getData());
                     level.setGroundMaskLayer(new Lemmings.SolidLayer(level.width, level.height, render.img.mask));
                     level.setMapObjects(levelReader.objects, groundReader.getObjectImages());
                     level.setPalettes(groundReader.colorPalette, groundReader.groundPalette);
@@ -1696,7 +1686,6 @@ var Lemmings;
             }
             /// add space
             let emptyFrame = new Lemmings.Frame(8, 16);
-            emptyFrame.clear();
             this.letterSprite[" "] = emptyFrame;
             /// read panel skill-count number letters
             fr2.setOffset(0x1900);
@@ -2237,43 +2226,38 @@ var Lemmings;
     class ColorPalette {
         constructor() {
             this.data = new Array(16); //- 16 colors
-            this.isColorLock = new Int8Array(16);
             for (let i = 0; i < this.data.length; i++) {
                 this.setColorInt(i, 0);
             }
         }
         //- locked colors are only changed if locked==true
-        setColorInt(index, colorValue, locked = false) {
+        setColorInt(index, colorValue) {
             let r = (colorValue >>> 16) & 0xFF;
             let g = (colorValue >>> 8) & 0xFF;
             let b = (colorValue) & 0xFF;
-            this.setColorRGB(index, r, g, b, locked);
+            this.setColorRGB(index, r, g, b);
         }
         getColor(index) {
             return this.data[index];
         }
         //- locked colors are only changed if locked==true
-        setColorRGB(index, r, g, b, locked = false) {
+        setColorRGB(index, r, g, b) {
             var color = new Uint8Array(4);
-            //- if the color is locked we do not overwrite it.
-            if ((this.isColorLock[index] != 0) && (!locked))
-                return;
             color[0] = r;
             color[1] = g;
             color[2] = b;
             color[3] = 255;
             this.data[index] = color;
-            this.isColorLock[index] = locked ? 1 : 0;
         }
         /** init with locked colors that can't be changed */
         initLockedValues() {
-            this.setColorInt(0, 0x000000, true); // balck
-            this.setColorInt(1, 0x4040e0, true); // blue: Lemmings Body
-            this.setColorInt(2, 0x00b000, true); // green: Lemmings haar
-            this.setColorInt(3, 0xf3d3d3, true); // white: Lemmings skin / Letters 
-            this.setColorInt(4, 0xb2b200, true); // yellow
-            this.setColorInt(5, 0xf32020, true); // dark red
-            this.setColorInt(6, 0x828282, true); // gray
+            this.setColorInt(0, 0x000000); // balck
+            this.setColorInt(1, 0x4040e0); // blue: Lemmings Body
+            this.setColorInt(2, 0x00b000); // green: Lemmings haar
+            this.setColorInt(3, 0xf3d3d3); // white: Lemmings skin / Letters 
+            this.setColorInt(4, 0xb2b200); // yellow
+            this.setColorInt(5, 0xf32020); // dark red
+            this.setColorInt(6, 0x828282); // gray
             this.setColorInt(7, 0xe08020); // this color is set by the level
         }
     }
@@ -2738,13 +2722,13 @@ var Lemmings;
         getImageBuffer() {
             return this.pixBuf;
         }
-        /** convert to frame (collored image) */
+        /** convert to frame (colored image) */
         createFrame(palette, offsetX, offsetY) {
             /// convert color-index data to pixle image
             let pixBuf = this.pixBuf;
             ;
             let resultFrame = new Lemmings.Frame(this.width, this.height, offsetX, offsetY);
-            let imgBuf = resultFrame.data;
+            let imgBuf = resultFrame.getData();
             let imgBufPos = 0;
             for (var i = 0; i < pixBuf.length; i++) {
                 let colorIndex = pixBuf[i];
@@ -2868,7 +2852,6 @@ var Lemmings;
             let chunkHeight = 40;
             let chunkCount = 4;
             this.img = new Lemmings.Frame(width, chunkHeight * chunkCount);
-            this.img.clear();
             let startScanLine = 0;
             let pixelCount = width * chunkHeight;
             let bitBuffer = new Uint8Array(pixelCount);
@@ -5151,7 +5134,7 @@ var Lemmings;
                 }
                 if (this.stage != null) {
                     let gameDisplay = this.stage.getGameDisplay();
-                    gameDisplay.initSize(level.width, level.height);
+                    gameDisplay.clear();
                     level.render(gameDisplay);
                     gameDisplay.redraw();
                 }
@@ -5178,16 +5161,26 @@ var Lemmings;
             }
         }
         clear() {
+            if (this.imgData == null)
+                return;
             let img = this.imgData.data;
             for (let i = 0; i < img.length; i += 4) {
-                img[i] = 0; // red
+                img[i] = 255; // red
                 img[i + 1] = 0; // green
                 img[i + 2] = 0; // blue
                 img[i + 3] = 255; // alpha
             }
+            /*
+                let img = new Uint32Array(this.imgData.data);
+
+                for (let i = 0; i < img.length; i++) {
+                    img[i] = 0xFF00FF00;
+                }
+            */
         }
         /** render the level-background to an image */
         setBackground(groundImage, groundMask = null) {
+            console.log("setBackground");
             /// set pixels
             this.imgData.data.set(groundImage);
             this.groundMask = groundMask;
@@ -5245,7 +5238,7 @@ var Lemmings;
         drawFrameCovered(frame, posX, posY, red, green, blue) {
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.data;
+            let srcBuffer = frame.getData();
             let destW = this.imgData.width;
             let destH = this.imgData.height;
             let destData = this.imgData.data;
@@ -5285,7 +5278,7 @@ var Lemmings;
         drawFrame(frame, posX, posY) {
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.data;
+            let srcBuffer = frame.getData();
             let destW = this.imgData.width;
             let destH = this.imgData.height;
             let destData = this.imgData.data;
@@ -5315,7 +5308,7 @@ var Lemmings;
         drawFrameFlags(frame, posX, posY, destConfig) {
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.data;
+            let srcBuffer = frame.getData();
             let destW = this.imgData.width;
             let destH = this.imgData.height;
             let destData = this.imgData.data;
@@ -5445,7 +5438,7 @@ var Lemmings;
             let dispaly = this.dispaly;
             let panelImage = this.skillPanelSprites.getPanelSprite();
             dispaly.initSize(panelImage.width, panelImage.height);
-            dispaly.setBackground(panelImage.data);
+            dispaly.setBackground(panelImage.getData());
             this.drawGreenString(dispaly, "Out " + this.gameVictoryCondition.GetOutCount() + "  ", 112, 0);
             this.drawGreenString(dispaly, "In" + this.stringPad(this.gameVictoryCondition.GetSurvivorPercentage() + "", 3) + "%", 186, 0);
             if (this.gameTimeChanged) {

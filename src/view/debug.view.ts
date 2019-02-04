@@ -206,7 +206,7 @@ module Lemmings {
 
                     if (this.stage != null){
                         let gameDisplay = this.stage.getGameDisplay();
-                        gameDisplay.initSize(level.width, level.height);
+                        gameDisplay.clear();
                         level.render(gameDisplay);
                         gameDisplay.redraw();
                     }

@@ -108,7 +108,7 @@
                             render.createGroundMap(levelReader, groundReader.getTerraImages());
                         }
 
-                        level.setGroundImage(render.img.data);
+                        level.setGroundImage(render.img.getData());
                         level.setGroundMaskLayer(new SolidLayer(level.width, level.height, render.img.mask));
 
                         level.setMapObjects(levelReader.objects, groundReader.getObjectImages());

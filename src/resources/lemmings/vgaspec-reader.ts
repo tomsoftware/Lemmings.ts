@@ -47,7 +47,6 @@ module Lemmings {
             let chunkCount = 4;
 
             this.img = new Frame(width, chunkHeight * chunkCount);
-            this.img.clear();
 
             let startScanLine = 0;
 

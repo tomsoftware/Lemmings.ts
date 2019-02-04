@@ -22,20 +22,30 @@ module Lemmings {
         }
 
         public clear() {
+            if (this.imgData == null) return;
+
             let img = this.imgData.data;
 
             for (let i = 0; i < img.length; i += 4) {
-                img[i] = 0; // red
+                img[i] = 255; // red
                 img[i + 1] = 0; // green
                 img[i + 2] = 0; // blue
                 img[i + 3] = 255; // alpha
             }
+
+            /*
+                let img = new Uint32Array(this.imgData.data);
+
+                for (let i = 0; i < img.length; i++) {
+                    img[i] = 0xFF00FF00;
+                }
+            */
         }
 
 
         /** render the level-background to an image */
         public setBackground(groundImage: Uint8ClampedArray, groundMask: SolidLayer = null) {
-
+            console.log("setBackground");
             /// set pixels
             this.imgData.data.set(groundImage);
             this.groundMask = groundMask;
@@ -114,7 +124,7 @@ module Lemmings {
 
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.data;
+            let srcBuffer = frame.getData();
 
             let destW = this.imgData.width;
             let destH = this.imgData.height;
@@ -165,7 +175,7 @@ module Lemmings {
 
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.data;
+            let srcBuffer = frame.getData();
 
             let destW = this.imgData.width;
             let destH = this.imgData.height;
@@ -205,7 +215,7 @@ module Lemmings {
 
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.data;
+            let srcBuffer = frame.getData();
 
             let destW = this.imgData.width;
             let destH = this.imgData.height;

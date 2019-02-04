@@ -20,8 +20,6 @@ module Lemmings {
 
             this.img = new Frame(lr.levelWidth, lr.levelHeight);
 
-            this.img.clear();
-
             let terrarObjects: LevelElement[] = lr.terrains;
 
             for (let i = 0; i < terrarObjects.length; i++) {
