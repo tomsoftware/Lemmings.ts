@@ -1188,10 +1188,12 @@ var Lemmings;
             }
             return this.frames[frame];
         }
+        /** load all images for this animation from a file */
         loadFromFile(fr, bitsPerPixle, width, height, frames, palette, offsetX = null, offsetY = null) {
             for (let f = 0; f < frames; f++) {
                 let paletteImg = new Lemmings.PaletteImage(width, height);
                 paletteImg.processImage(fr, bitsPerPixle);
+                paletteImg.processTransparentByColorIndex(0);
                 this.frames.push(paletteImg.createFrame(palette, offsetX, offsetY));
             }
         }
@@ -1340,9 +1342,16 @@ var Lemmings;
         getData() {
             return new Uint8ClampedArray(this.data.buffer);
         }
+        getBuffer() {
+            return this.data;
+        }
+        /** Mask can be 0 or 1 */
+        getMask() {
+            return this.mask;
+        }
         /** set the image to color=black / alpha=255 / mask=0 */
         clear() {
-            this.data.fill(0xFF000000);
+            this.data.fill(0xFFFF00FF);
             this.mask.fill(0);
         }
         /** draw a palette Image to this frame */
@@ -1356,7 +1365,7 @@ var Lemmings;
                         this.clearPixel(x + left, y + top);
                     }
                     else {
-                        this.setPixel(x + left, y + top, palette.data[colorIndex]);
+                        this.setPixel(x + left, y + top, palette.getColor(colorIndex));
                     }
                 }
             }
@@ -1378,7 +1387,7 @@ var Lemmings;
                 if (this.mask[destPixelPos] == 0)
                     return;
             }
-            this.data[destPixelPos] = (0xFF << 24) | (color[2] << 16) | (color[1] << 8) | (color[0]); //- R
+            this.data[destPixelPos] = color;
             this.mask[destPixelPos] = 1;
         }
         /** set a pixle to back */
@@ -1438,7 +1447,7 @@ var Lemmings;
                         this.img.clearPixel(x + destX, y + destY);
                     }
                     else {
-                        this.img.setPixel(x + destX, y + destY, pal.data[colorIndex], noOverwrite, onlyOverwrite);
+                        this.img.setPixel(x + destX, y + destY, pal.getColor(colorIndex), noOverwrite, onlyOverwrite);
                     }
                 }
             }
@@ -2219,46 +2228,26 @@ var Lemmings;
 (function (Lemmings) {
     /** The ColorPalette Class provides a Collor Palette of the game.
      *  use:
-     *                           INDEX   RGBA
-     * read:  ColorPalette.data[0 ... 16][0..3];
+     *                           INDEX    RGBA
+     * read:  ColorPalette.data[0 ... 16].color;
      * write: ColorPalette.setColor(INT index, INT r, INT g, INT b, BOOL locked)
      */
     class ColorPalette {
         constructor() {
-            this.data = new Array(16); //- 16 colors
-            for (let i = 0; i < this.data.length; i++) {
-                this.setColorInt(i, 0);
-            }
+            this.data = new Uint32Array(16); //- 16 colors
+            this.data.fill(0);
         }
-        //- locked colors are only changed if locked==true
+        /** set color from Int-Value e.g. 0xFF00FF00 */
         setColorInt(index, colorValue) {
-            let r = (colorValue >>> 16) & 0xFF;
-            let g = (colorValue >>> 8) & 0xFF;
-            let b = (colorValue) & 0xFF;
-            this.setColorRGB(index, r, g, b);
+            this.data[index] = colorValue;
         }
+        /** return a int-color value e.g. 0xFF00FF00 */
         getColor(index) {
             return this.data[index];
         }
-        //- locked colors are only changed if locked==true
+        /** set color from R,G,B */
         setColorRGB(index, r, g, b) {
-            var color = new Uint8Array(4);
-            color[0] = r;
-            color[1] = g;
-            color[2] = b;
-            color[3] = 255;
-            this.data[index] = color;
-        }
-        /** init with locked colors that can't be changed */
-        initLockedValues() {
-            this.setColorInt(0, 0x000000); // balck
-            this.setColorInt(1, 0x4040e0); // blue: Lemmings Body
-            this.setColorInt(2, 0x00b000); // green: Lemmings haar
-            this.setColorInt(3, 0xf3d3d3); // white: Lemmings skin / Letters 
-            this.setColorInt(4, 0xb2b200); // yellow
-            this.setColorInt(5, 0xf32020); // dark red
-            this.setColorInt(6, 0x828282); // gray
-            this.setColorInt(7, 0xe08020); // this color is set by the level
+            this.setColorInt(index, 0xFF << 24 | b << 16 | g << 8 | r << 0);
         }
     }
     Lemmings.ColorPalette = ColorPalette;
@@ -2725,34 +2714,9 @@ var Lemmings;
         /** convert to frame (colored image) */
         createFrame(palette, offsetX, offsetY) {
             /// convert color-index data to pixle image
-            let pixBuf = this.pixBuf;
-            ;
             let resultFrame = new Lemmings.Frame(this.width, this.height, offsetX, offsetY);
-            let imgBuf = resultFrame.getData();
-            let imgBufPos = 0;
-            for (var i = 0; i < pixBuf.length; i++) {
-                let colorIndex = pixBuf[i];
-                if (colorIndex == 0) {
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                }
-                else {
-                    if (palette != null) {
-                        let color = palette.getColor(colorIndex);
-                        imgBuf[imgBufPos++] = color[0];
-                        imgBuf[imgBufPos++] = color[1];
-                        imgBuf[imgBufPos++] = color[2];
-                        imgBuf[imgBufPos++] = 255;
-                    }
-                    else {
-                        imgBuf[imgBufPos++] = 255;
-                        imgBuf[imgBufPos++] = 255;
-                        imgBuf[imgBufPos++] = 255;
-                        imgBuf[imgBufPos++] = 255;
-                    }
-                }
+            if (palette != null) {
+                resultFrame.drawPaletteImage(this.pixBuf, this.width, this.height, palette, 0, 0);
             }
             return resultFrame;
         }
@@ -2766,7 +2730,7 @@ var Lemmings;
                 src.setOffset(startPos);
             }
             /// read image
-            //- bits of byte are stored separately
+            //- bits of a byte are stored separately
             for (var i = 0; i < bitsPerPixle; i++) {
                 for (var p = 0; p < pixCount; p++) {
                     if (bitBufLen <= 0) {
@@ -2790,7 +2754,6 @@ var Lemmings;
                     pixBuf[i] = 0x80 | pixBuf[i];
                 }
             }
-            this.pixBuf = pixBuf;
         }
         /** use a bit plain for the transparency in the image */
         processTransparentData(src, startPos = 0) {
@@ -2814,7 +2777,6 @@ var Lemmings;
                 bitBuf = (bitBuf << 1);
                 bitBufLen--;
             }
-            this.pixBuf = pixBuf;
         }
     }
     Lemmings.PaletteImage = PaletteImage;
@@ -2832,6 +2794,7 @@ var Lemmings;
             this.groundPalette = new Lemmings.ColorPalette();
             this.read(vgaspecFile);
         }
+        /** read the file */
         read(fr) {
             fr.setOffset(0);
             let fc = new Lemmings.FileContainer(fr);
@@ -2846,6 +2809,7 @@ var Lemmings;
             /// process the image
             this.readImage(fr, 40);
         }
+        /** read image from file */
         readImage(fr, offset) {
             fr.setOffset(offset);
             let width = 960;
@@ -5238,10 +5202,12 @@ var Lemmings;
         drawFrameCovered(frame, posX, posY, red, green, blue) {
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.getData();
+            let srcBuffer = frame.getBuffer();
+            let srcMask = frame.getMask();
+            let nullCollor = 0xFF << 24 | blue << 16 | green << 8 | red;
             let destW = this.imgData.width;
             let destH = this.imgData.height;
-            let destData = this.imgData.data;
+            let destData = new Uint32Array(this.imgData.data.buffer);
             let destX = posX - frame.offsetX;
             let destY = posY - frame.offsetY;
             red = this.uint8ClampedColor(red);
@@ -5252,36 +5218,31 @@ var Lemmings;
                 if ((outY < 0) || (outY >= destH))
                     continue;
                 for (let x = 0; x < srcW; x++) {
-                    let srcIndex = ((srcW * y) + x) * 4;
+                    let srcIndex = ((srcW * y) + x);
                     let outX = x + destX;
                     if ((outX < 0) || (outX >= destW))
                         continue;
-                    let destIndex = ((destW * outY) + outX) * 4;
-                    if (srcBuffer[srcIndex + 3] == 0) {
+                    let destIndex = ((destW * outY) + outX);
+                    if (srcMask[srcIndex] == 0) {
                         /// transparent pixle
-                        destData[destIndex] = red;
-                        destData[destIndex + 1] = green;
-                        destData[destIndex + 2] = blue;
-                        destData[destIndex + 3] = 255;
+                        destData[destIndex] = nullCollor;
                     }
                     else {
                         destData[destIndex] = srcBuffer[srcIndex];
-                        destData[destIndex + 1] = srcBuffer[srcIndex + 1];
-                        destData[destIndex + 2] = srcBuffer[srcIndex + 2];
-                        destData[destIndex + 3] = 255;
                     }
                 }
             }
-            this.setDebugPixel(posX, posY);
+            //this.setDebugPixel(posX, posY);
         }
         /** copy a frame to the display */
         drawFrame(frame, posX, posY) {
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.getData();
+            let srcBuffer = frame.getBuffer();
+            let srcMask = frame.getMask();
             let destW = this.imgData.width;
             let destH = this.imgData.height;
-            let destData = this.imgData.data;
+            let destData = new Uint32Array(this.imgData.data.buffer);
             let destX = posX - frame.offsetX;
             let destY = posY - frame.offsetY;
             for (let y = 0; y < srcH; y++) {
@@ -5289,17 +5250,15 @@ var Lemmings;
                 if ((outY < 0) || (outY >= destH))
                     continue;
                 for (let x = 0; x < srcW; x++) {
-                    let srcIndex = ((srcW * y) + x) * 4;
+                    let srcIndex = ((srcW * y) + x);
                     /// ignore transparent pixels
-                    if (srcBuffer[srcIndex + 3] == 0)
+                    if (srcMask[srcIndex] == 0)
                         continue;
                     let outX = x + destX;
                     if ((outX < 0) || (outX >= destW))
                         continue;
-                    let destIndex = ((destW * outY) + outX) * 4;
+                    let destIndex = ((destW * outY) + outX);
                     destData[destIndex] = srcBuffer[srcIndex];
-                    destData[destIndex + 1] = srcBuffer[srcIndex + 1];
-                    destData[destIndex + 2] = srcBuffer[srcIndex + 2];
                 }
             }
             //this.setDebugPixel(posX, posY);
@@ -5308,10 +5267,11 @@ var Lemmings;
         drawFrameFlags(frame, posX, posY, destConfig) {
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.getData();
+            let srcBuffer = frame.getBuffer();
+            let srcMask = frame.getMask();
             let destW = this.imgData.width;
             let destH = this.imgData.height;
-            let destData = this.imgData.data;
+            let destData = new Uint32Array(this.imgData.data.buffer);
             let destX = posX - frame.offsetX;
             let destY = posY - frame.offsetY;
             var upsideDown = destConfig.isUpsideDown;
@@ -5324,9 +5284,9 @@ var Lemmings;
                     continue;
                 for (let srcX = 0; srcX < srcW; srcX++) {
                     let sourceY = upsideDown ? (srcH - srcY - 1) : srcY;
-                    let srcIndex = ((srcW * sourceY) + srcX) * 4;
+                    let srcIndex = ((srcW * sourceY) + srcX);
                     /// ignore transparent pixels
-                    if (srcBuffer[srcIndex + 3] == 0)
+                    if (srcMask[srcIndex] == 0)
                         continue;
                     let outX = srcX + destX;
                     if ((outX < 0) || (outX >= destW))
@@ -5341,10 +5301,8 @@ var Lemmings;
                             continue;
                     }
                     /// draw
-                    let destIndex = ((destW * outY) + outX) * 4;
+                    let destIndex = ((destW * outY) + outX);
                     destData[destIndex] = srcBuffer[srcIndex];
-                    destData[destIndex + 1] = srcBuffer[srcIndex + 1];
-                    destData[destIndex + 2] = srcBuffer[srcIndex + 2];
                 }
             }
             //this.setDebugPixel(posX, posY);

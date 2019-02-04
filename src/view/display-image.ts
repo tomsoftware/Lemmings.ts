@@ -124,11 +124,14 @@ module Lemmings {
 
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.getData();
+            let srcBuffer = frame.getBuffer();
+            let srcMask = frame.getMask();
+
+            let nullCollor = 0xFF << 24 | blue << 16 | green << 8 | red;
 
             let destW = this.imgData.width;
             let destH = this.imgData.height;
-            let destData = this.imgData.data;
+            let destData = new Uint32Array(this.imgData.data.buffer);
 
             let destX = posX - frame.offsetX;
             let destY = posY - frame.offsetY;
@@ -143,31 +146,24 @@ module Lemmings {
                 if ((outY < 0) || (outY >= destH)) continue;
 
                 for (let x = 0; x < srcW; x++) {
-                    let srcIndex = ((srcW * y) + x) * 4;
+                    let srcIndex = ((srcW * y) + x);
 
                     let outX = x + destX;
                     if ((outX < 0) || (outX >= destW)) continue;
 
-                    let destIndex = ((destW * outY) + outX) * 4;
+                    let destIndex = ((destW * outY) + outX);
 
-                    if (srcBuffer[srcIndex + 3] == 0) {
+                    if (srcMask[srcIndex] == 0) {
                         /// transparent pixle
-                        destData[destIndex] = red;
-                        destData[destIndex + 1] = green;
-                        destData[destIndex + 2] = blue;
-                        destData[destIndex + 3] = 255;
+                        destData[destIndex] = nullCollor;
                     }
                     else {
-
                         destData[destIndex] = srcBuffer[srcIndex];
-                        destData[destIndex + 1] = srcBuffer[srcIndex + 1];
-                        destData[destIndex + 2] = srcBuffer[srcIndex + 2];
-                        destData[destIndex + 3] = 255;
                     }
                 }
             }
 
-            this.setDebugPixel(posX, posY);
+            //this.setDebugPixel(posX, posY);
         }
 
         /** copy a frame to the display */
@@ -175,11 +171,12 @@ module Lemmings {
 
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.getData();
+            let srcBuffer = frame.getBuffer();
+            let srcMask = frame.getMask();
 
             let destW = this.imgData.width;
             let destH = this.imgData.height;
-            let destData = this.imgData.data;
+            let destData = new Uint32Array(this.imgData.data.buffer);
 
             let destX = posX - frame.offsetX;
             let destY = posY - frame.offsetY;
@@ -190,19 +187,17 @@ module Lemmings {
                 if ((outY < 0) || (outY >= destH)) continue;
 
                 for (let x = 0; x < srcW; x++) {
-                    let srcIndex = ((srcW * y) + x) * 4;
+                    let srcIndex = ((srcW * y) + x);
 
                     /// ignore transparent pixels
-                    if (srcBuffer[srcIndex + 3] == 0) continue;
+                    if (srcMask[srcIndex] == 0) continue;
 
                     let outX = x + destX;
                     if ((outX < 0) || (outX >= destW)) continue;
 
-                    let destIndex = ((destW * outY) + outX) * 4;
+                    let destIndex = ((destW * outY) + outX);
 
                     destData[destIndex] = srcBuffer[srcIndex];
-                    destData[destIndex + 1] = srcBuffer[srcIndex + 1];
-                    destData[destIndex + 2] = srcBuffer[srcIndex + 2];
                 }
             }
 
@@ -215,11 +210,12 @@ module Lemmings {
 
             let srcW = frame.width;
             let srcH = frame.height;
-            let srcBuffer = frame.getData();
+            let srcBuffer = frame.getBuffer();
+            let srcMask = frame.getMask();
 
             let destW = this.imgData.width;
             let destH = this.imgData.height;
-            let destData = this.imgData.data;
+            let destData = new Uint32Array(this.imgData.data.buffer);
 
             let destX = posX - frame.offsetX;
             let destY = posY - frame.offsetY;
@@ -238,10 +234,10 @@ module Lemmings {
                 for (let srcX = 0; srcX < srcW; srcX++) {
 
                     let sourceY = upsideDown ? (srcH - srcY - 1) : srcY;
-                    let srcIndex = ((srcW * sourceY) + srcX) * 4;
+                    let srcIndex = ((srcW * sourceY) + srcX);
 
                     /// ignore transparent pixels
-                    if (srcBuffer[srcIndex + 3] == 0) continue;
+                    if (srcMask[srcIndex] == 0) continue;
 
                     let outX = srcX + destX;
                     if ((outX < 0) || (outX >= destW)) continue;
@@ -256,11 +252,9 @@ module Lemmings {
                     }
 
                     /// draw
-                    let destIndex = ((destW * outY) + outX) * 4;
+                    let destIndex = ((destW * outY) + outX);
 
                     destData[destIndex] = srcBuffer[srcIndex];
-                    destData[destIndex + 1] = srcBuffer[srcIndex + 1];
-                    destData[destIndex + 2] = srcBuffer[srcIndex + 2];
                 }
             }
 

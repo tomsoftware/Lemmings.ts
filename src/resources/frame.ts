@@ -14,6 +14,15 @@ module Lemmings {
             return new Uint8ClampedArray(this.data.buffer);
         }
 
+        public getBuffer(): Uint32Array{
+            return this.data;
+        }
+
+        /** Mask can be 0 or 1 */
+        public getMask(): Int8Array{
+            return this.mask;
+        }
+
         constructor(width: number, height: number, offsetX?: number, offsetY?: number) {
             this.width = Math.trunc(width);
             this.height = Math.trunc(height);
@@ -40,8 +49,8 @@ module Lemmings {
         }
 
         /** set the image to color=black / alpha=255 / mask=0 */
-        public clear() {
-            this.data.fill(0xFF000000);
+        public clear() { 
+            this.data.fill(0xFFFF00FF);
             this.mask.fill(0);
         }
 
@@ -58,12 +67,13 @@ module Lemmings {
                     if ((colorIndex & 0x80) > 0) {
                         this.clearPixel(x + left, y + top);
                     } else {
-                        this.setPixel(x + left, y + top, palette.data[colorIndex]);
+                        this.setPixel(x + left, y + top, palette.getColor(colorIndex));
                     }
 
                 }
             }
         }
+
 
         /** set the color of a pixle */
         public setPixel(x: number, y: number, color: number, noOverwrite: boolean = false, onlyOverwrite: boolean = false) {
@@ -83,7 +93,7 @@ module Lemmings {
                 if (this.mask[destPixelPos] == 0) return;
             }
 
-            this.data[destPixelPos] = (0xFF << 24) | (color[2] << 16) | (color[1] << 8) | (color[0]); //- R
+            this.data[destPixelPos] = color;
             this.mask[destPixelPos] = 1;
         }
 

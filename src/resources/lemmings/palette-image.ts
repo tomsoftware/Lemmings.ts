@@ -11,7 +11,6 @@ module Lemmings {
             this.pixBuf = new Uint8Array(pixCount);
         }
 
-
         /** return the image buffer */
         public getImageBuffer():Uint8Array {
             return this.pixBuf;
@@ -19,41 +18,13 @@ module Lemmings {
 
         /** convert to frame (colored image) */
         public createFrame(palette?:ColorPalette, offsetX?:number, offsetY?:number):Frame {
-          
+            
             /// convert color-index data to pixle image
-            let pixBuf = this.pixBuf;;
             let resultFrame = new Frame(this.width, this.height, offsetX, offsetY);
 
-            let imgBuf = resultFrame.getData();
-            let imgBufPos = 0;
-
-            for (var i = 0; i < pixBuf.length; i++) {
-                let colorIndex = pixBuf[i];
-                
-                if (colorIndex == 0) {
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                    imgBuf[imgBufPos++] = 0;
-                }
-                else {
-                    if (palette != null) {
-                        let color = palette.getColor(colorIndex);
-
-                        imgBuf[imgBufPos++] = color[0];
-                        imgBuf[imgBufPos++] = color[1];
-                        imgBuf[imgBufPos++] = color[2];
-                        imgBuf[imgBufPos++] = 255;
-                    }
-                    else {
-                        imgBuf[imgBufPos++] = 255;
-                        imgBuf[imgBufPos++] = 255;
-                        imgBuf[imgBufPos++] = 255;
-                        imgBuf[imgBufPos++] = 255;
-                    }
-
-                }
-            }
+            if (palette != null) {
+                resultFrame.drawPaletteImage(this.pixBuf, this.width, this.height, palette, 0, 0);
+            }            
 
             return resultFrame;
         }
@@ -73,7 +44,7 @@ module Lemmings {
             
             /// read image
 
-            //- bits of byte are stored separately
+            //- bits of a byte are stored separately
             for (var i = 0; i < bitsPerPixle; i++) {
 
                 for (var p = 0; p < pixCount; p++) {
@@ -104,10 +75,7 @@ module Lemmings {
                     pixBuf[i] = 0x80 | pixBuf[i];
                 }
             }
-
-            this.pixBuf = pixBuf;
         }
-
 
         
         /** use a bit plain for the transparency in the image */
@@ -137,9 +105,6 @@ module Lemmings {
                 bitBuf = (bitBuf << 1);
                 bitBufLen--;
             }
-
-            this.pixBuf = pixBuf;
-
         }
 
         

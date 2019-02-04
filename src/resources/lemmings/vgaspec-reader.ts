@@ -3,7 +3,6 @@
 
 module Lemmings {
 
-
     /** read the VGASPECx.DAT file : it is a image used for the ground */
     export class VgaspecReader {
         private levelProperties: LevelProperties[] = []
@@ -17,7 +16,7 @@ module Lemmings {
             this.read(vgaspecFile);
         }
 
-
+        /** read the file */
         private read(fr: BinaryReader) {
             fr.setOffset(0);
 
@@ -37,7 +36,7 @@ module Lemmings {
             this.readImage(fr, 40);
         }
 
-
+        /** read image from file */
         private readImage(fr: BinaryReader, offset:number) {
 
             fr.setOffset(offset);
@@ -53,7 +52,6 @@ module Lemmings {
             let pixelCount = width * chunkHeight;
             let bitBuffer = new Uint8Array(pixelCount);
             let bitBufferPos:number = 0;
-
 
             while(!fr.eof()) {
                 let curByte = fr.readByte();
@@ -88,9 +86,8 @@ module Lemmings {
                         copyByteCount--;
                         if (copyByteCount <= 0) break;
                     }
-
-
-                } else {
+                }
+                else {
                     /// copy n times the same value
                     let repeatByte = fr.readByte();
                     for(let repeatByteCount = 257 - curByte; repeatByteCount>0; repeatByteCount--){

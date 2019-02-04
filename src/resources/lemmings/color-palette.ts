@@ -2,59 +2,48 @@ module Lemmings {
 
 	/** The ColorPalette Class provides a Collor Palette of the game.
 	 *  use:
-	 *                           INDEX   RGBA
-	 * read:  ColorPalette.data[0 ... 16][0..3];
+	 *                           INDEX    RGBA
+	 * read:  ColorPalette.data[0 ... 16].color;
 	 * write: ColorPalette.setColor(INT index, INT r, INT g, INT b, BOOL locked)
 	 */
 	export class ColorPalette {
 
-		public data = new Array(16); //- 16 colors
+		private data = new Uint32Array(16); //- 16 colors
 
 		constructor() {
-			for(let i=0; i< this.data.length; i++) {
-				this.setColorInt(i, 0);
-			}
+			this.data.fill(0);
 		}
 
 
-		//- locked colors are only changed if locked==true
-		public setColorInt(index: number, colorValue:number) {
-
-			let r = (colorValue >>> 16) & 0xFF;
-			let g = (colorValue >>> 8 ) & 0xFF;
-			let b = (colorValue	      ) & 0xFF;
-			
-			this.setColorRGB(index, r, g, b);
+		/** set color from Int-Value e.g. 0xFF00FF00 */
+		public setColorInt(index: number, colorValue: number) {
+			this.data[index] = colorValue;
 		}
 
-		public getColor(index: number) {
+		/** return a int-color value e.g. 0xFF00FF00 */
+		public getColor(index: number): number {
 			return this.data[index];
 		}
 
-		//- locked colors are only changed if locked==true
-		public setColorRGB(index: number, r: number, g: number, b: number)	{
-			var color = new Uint8Array(4);
+		/** set color from R,G,B */
+		public setColorRGB(index: number, r: number, g: number, b: number) {
 
-			color[0] = r;
-			color[1] = g;
-			color[2] = b;
-			color[3] = 255;
-
-			this.data[index] = color;
+			this.setColorInt(index, 0xFF << 24 | b << 16 | g << 8 | r << 0);
 		}
 
-
-		/** init with locked colors that can't be changed */
-		public initLockedValues() {
-			this.setColorInt(0, 0x000000);	// balck
-			this.setColorInt(1, 0x4040e0);	// blue: Lemmings Body
-			this.setColorInt(2, 0x00b000);	// green: Lemmings haar
-			this.setColorInt(3, 0xf3d3d3);	// white: Lemmings skin / Letters 
-			this.setColorInt(4, 0xb2b200);	// yellow
-			this.setColorInt(5, 0xf32020);	// dark red
-			this.setColorInt(6, 0x828282);	// gray
-			this.setColorInt(7, 0xe08020);	// this color is set by the level
+		/** set lemmings default colors */
+		/*
+		public defaultColors() {
+			this.setColorRGB(0,   0,   0,   0);	// balck
+			this.setColorRGB(1,  64,  64, 224);	// blue: Lemmings Body
+			this.setColorRGB(2,   0, 176,   0);	// green: Lemmings haar
+			this.setColorRGB(3, 243, 211, 211);	// white: Lemmings skin / Letters 
+			this.setColorRGB(4, 178, 178,   0);	// yellow
+			this.setColorRGB(5, 243,  32,  32);	// dark red
+			this.setColorRGB(6, 130, 130, 130);	// gray
+			this.setColorRGB(7, 224, 128,  32);	// this color is set by the level
 		}
+		*/
 	}
 
 }

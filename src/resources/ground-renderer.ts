@@ -67,7 +67,7 @@ module Lemmings {
                         this.img.clearPixel(x + destX, y + destY);    
                     }
                     else {
-                        this.img.setPixel(x + destX, y + destY, pal.data[colorIndex], noOverwrite, onlyOverwrite);
+                        this.img.setPixel(x + destX, y + destY, pal.getColor(colorIndex), noOverwrite, onlyOverwrite);
                     }
                 }
             }
