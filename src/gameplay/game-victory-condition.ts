@@ -38,7 +38,6 @@ module Lemmings {
             return Math.floor(this.survivorCount / this.releaseCount * 100);
         }
 
-
         public GetOutCount():number {
             return this.outCount;
         }

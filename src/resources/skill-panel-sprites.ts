@@ -8,6 +8,7 @@ module Lemmings {
         private letterSprite: {[key:string]:Frame} = {};
         private numberSpriteLeft: Frame[] = [];
         private numberSpriteRight: Frame[] = [];
+        private emptyNumberSprite : Frame;
 
         /** return the sprite for the skill panel */
         public getPanelSprite() : Frame {
@@ -29,6 +30,9 @@ module Lemmings {
             return this.numberSpriteRight[number];
         }
 
+        public getNumberSpriteEmpty() : Frame {
+            return this.emptyNumberSprite;
+        }
 
         constructor(fr2:BinaryReader, fr6:BinaryReader,colorPalette:ColorPalette) {
 
@@ -48,19 +52,29 @@ module Lemmings {
 
             /// add space
             let emptyFrame = new Frame(8, 16);
+            emptyFrame.fill(0, 0, 0);
             this.letterSprite[" "] = emptyFrame;
+
+            let blackAndWithPalette = new ColorPalette();
+            blackAndWithPalette.setColorRGB(1, 255, 255, 255);
 
             /// read panel skill-count number letters
             fr2.setOffset(0x1900);
             for (let i = 0; i < 10; i++) {
                 let paletteImgRight = new PaletteImage(8, 8);
                 paletteImgRight.processImage(fr2, 1);
-                this.numberSpriteRight.push(paletteImgRight.createFrame());
+                paletteImgRight.processTransparentByColorIndex(0);
+                this.numberSpriteRight.push(paletteImgRight.createFrame(blackAndWithPalette));
 
                 let paletteImgLeft = new PaletteImage(8, 8);
                 paletteImgLeft.processImage(fr2, 1);
-                this.numberSpriteLeft.push(paletteImgLeft.createFrame());
+                paletteImgLeft.processTransparentByColorIndex(0);
+                this.numberSpriteLeft.push(paletteImgLeft.createFrame(blackAndWithPalette));
             }
+
+            /// add space
+            this.emptyNumberSprite = new Frame(9, 8);
+            this.emptyNumberSprite.fill(255, 255, 255);
         }
 
     }

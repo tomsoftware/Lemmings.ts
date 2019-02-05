@@ -1,5 +1,3 @@
-/// <reference path="./gameplay/action-type.ts"/>
-
 module Lemmings {
 
     /** provides an game object to controle the game */
@@ -10,12 +8,12 @@ module Lemmings {
         private levelGroupIndex: number;
         private levelIndex: number;
         private level: Level;
-        private triggerManager : TriggerManager;
+        private triggerManager: TriggerManager;
         private lemmingManager: LemmingManager;
         private objectManager: ObjectManager;
 
-        private gameVictoryCondition : GameVictoryCondition;
-        
+        private gameVictoryCondition: GameVictoryCondition;
+
         private gameGui: GameGui;
         private guiDispaly: DisplayImage = null;
 
@@ -23,13 +21,13 @@ module Lemmings {
         private gameDispaly: GameDisplay = null;
         private gameTimer: GameTimer = null;
 
-        private skills:GameSkills;
+        private skills: GameSkills;
 
         constructor(gameResources: GameResources) {
             this.gameResources = gameResources;
         }
 
-        public setGameDispaly(dispaly:DisplayImage){
+        public setGameDispaly(dispaly: DisplayImage) {
             this.dispaly = dispaly;
 
             if (this.gameDispaly != null) {
@@ -37,7 +35,7 @@ module Lemmings {
             }
         }
 
-        public setGuiDisplay(dispaly:DisplayImage) {
+        public setGuiDisplay(dispaly: DisplayImage) {
             this.guiDispaly = dispaly;
 
             if (this.gameGui != null) {
@@ -46,7 +44,7 @@ module Lemmings {
         }
 
         /** load a new game/level */
-        public loadLevel(levelGroupIndex: number, levelIndex: number):Promise<Game> {
+        public loadLevel(levelGroupIndex: number, levelIndex: number): Promise<Game> {
 
             this.levelGroupIndex = levelGroupIndex;
             this.levelIndex = levelIndex;
@@ -54,51 +52,51 @@ module Lemmings {
             return new Promise<Game>((resolve, reject) => {
 
                 this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
-                .then(level => {
+                    .then(level => {
 
-                    this.gameTimer = new GameTimer(level);
-                    this.gameTimer.onGameTick.on(() => {
-                         this.onGameTimerTick() 
+                        this.gameTimer = new GameTimer(level);
+                        this.gameTimer.onGameTick.on(() => {
+                            this.onGameTimerTick()
+                        });
+
+                        this.skills = new GameSkills(level);
+
+                        this.level = level;
+
+                        this.gameVictoryCondition = new GameVictoryCondition(level);
+
+                        this.triggerManager = new TriggerManager(this.gameTimer);
+                        this.triggerManager.addRange(level.triggers);
+
+                        return this.gameResources.getLemmingsSprite(level.colorPalette);
+                    })
+                    .then(lemSprite => {
+                        /// setup Lemmings
+                        this.lemmingManager = new LemmingManager(this.level, lemSprite, this.triggerManager, this.gameVictoryCondition);
+
+                        return this.gameResources.getSkillPanelSprite(this.level.colorPalette);
+
+                    })
+                    .then(skillPanelSprites => {
+                        /// setup gui
+                        this.gameGui = new GameGui(skillPanelSprites, this.skills, this.gameTimer, this.gameVictoryCondition);
+
+                        if (this.guiDispaly != null) {
+                            this.gameGui.setGuiDisplay(this.guiDispaly);
+                        }
+
+                        this.objectManager = new ObjectManager(this.gameTimer);
+                        this.objectManager.addRange(this.level.objects);
+
+                        this.gameDispaly = new GameDisplay(this.skills, this.level, this.lemmingManager, this.objectManager);
+                        if (this.dispaly != null) {
+                            this.gameDispaly.setGuiDisplay(this.dispaly);
+                        }
+
+                        /// let's start!
+                        resolve(this);
                     });
 
-                    this.skills = new GameSkills(level);
-
-                    this.level = level;
-                    
-                    this.gameVictoryCondition = new GameVictoryCondition(level);
-
-                    this.triggerManager = new TriggerManager(this.gameTimer);
-                    this.triggerManager.addRange(level.triggers);
-
-                    return this.gameResources.getLemmingsSprite(level.colorPalette);
-                })
-                .then(lemSprite => {
-                    /// setup Lemmings
-                    this.lemmingManager = new LemmingManager(this.level, lemSprite, this.triggerManager, this.gameVictoryCondition);
-
-                    return this.gameResources.getSkillPanelSprite(this.level.colorPalette);
-
-                })
-                .then(skillPanelSprites => {
-                    /// setup gui
-                    this.gameGui = new GameGui(skillPanelSprites, this.skills, this.gameTimer, this.gameVictoryCondition);
-            
-                    if (this.guiDispaly != null) {
-                        this.gameGui.setGuiDisplay(this.guiDispaly);
-                    }
-
-                    this.objectManager = new ObjectManager(this.gameTimer);
-                    this.objectManager.addRange(this.level.objects);
-
-                    this.gameDispaly = new GameDisplay(this.skills, this.level, this.lemmingManager, this.objectManager);
-                    if (this.dispaly != null) {
-                        this.gameDispaly.setGuiDisplay(this.dispaly);
-                    }
-
-                    /// let's start!
-                    resolve(this);
-                });
-                
             });
         }
 
@@ -109,7 +107,7 @@ module Lemmings {
         }
 
         /** return the game Timer for this game */
-        public getGameTimer():GameTimer {
+        public getGameTimer(): GameTimer {
             return this.gameTimer;
         }
 
@@ -120,7 +118,7 @@ module Lemmings {
             this.render();
         }
 
-        
+
         /** run the game logic one step in time */
         public runGameLogic() {
             if (this.level == null) {
@@ -132,7 +130,7 @@ module Lemmings {
         }
 
 
-        /** refresh display */ 
+        /** refresh display */
         private render() {
             if (this.gameDispaly) {
                 this.gameDispaly.render();
@@ -141,7 +139,7 @@ module Lemmings {
             if (this.guiDispaly) {
                 this.gameGui.render();
             }
-            
+
             this.guiDispaly.redraw();
         }
 
@@ -163,7 +161,7 @@ module Lemmings {
 
 
 
-        public getScreenPositionX():number {
+        public getScreenPositionX(): number {
             return this.level.screenPositionX;
         }
     }

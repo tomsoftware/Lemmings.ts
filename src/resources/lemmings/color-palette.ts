@@ -28,7 +28,19 @@ module Lemmings {
 		/** set color from R,G,B */
 		public setColorRGB(index: number, r: number, g: number, b: number) {
 
-			this.setColorInt(index, 0xFF << 24 | b << 16 | g << 8 | r << 0);
+			this.setColorInt(index, ColorPalette.colorFromRGB(r, g, b));
+		}
+
+		public static colorFromRGB( r: number, g: number, b: number) : number {
+			return 0xFF << 24 | b << 16 | g << 8 | r << 0;
+		}
+
+		public static get black() : number {
+			return 0xFF000000;
+		}
+
+		public static get debugColor() : number {
+			return 0xFFFF00FF;
 		}
 
 		/** set lemmings default colors */

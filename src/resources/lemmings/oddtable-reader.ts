@@ -11,7 +11,7 @@ module Lemmings {
         /** return the Level for a given levelNumber - LevelNumber is counting all levels from first to last of the game 
          *  Odd-Tables are only used for the "Original Lemmings" Game 
          */
-        public getLevelProperties(levelNumber):LevelProperties{
+        public getLevelProperties(levelNumber): LevelProperties {
             if ((levelNumber >= this.levelProperties.length) && (levelNumber < 0)) return null;
 
             return this.levelProperties[levelNumber];
@@ -26,9 +26,10 @@ module Lemmings {
         private read(fr: BinaryReader) {
             fr.setOffset(0);
 
-            let count = Math.floor(fr.length / 56);
+            /// count of levels definitions
+            let count = Math.trunc(fr.length / 56);
 
-            for(let i=0; i<count; i++) {
+            for (let i = 0; i < count; i++) {
                 let prop = new LevelProperties();
 
                 prop.releaseRate = fr.readWord();
@@ -47,12 +48,12 @@ module Lemmings {
                 prop.skills[SkillTypes.DIGGER] = fr.readWord();
 
                 prop.levelName = fr.readString(32);
-                this.error.debug("Level ("+ i +") Name: " + prop.levelName + " "+ prop.needCount +" "+ prop.timeLimit);
+                this.error.debug("Level (" + i + ") Name: " + prop.levelName + " " + prop.needCount + " " + prop.timeLimit);
 
                 this.levelProperties.push(prop);
             }
 
-            this.error.debug("levelProperties: "+ this.levelProperties.length);
+            this.error.debug("levelProperties: " + this.levelProperties.length);
         }
 
     }

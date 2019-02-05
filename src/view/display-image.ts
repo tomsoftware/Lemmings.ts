@@ -53,9 +53,7 @@ module Lemmings {
 
 
         private uint8ClampedColor(colorValue: number): number {
-            let c = Math.floor(colorValue);
-
-            return (c > 255) ? 255 : ((c < 0) ? 0 : c);
+            return colorValue & 0xFF;
         }
 
         /** draw a rect to the display */

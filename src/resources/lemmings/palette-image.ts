@@ -38,7 +38,7 @@ module Lemmings {
             let bitBufLen = 0;
             let bitBuf = 0;
 
-            if (startPos != null){
+            if (startPos != null) {
                 src.setOffset(startPos);
             }
             

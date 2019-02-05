@@ -10,16 +10,16 @@ module Lemmings {
         private data: Uint32Array;
         public mask: Int8Array;
 
-        public getData(): Uint8ClampedArray{
+        public getData(): Uint8ClampedArray {
             return new Uint8ClampedArray(this.data.buffer);
         }
 
-        public getBuffer(): Uint32Array{
+        public getBuffer(): Uint32Array {
             return this.data;
         }
 
         /** Mask can be 0 or 1 */
-        public getMask(): Int8Array{
+        public getMask(): Int8Array {
             return this.mask;
         }
 
@@ -49,10 +49,18 @@ module Lemmings {
         }
 
         /** set the image to color=black / alpha=255 / mask=0 */
-        public clear() { 
-            this.data.fill(0xFFFF00FF);
+        public clear() {
+            //this.data.fill(ColorPalette.debugColor());
+            this.data.fill(ColorPalette.black);
             this.mask.fill(0);
         }
+
+        /** set the image to color=black / alpha=255 / mask=0 */
+        public fill(r:number, g:number, b:number) {
+            this.data.fill(ColorPalette.colorFromRGB(r, g, b));
+            this.mask.fill(1);
+        }
+
 
         /** draw a palette Image to this frame */
         public drawPaletteImage(srcImg: Uint8Array, srcWidth: number, srcHeight: number, palette: ColorPalette, left: number, top: number) {
@@ -105,7 +113,7 @@ module Lemmings {
 
             let destPixelPos = y * this.width + x;
 
-            this.data[destPixelPos] = 0xFF000000;
+            this.data[destPixelPos] = ColorPalette.black;
             this.mask[destPixelPos] = 0;
         }
 
