@@ -23,6 +23,7 @@ module Lemmings {
             this.actions[LemmingStateType.JUMPING] = new ActionJumpSystem(lemingsSprite);
             this.actions[LemmingStateType.DIGGING] = new ActionDiggSystem(lemingsSprite);
             this.actions[LemmingStateType.EXITING] = new ActionExitingSystem(lemingsSprite, gameVictoryCondition);
+            this.actions[LemmingStateType.FLOATING] = new ActionFloatingSystem(lemingsSprite);
             
             this.releaseTickIndex = 99;
         }
@@ -36,7 +37,8 @@ module Lemmings {
             lem.y = y;
             lem.lookRight = true;
             lem.id = "Lem" + this.lemmings.length;
-
+            lem.hasParachute = true;
+            
             this.setLemmingState(lem, LemmingStateType.FALLING);
 
             this.lemmings.push(lem);
@@ -75,7 +77,7 @@ module Lemmings {
             }
         }
 
-
+        /** let a new lemming be born from a entrance  */
         private addNewLemmings() {
             if (this.gameVictoryCondition.GetLeftCount() <= 0) return;
 
@@ -86,7 +88,7 @@ module Lemmings {
 
                 let entrance = this.level.entrances[0];
             
-                this.addLemming(entrance.x, entrance.y);
+                this.addLemming(entrance.x + 24, entrance.y + 14);
 
                 this.gameVictoryCondition.ReleaseOne();
             }

@@ -25,7 +25,6 @@ module Lemmings {
         public process(level: Level, lem: Lemming): LemmingStateType {
             
             lem.removed = true;
-
             lem.frameIndex++;
 
             if (lem.frameIndex >= 8) {

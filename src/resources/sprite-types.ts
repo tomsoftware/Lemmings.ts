@@ -18,7 +18,6 @@ module Lemmings {
 
             FALLING,
             UMBRELLA ,
-            PREUMBRELLA,
             SPLATTING, // after falling down from too high
 
             MINEING ,

@@ -369,10 +369,8 @@ var Lemmings;
             this.registerAnimation(Lemmings.SpriteTypes.MINEING, -1, fr, 3, 16, 13, -8, -10, 24); //- mining (l)
             this.registerAnimation(Lemmings.SpriteTypes.FALLING, 1, fr, 2, 16, 10, -8, -10, 4); //- falling (r)
             this.registerAnimation(Lemmings.SpriteTypes.FALLING, -1, fr, 2, 16, 10, -8, -10, 4); //- falling (l)
-            this.registerAnimation(Lemmings.SpriteTypes.PREUMBRELLA, 1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (r)
-            this.registerAnimation(Lemmings.SpriteTypes.UMBRELLA, 1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (r)
-            this.registerAnimation(Lemmings.SpriteTypes.PREUMBRELLA, -1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (l)
-            this.registerAnimation(Lemmings.SpriteTypes.UMBRELLA, -1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (l)
+            this.registerAnimation(Lemmings.SpriteTypes.UMBRELLA, 1, fr, 3, 16, 16, -8, -16, 8); //- pre-umbrella (r)
+            this.registerAnimation(Lemmings.SpriteTypes.UMBRELLA, -1, fr, 3, 16, 16, -8, -16, 8); //- umbrella (r)
             this.registerAnimation(Lemmings.SpriteTypes.SPLATTING, 0, fr, 2, 16, 10, -8, -10, 16); //- splatting
             this.registerAnimation(Lemmings.SpriteTypes.EXITING, 0, fr, 2, 16, 13, -8, -10, 8); //- exiting
             this.registerAnimation(Lemmings.SpriteTypes.FRYING, 1, fr, 4, 16, 14, -8, -10, 14); //- fried
@@ -389,11 +387,10 @@ var Lemmings;
         typeToIndex(state, right) {
             return state * 2 + (right ? 0 : 1);
         }
-        registerAnimation(state, dir, fr, bitsPerPixle, width, height, offsetX, offsetY, frames, usePingPong = false) {
+        registerAnimation(state, dir, fr, bitsPerPixle, width, height, offsetX, offsetY, frames) {
             //- load animation frames from file (fr)
             var animation = new Lemmings.Animation();
             animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, -offsetX, -offsetY);
-            animation.isPingPong = usePingPong;
             //- add animation to cache -add unidirectional (dir == 0) annimations to both lists
             if (dir >= 0) {
                 this.lemmingAnimation[this.typeToIndex(state, true)] = animation;
@@ -538,6 +535,47 @@ var Lemmings;
         }
     }
     Lemmings.ActionFallSystem = ActionFallSystem;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class ActionFloatingSystem {
+        constructor(sprites) {
+            this.soundSystem = new Lemmings.SoundSystem();
+            this.sprite = [];
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.UMBRELLA, false));
+            this.sprite.push(sprites.getAnimation(Lemmings.SpriteTypes.UMBRELLA, true));
+        }
+        getActionName() {
+            return "floating";
+        }
+        /** render Leming to gamedisply */
+        draw(gameDisplay, lem) {
+            let ani = this.sprite[(lem.lookRight ? 1 : 0)];
+            let frame = ani.getFrame(ActionFloatingSystem.floatFrame[lem.frameIndex]);
+            gameDisplay.drawFrame(frame, lem.x, lem.y);
+        }
+        process(level, lem) {
+            lem.frameIndex++;
+            if (lem.frameIndex >= ActionFloatingSystem.floatFrame.length) {
+                /// first 8 are the opening of the umbrella
+                lem.frameIndex = 8;
+            }
+            let groundMask = level.getGroundMaskLayer();
+            let speed = ActionFloatingSystem.floatSpeed[lem.frameIndex];
+            for (let i = 0; i < speed; i++) {
+                if (groundMask.hasGroundAt(lem.x, lem.y + i)) {
+                    // landed
+                    lem.y += i;
+                    return Lemmings.LemmingStateType.WALKING;
+                }
+            }
+            lem.y += speed;
+            return Lemmings.LemmingStateType.NO_STATE_TYPE;
+        }
+    }
+    ActionFloatingSystem.floatSpeed = [3, 3, 3, 3, -1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2];
+    ActionFloatingSystem.floatFrame = [0, 1, 3, 5, 5, 5, 5, 5, 5, 6, 7, 7, 6, 5, 4, 4];
+    Lemmings.ActionFloatingSystem = ActionFloatingSystem;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -858,6 +896,7 @@ var Lemmings;
             this.actions[Lemmings.LemmingStateType.JUMPING] = new Lemmings.ActionJumpSystem(lemingsSprite);
             this.actions[Lemmings.LemmingStateType.DIGGING] = new Lemmings.ActionDiggSystem(lemingsSprite);
             this.actions[Lemmings.LemmingStateType.EXITING] = new Lemmings.ActionExitingSystem(lemingsSprite, gameVictoryCondition);
+            this.actions[Lemmings.LemmingStateType.FLOATING] = new Lemmings.ActionFloatingSystem(lemingsSprite);
             this.releaseTickIndex = 99;
         }
         /** Add a new Lemming to the manager */
@@ -867,6 +906,7 @@ var Lemmings;
             lem.y = y;
             lem.lookRight = true;
             lem.id = "Lem" + this.lemmings.length;
+            lem.hasParachute = true;
             this.setLemmingState(lem, Lemmings.LemmingStateType.FALLING);
             this.lemmings.push(lem);
         }
@@ -893,6 +933,7 @@ var Lemmings;
                 console.log(lem.id + " :: x:" + lem.x + " y:" + lem.y + " Action: " + actionName);
             }
         }
+        /** let a new lemming be born from a entrance  */
         addNewLemmings() {
             if (this.gameVictoryCondition.GetLeftCount() <= 0)
                 return;
@@ -900,7 +941,7 @@ var Lemmings;
             if (this.releaseTickIndex >= (100 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
                 this.releaseTickIndex = 0;
                 let entrance = this.level.entrances[0];
-                this.addLemming(entrance.x, entrance.y);
+                this.addLemming(entrance.x + 24, entrance.y + 14);
                 this.gameVictoryCondition.ReleaseOne();
             }
         }
@@ -1162,23 +1203,13 @@ var Lemmings;
     class Animation {
         constructor() {
             this.frames = [];
-            this.isPingPong = false;
             this.isRepeat = true;
             this.firstFrameIndex = 0;
         }
         getFrame(frameIndex) {
             frameIndex = frameIndex + this.firstFrameIndex;
             let frame = 0;
-            if (this.isPingPong) {
-                /// 0 1 2 3 => size: 4
-                ///   0 => 0   1 => 1    2 => 2
-                ///   3 => 3   4 => 2    5 => 1
-                frame = frameIndex % (this.frames.length * 2 - 2);
-                if (frame >= frames.length) {
-                    frame = frames.length - (frame % frames.length) - 2;
-                }
-            }
-            else if (this.isRepeat) {
+            if (this.isRepeat) {
                 frame = frameIndex % this.frames.length;
             }
             else {
@@ -1790,16 +1821,15 @@ var Lemmings;
         SpriteTypes[SpriteTypes["BASHING"] = 8] = "BASHING";
         SpriteTypes[SpriteTypes["FALLING"] = 9] = "FALLING";
         SpriteTypes[SpriteTypes["UMBRELLA"] = 10] = "UMBRELLA";
-        SpriteTypes[SpriteTypes["PREUMBRELLA"] = 11] = "PREUMBRELLA";
-        SpriteTypes[SpriteTypes["SPLATTING"] = 12] = "SPLATTING";
-        SpriteTypes[SpriteTypes["MINEING"] = 13] = "MINEING";
-        SpriteTypes[SpriteTypes["DROWNING"] = 14] = "DROWNING";
-        SpriteTypes[SpriteTypes["EXITING"] = 15] = "EXITING";
-        SpriteTypes[SpriteTypes["FRYING"] = 16] = "FRYING";
-        SpriteTypes[SpriteTypes["OHNO"] = 17] = "OHNO";
-        SpriteTypes[SpriteTypes["LEMACTION_SHRUG"] = 18] = "LEMACTION_SHRUG";
-        SpriteTypes[SpriteTypes["SHRUGGING"] = 19] = "SHRUGGING";
-        SpriteTypes[SpriteTypes["OUT_OFF_LEVEL"] = 20] = "OUT_OFF_LEVEL";
+        SpriteTypes[SpriteTypes["SPLATTING"] = 11] = "SPLATTING";
+        SpriteTypes[SpriteTypes["MINEING"] = 12] = "MINEING";
+        SpriteTypes[SpriteTypes["DROWNING"] = 13] = "DROWNING";
+        SpriteTypes[SpriteTypes["EXITING"] = 14] = "EXITING";
+        SpriteTypes[SpriteTypes["FRYING"] = 15] = "FRYING";
+        SpriteTypes[SpriteTypes["OHNO"] = 16] = "OHNO";
+        SpriteTypes[SpriteTypes["LEMACTION_SHRUG"] = 17] = "LEMACTION_SHRUG";
+        SpriteTypes[SpriteTypes["SHRUGGING"] = 18] = "SHRUGGING";
+        SpriteTypes[SpriteTypes["OUT_OFF_LEVEL"] = 19] = "OUT_OFF_LEVEL";
     })(SpriteTypes = Lemmings.SpriteTypes || (Lemmings.SpriteTypes = {}));
 })(Lemmings || (Lemmings = {}));
 var Lemmings;

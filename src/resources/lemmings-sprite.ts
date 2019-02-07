@@ -34,10 +34,8 @@ module Lemmings {
             this.registerAnimation(SpriteTypes.MINEING,      -1, fr, 3, 16, 13, -8, -10, 24); //- mining (l)
             this.registerAnimation(SpriteTypes.FALLING,       1, fr, 2, 16, 10, -8, -10, 4); //- falling (r)
             this.registerAnimation(SpriteTypes.FALLING,      -1, fr, 2, 16, 10, -8, -10, 4); //- falling (l)
-            this.registerAnimation(SpriteTypes.PREUMBRELLA,   1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (r)
-            this.registerAnimation(SpriteTypes.UMBRELLA,      1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (r)
-            this.registerAnimation(SpriteTypes.PREUMBRELLA,  -1, fr, 3, 16, 16, -8, -10, 4); //- pre-umbrella (l)
-            this.registerAnimation(SpriteTypes.UMBRELLA,     -1, fr, 3, 16, 16, -8, -10, 4, true); //- umbrella (l)
+            this.registerAnimation(SpriteTypes.UMBRELLA,      1, fr, 3, 16, 16, -8, -16, 8); //- pre-umbrella (r)
+            this.registerAnimation(SpriteTypes.UMBRELLA,     -1, fr, 3, 16, 16, -8, -16, 8); //- umbrella (r)
             this.registerAnimation(SpriteTypes.SPLATTING,     0, fr, 2, 16, 10, -8, -10, 16); //- splatting
             this.registerAnimation(SpriteTypes.EXITING,       0, fr, 2, 16, 13, -8, -10, 8); //- exiting
             this.registerAnimation(SpriteTypes.FRYING,        1, fr, 4, 16, 14, -8, -10, 14); //- fried
@@ -54,13 +52,12 @@ module Lemmings {
         }
 
 
-        private registerAnimation(state:SpriteTypes, dir:number, fr:BinaryReader, bitsPerPixle:number, width:number, height:number, offsetX:number, offsetY:number, frames:number, usePingPong:boolean = false) {
+        private registerAnimation(state:SpriteTypes, dir:number, fr:BinaryReader, bitsPerPixle:number, width:number, height:number, offsetX:number, offsetY:number, frames:number) {
 
             //- load animation frames from file (fr)
             var animation = new Animation();
 
             animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, -offsetX, -offsetY);
-            animation.isPingPong = usePingPong;
 
             //- add animation to cache -add unidirectional (dir == 0) annimations to both lists
             if (dir >= 0) {
