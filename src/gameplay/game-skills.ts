@@ -9,6 +9,12 @@ module Lemmings {
         }
 
         public onCountChanged = new EventHandler<SkillTypes>();
+        
+        /** return true if the skill can be redused / used */
+        public canReduseSkill(type:SkillTypes):boolean {
+            return (this.skills[type] <= 0);
+        }
+
 
         public reduseSkill(type:SkillTypes):boolean {
             if (this.skills[type] <= 0) return false;

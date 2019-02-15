@@ -24,6 +24,7 @@ module Lemmings {
             this.actions[LemmingStateType.DIGGING] = new ActionDiggSystem(lemingsSprite);
             this.actions[LemmingStateType.EXITING] = new ActionExitingSystem(lemingsSprite, gameVictoryCondition);
             this.actions[LemmingStateType.FLOATING] = new ActionFloatingSystem(lemingsSprite);
+            this.actions[LemmingStateType.BLOCKING] = new ActionBlockerSystem(lemingsSprite, triggerManager);
             
             this.releaseTickIndex = 99;
         }
@@ -112,6 +113,12 @@ module Lemmings {
                     return LemmingStateType.EXPLODING;
                 case TriggerTypes.TRAP:
                     return LemmingStateType.HOISTING;
+                case TriggerTypes.BLOCKER_LEFT:
+                    if (lem.lookRight) lem.lookRight = false;
+                    return LemmingStateType.NO_STATE_TYPE;
+                case TriggerTypes.BLOCKER_RIGHT:
+                    if (!lem.lookRight) lem.lookRight = true;
+                    return LemmingStateType.NO_STATE_TYPE;
                 default:
                     console.error("unknown trigger type: " + triggerType);
                     return LemmingStateType.NO_STATE_TYPE;
@@ -129,6 +136,7 @@ module Lemmings {
 
                 if (lem.action != null){
                     lem.action.draw(gameDisplay, lem);
+                    gameDisplay.setDebugPixel(lem.x, lem.y)
                 }
                 
             }
@@ -173,12 +181,22 @@ module Lemmings {
         }
 
         /** change the action a Lemming is doing */
-        public setLemmingAction(lem: Lemming, actionType: ActionType) {
+        public doLemmingAction(lem: Lemming, actionType: SkillTypes):boolean {
 
             switch (actionType) {
-                case ActionType.DIGG:
+                case SkillTypes.DIGGER:
                     this.setLemmingState(lem, LemmingStateType.DIGGING);
-                    break;
+                    return true;
+
+                case SkillTypes.BLOCKER:
+                    this.setLemmingState(lem, LemmingStateType.BLOCKING);
+                    return true;
+
+                case SkillTypes.FLOATER:
+                    if (lem.hasParachute) return false;
+                    lem.hasParachute = true;
+                    return true;
+
                 default:
                     console.log(lem.id + " Unknown Action: " + actionType);   
             }

@@ -10,7 +10,6 @@ module Lemmings {
         constructor(sprites:LemmingsSprite){
             this.sprite.push(sprites.getAnimation(SpriteTypes.DIGGING, false));
             this.sprite.push(sprites.getAnimation(SpriteTypes.DIGGING, true));
-
         }
 
 

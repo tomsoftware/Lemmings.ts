@@ -2,6 +2,7 @@ module Lemmings {
 
     /** manages all triggers */
     export class TriggerManager {
+
         private triggers: Trigger[] = [];
 
         constructor(private gameTimer:GameTimer) {
@@ -13,9 +14,33 @@ module Lemmings {
             this.triggers.push(trigger);
         }
 
-        public addRange(triggers: Trigger[]) {
-            for (let i = 0; i < triggers.length; i++) {
-                this.triggers.push(triggers[i]);
+        /** remove all triggers having a giving owner */
+        public removeByOwner(owner: any): void {
+            let triggerIndex = (this.triggers.length -1);
+
+            while (triggerIndex >= 0) {
+                triggerIndex = this.triggers.findIndex((t) => t.owner == owner);
+                this.triggers.splice(triggerIndex, 1);
+            }
+            
+        }
+
+        /** add a new trigger to the manager */
+        public remove(trigger: Trigger) {
+            let triggerIndex = this.triggers.indexOf(trigger);
+
+            this.triggers.splice(triggerIndex, 1);
+        }
+
+        public addRange(newTriggers: Trigger[]) {
+            for (let i = 0; i < newTriggers.length; i++) {
+                this.triggers.push(newTriggers[i]);
+            }
+        }
+
+        public render(gameDisplay:DisplayImage) {
+            for (let i = 0; i < this.triggers.length; i++) {
+                this.triggers[i].draw(gameDisplay);
             }
         }
 
@@ -27,7 +52,8 @@ module Lemmings {
             for (var i = 0; i < l; i++) {
                 let type = this.triggers[i].trigger(x, y, tick);
 
-                if (type != TriggerTypes.NO_TRIGGER) return type;
+                if (type != TriggerTypes.NO_TRIGGER) 
+                    return type;
             }
 
             return TriggerTypes.NO_TRIGGER;

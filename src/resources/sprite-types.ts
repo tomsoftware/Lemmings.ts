@@ -17,15 +17,15 @@ module Lemmings {
             BASHING,
 
             FALLING,
-            UMBRELLA ,
+            UMBRELLA,  // 8 frames opening + 8 frames floating
             SPLATTING, // after falling down from too high
 
-            MINEING ,
-            DROWNING , // in water
-            EXITING ,
-            FRYING , // killed by flameblower etc.
-            OHNO ,
-            LEMACTION_SHRUG , // builder finished buildung
+            MINEING,
+            DROWNING, // in water
+            EXITING,
+            FRYING, // killed by flameblower etc.
+            OHNO,
+            LEMACTION_SHRUG, // builder finished buildung
             
             SHRUGGING,
 

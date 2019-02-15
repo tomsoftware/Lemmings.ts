@@ -24,28 +24,16 @@ module Lemmings {
         public clear() {
             if (this.imgData == null) return;
 
-            let img = this.imgData.data;
+            let img = new Uint32Array(this.imgData.data);
 
-            for (let i = 0; i < img.length; i += 4) {
-                img[i] = 255; // red
-                img[i + 1] = 0; // green
-                img[i + 2] = 0; // blue
-                img[i + 3] = 255; // alpha
+            for (let i = 0; i < img.length; i++) {
+                img[i] = 0xFF00FF00;
             }
-
-            /*
-                let img = new Uint32Array(this.imgData.data);
-
-                for (let i = 0; i < img.length; i++) {
-                    img[i] = 0xFF00FF00;
-                }
-            */
         }
 
 
         /** render the level-background to an image */
         public setBackground(groundImage: Uint8ClampedArray, groundMask: SolidLayer = null) {
-            console.log("setBackground");
             /// set pixels
             this.imgData.data.set(groundImage);
             this.groundMask = groundMask;
