@@ -94,15 +94,31 @@ module Lemmings {
             this.groundMask = solidLayer;
         }
 
+        /** clear with mask  */
+        public clearGroundWithMask(mask:Mask, x:number, y:number) {
+            x += mask.offsetX;
+            y += mask.offsetY;
+
+            for(let d_y=0; d_y<mask.height; d_y++) {
+                for(let d_x=0; d_x<mask.width; d_x++) {
+                    if(!mask.at(d_x, d_y)) {
+                        this.clearGroundAt(x +d_x ,y+d_y);
+                    }
+                }
+            }
+
+        }
+
+
         /** clear a point  */
         public clearGroundAt(x: number, y: number) {
 
             this.groundMask.clearGroundAt(x, y);
 
-            let index = (x + y * this.width) * 4;
+            let index = (y * this.width + x) * 4;
 
-            this.groundImage[index + 0] = 0; // R
-            this.groundImage[index + 1] = 0; // G
+            this.groundImage[index + 0] = 30; // R
+            this.groundImage[index + 1] = 30; // G
             this.groundImage[index + 2] = 0; // B
         }
 

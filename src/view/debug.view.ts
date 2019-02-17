@@ -2,7 +2,7 @@ module Lemmings {
 
     export class DebugView {
 
-        private levelIndex = 0;
+        private levelIndex = 3;
         private levelGroupIndex = 0;
         private gameType: GameTypes;
         private musicIndex = 0;
@@ -15,9 +15,6 @@ module Lemmings {
 
         private stage : Stage = null;
         
-
-
-
         public elementSoundNumber: HTMLElement = null;
         public elementTrackNumber: HTMLElement = null;
         public elementLevelNumber: HTMLElement = null;

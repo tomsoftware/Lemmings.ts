@@ -66,6 +66,15 @@ module Lemmings {
             });
         }
 
+        public getMasks(): Promise<MaskProvider> {
+            return new Promise<MaskProvider>((resolve, reject) => {
+
+                this.getMainDat().then(container => {
+
+                    resolve(new MaskProvider(container.getPart(1)));
+                });
+            });
+        }
 
         /** return the Level Data for a given Level-Index */
         public getLevel(levelMode: number, levelIndex: number): Promise<Level> {

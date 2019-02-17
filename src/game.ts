@@ -68,11 +68,18 @@ module Lemmings {
                         this.triggerManager = new TriggerManager(this.gameTimer);
                         this.triggerManager.addRange(level.triggers);
 
-                        return this.gameResources.getLemmingsSprite(level.colorPalette);
+                        /// request next resources
+                        let maskPromis = this.gameResources.getMasks();
+                        let lemPromis = this.gameResources.getLemmingsSprite(this.level.colorPalette);
+
+                        return Promise.all([maskPromis, lemPromis]);
                     })
-                    .then(lemSprite => {
+                    .then(results => {
+                        let masks = results[0];
+                        let lemSprite = results[1];
+
                         /// setup Lemmings
-                        this.lemmingManager = new LemmingManager(this.level, lemSprite, this.triggerManager, this.gameVictoryCondition);
+                        this.lemmingManager = new LemmingManager(this.level, lemSprite, this.triggerManager, this.gameVictoryCondition, masks);
 
                         return this.gameResources.getSkillPanelSprite(this.level.colorPalette);
 

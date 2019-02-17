@@ -16,7 +16,8 @@ module Lemmings {
         constructor(private level: Level,
                     lemingsSprite: LemmingsSprite,
                     private triggerManager: TriggerManager,
-                    private gameVictoryCondition:GameVictoryCondition) {
+                    private gameVictoryCondition:GameVictoryCondition,
+                    private masks:MaskProvider) {
 
             this.actions[LemmingStateType.WALKING] = new ActionWalkSystem(lemingsSprite);
             this.actions[LemmingStateType.FALLING] = new ActionFallSystem(lemingsSprite);
@@ -25,6 +26,7 @@ module Lemmings {
             this.actions[LemmingStateType.EXITING] = new ActionExitingSystem(lemingsSprite, gameVictoryCondition);
             this.actions[LemmingStateType.FLOATING] = new ActionFloatingSystem(lemingsSprite);
             this.actions[LemmingStateType.BLOCKING] = new ActionBlockerSystem(lemingsSprite, triggerManager);
+            this.actions[LemmingStateType.MINEING] = new ActionMineSystem(lemingsSprite, masks);
             
             this.releaseTickIndex = 99;
         }
@@ -184,6 +186,10 @@ module Lemmings {
         public doLemmingAction(lem: Lemming, actionType: SkillTypes):boolean {
 
             switch (actionType) {
+                case SkillTypes.MINER:
+                    this.setLemmingState(lem, LemmingStateType.MINEING);
+                    return true;
+
                 case SkillTypes.DIGGER:
                     this.setLemmingState(lem, LemmingStateType.DIGGING);
                     return true;
