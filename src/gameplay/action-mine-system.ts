@@ -32,22 +32,19 @@ module Lemmings {
         }
 
 
-        
         public process(level:Level, lem: Lemming):LemmingStateType {
 
-          //  let index =           lem.frameIndex;
-          let index =  lem.frameIndex  = (lem.frameIndex + 1) % 24;
-
-            let maskFrameIndex = 0;
+            lem.frameIndex = (lem.frameIndex + 1) % 24;
 
             switch(lem.frameIndex) {
-                case 2:
-                    maskFrameIndex = 1;
                 case 1:
-                    let mask = this.masks[ (lem.lookRight ? 1 : 0)];
-
-                    level.clearGroundWithMask(mask.GetMask(maskFrameIndex), lem.x, lem.y);
+                case 2:
+                    let mask = this.masks[(lem.lookRight ? 1 : 0)];
+                    let maskIndex = lem.frameIndex - 1;
+                    
+                    level.clearGroundWithMask(mask.GetMask(maskIndex), lem.x, lem.y);
                     break;
+
                 case 3:
                     lem.y++;
 

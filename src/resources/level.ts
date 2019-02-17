@@ -117,8 +117,8 @@ module Lemmings {
 
             let index = (y * this.width + x) * 4;
 
-            this.groundImage[index + 0] = 30; // R
-            this.groundImage[index + 1] = 30; // G
+            this.groundImage[index + 0] = 0; // R
+            this.groundImage[index + 1] = 0; // G
             this.groundImage[index + 2] = 0; // B
         }
 
