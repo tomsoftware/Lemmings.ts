@@ -75,7 +75,7 @@ module Lemmings {
                     actionName = lem.action.getActionName()
                 }
 
-                console.log(lem.id + " :: x:" + lem.x + " y:" + lem.y + " Action: " + actionName);
+               // console.log(lem.id + " :: x:" + lem.x + " y:" + lem.y + " Action: " + actionName);
             }
         }
 
@@ -132,16 +132,19 @@ module Lemmings {
         public render(gameDisplay: DisplayImage) {
             let lems = this.lemmings;
 
+            //gameDisplay.drawRectangle(this.clickRect, 255,255,0);
+
             for (let i = 0; i < lems.length; i++) {
                 let lem = lems[i];
 
                 if (lem.action != null){
                     lem.action.draw(gameDisplay, lem);
                     gameDisplay.setDebugPixel(lem.x, lem.y)
-                }
-                
+                } 
             }
         }
+
+        //private clickRect:Rectangle = new Rectangle(0,0,0,0);
 
         public getLemmingAt(x: number, y: number): Lemming {
             let lems = this.lemmings;
@@ -149,7 +152,14 @@ module Lemmings {
             for (let i = 0; i < lems.length; i++) {
                 let lem = lems[i];
 
-                if ((x >= (lem.x - 2)) && (x <= (lem.x + 3)) && (y >= (lem.y - 8)) && (y < lem.y)) {
+                let x1 = lem.x - 3;
+                let y1 = lem.y - 9;
+                let x2 = lem.x + 3;
+                let y2 = lem.y - 1;
+
+                //this.clickRect = new Rectangle(x1, y1, x2, y2);
+
+                if ((x >= x1) && (x <= x2) && (y >= y1) && (y < y2)) {
                     return lem;
                 }
             }
@@ -171,7 +181,7 @@ module Lemmings {
 
             lem.setAction(actionSystem);
             if (lem.action == null) {
-                console.log(lem.id + " Action: no action: " + LemmingStateType[stateType]);
+                console.log(lem.id + " Action: Error not an action: " + LemmingStateType[stateType]);
                 return;
             }
             else {

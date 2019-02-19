@@ -38,16 +38,20 @@ module Lemmings {
                     lem.y = lem.y - 10;
                     return LemmingStateType.HOISTING;
                 }
+
+                return LemmingStateType.NO_STATE_TYPE;
             }
             else {
                 lem.y--;
 
-                if (groundMask.hasGroundAt(lem.x + (lem.lookRight? -1 : 1), lem.y - 8)) {
+                if (groundMask.hasGroundAt(lem.x + (lem.lookRight ? -1 : 1), lem.y - 8)) {
                  
                     lem.lookRight = !lem.lookRight;
-                    lem.x += (lem.lookRight?2:-2);
+                    lem.x += (lem.lookRight ? 2 : -2);
                     return LemmingStateType.FALLING;
                 }
+
+                return LemmingStateType.NO_STATE_TYPE;
             }
             
         }

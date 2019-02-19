@@ -44,6 +44,13 @@ module Lemmings {
             return colorValue & 0xFF;
         }
 
+        public drawRectangle(rect: Rectangle, red: number, green: number, blue: number) {
+            this.drawHorizontalLine(rect.x1, rect.y1, rect.x2, red, green, blue);
+            this.drawHorizontalLine(rect.x1, rect.y2, rect.x2, red, green, blue);
+            this.drawVerticalLine(rect.x1, rect.y1, rect.y2, red, green, blue);
+            this.drawVerticalLine(rect.x2, rect.y1, rect.y2, red, green, blue); 
+        }
+
         /** draw a rect to the display */
         public drawRect(x: number, y: number, width: number, height: number, red: number, green: number, blue: number) {
 

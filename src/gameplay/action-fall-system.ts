@@ -47,6 +47,7 @@ module Lemmings {
             if (i == 3) {
                 lem.state += i;
                 return LemmingStateType.NO_STATE_TYPE;
+                
             } else {
                 // landed
                 if (lem.state > Lemming.LEM_MAX_FALLING) {
