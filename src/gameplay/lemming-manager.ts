@@ -27,6 +27,7 @@ module Lemmings {
             this.actions[LemmingStateType.FLOATING] = new ActionFloatingSystem(lemingsSprite);
             this.actions[LemmingStateType.BLOCKING] = new ActionBlockerSystem(lemingsSprite, triggerManager);
             this.actions[LemmingStateType.MINEING] = new ActionMineSystem(lemingsSprite, masks);
+            this.actions[LemmingStateType.CLIMBING] = new ActionClimbSystem(lemingsSprite);
             
             this.releaseTickIndex = 99;
         }
@@ -38,9 +39,7 @@ module Lemmings {
 
             lem.x = x;
             lem.y = y;
-            lem.lookRight = true;
             lem.id = "Lem" + this.lemmings.length;
-            lem.hasParachute = true;
             
             this.setLemmingState(lem, LemmingStateType.FALLING);
 
@@ -201,6 +200,11 @@ module Lemmings {
                 case SkillTypes.FLOATER:
                     if (lem.hasParachute) return false;
                     lem.hasParachute = true;
+                    return true;
+
+                case SkillTypes.CLIMBER:
+                    if (lem.canClimb) return false;
+                    lem.canClimb = true;
                     return true;
 
                 default:

@@ -21,8 +21,8 @@ module Lemmings {
             this.registerAnimation(SpriteTypes.WALKING,      -1, fr, 2, 16, 10, -8, -10, 8); //- walking (l)
             this.registerAnimation(SpriteTypes.JUMPING,      -1, fr, 2, 16, 10, -8, -10, 1); //- jumping (l)
             this.registerAnimation(SpriteTypes.DIGGING,       0, fr, 3, 16, 14, -8, -12, 16); //- digging
-            this.registerAnimation(SpriteTypes.CLIMBING,      1, fr, 2, 16, 12, -8, -10, 8); //- climbing (r)
-            this.registerAnimation(SpriteTypes.CLIMBING,     -1, fr, 2, 16, 12, -8, -10, 8); //- climbing (l)
+            this.registerAnimation(SpriteTypes.CLIMBING,      1, fr, 2, 16, 12, -8, -12, 8); //- climbing (r)
+            this.registerAnimation(SpriteTypes.CLIMBING,     -1, fr, 2, 16, 12, -8, -12, 8); //- climbing (l)
             this.registerAnimation(SpriteTypes.DROWNING,      0, fr, 2, 16, 10, -8, -10, 16); //- drowning
             this.registerAnimation(SpriteTypes.POSTCLIMBING,  1, fr, 2, 16, 12, -8, -10, 8); //- post-climb (r)
             this.registerAnimation(SpriteTypes.POSTCLIMBING, -1, fr, 2, 16, 12, -8, -10, 8); //- post-climb (l)

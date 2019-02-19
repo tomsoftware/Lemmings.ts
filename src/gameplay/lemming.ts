@@ -6,10 +6,10 @@ module Lemmings {
 
         public x:number=0;
         public y:number=0;
-        public lookRight = false;
+        public lookRight = true;
         public frameIndex:number = 0;
         public canClimb:boolean = false;
-        public hasParachute:boolean = false;
+        public hasParachute:boolean = true;
         public removed:boolean = false;
         public action:IActionSystem;
         public state:number=0;

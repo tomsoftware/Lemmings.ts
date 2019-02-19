@@ -27,7 +27,23 @@ module Lemmings {
             return "walk";
         }
 
+        private getGroundStepDelta(groundMask:SolidLayer, x:number, y:number):number {
+            for (let i = 0; i < 8; i++) {
+                if (!groundMask.hasGroundAt(x, y - i)) {
+                    return i;
+                }
+            }
+            return 8;
+        }
 
+        private getGroudGapDelta(groundMask:SolidLayer, x:number, y:number):number {
+            for (let i = 1; i < 4; i++) {
+                if (groundMask.hasGroundAt(x, y + i)) {
+                    return i;
+                }
+            }
+            return 4;
+        }
         
         public process(level:Level, lem: Lemming) {
 
@@ -35,69 +51,57 @@ module Lemmings {
             lem.x += (lem.lookRight ? 1 : -1);
 
             let groundMask = level.getGroundMaskLayer();
-            let newAction:LemmingStateType = LemmingStateType.NO_STATE_TYPE;
 
             if (lem.x < 0) {
                 lem.lookRight = true;
                 return LemmingStateType.NO_STATE_TYPE;
             }
 
-            if (groundMask.hasGroundAt(lem.x, lem.y)) {
-                // walk, jump, climb, or turn
-                let i;
-                for (i = 1; i < 8; i++) {
-                    if (!groundMask.hasGroundAt(lem.x, lem.y - i)) {
-                        break;
-                    }
-                }
-
+            let delta = this.getGroundStepDelta(groundMask, lem.x, lem.y);
+            
+            
+            if (delta == 8) {
                 // collision with obstacle
-                if (i == 8) {
-                    if (lem.canClimb) {
-                        // start climbing
-                        newAction = LemmingStateType.CLIMBING;
-                    } else {
-                        // turn around
-                        lem.lookRight = !lem.lookRight;
-                    }
-                    return 1;
+                if (lem.canClimb) {
+                    // start climbing
+                    return LemmingStateType.CLIMBING;
                 }
-                if (i > 3) {
-                    // jump
-                    newAction = LemmingStateType.JUMPING;
-                    lem.y -= 2;
-                } else {
-                    // just walk
-                    lem.y -= i - 1;
+                else {
+                    // turn around
+                    lem.lookRight = !lem.lookRight;
+                    return LemmingStateType.NO_STATE_TYPE;
                 }
-
-                // test for collision with top of level
-                // todo: this.check_top_collision();
-                return newAction; //ActionType.OUT_OFF_LEVEL;
-                
-            } else {
+            }
+            else if (delta > 3) {
+                // jump
+                lem.y -= 2;
+                return LemmingStateType.JUMPING;;
+            }
+            else if (delta > 0) {
+                // just walk
+                lem.y -= delta - 1;
+                return LemmingStateType.NO_STATE_TYPE; 
+            } 
+            else {
                 // walk or fall
-                let i;
-                for (i = 1; i < 4; i++) {
-                    if (groundMask.hasGroundAt(lem.x, lem.y + i)) {
-                        break;
-                    }
-                }
-                lem.y += i;
-                if (i == 4) {
-                    newAction = LemmingStateType.FALLING;
-                }
+                let gapDelta = this.getGroudGapDelta(groundMask, lem.x, lem.y);
 
-                if (level.isOutOfLevel(lem.y)) {
-                    // play sound: fall out of level
-                    this.soundSystem.play_sound(lem, 0x13);
-                    lem.removed = true;
-                    return LemmingStateType.OUT_OFF_LEVEL;
+                lem.y += gapDelta;
+
+                if (gapDelta == 4) {
+                    return LemmingStateType.FALLING;
                 }
+                
+                return LemmingStateType.NO_STATE_TYPE;
+                //if (level.isOutOfLevel(lem.y)) {
+                //    // play sound: fall out of level
+                //    this.soundSystem.play_sound(lem, 0x13);
+                //    lem.removed = true;
+                //    return LemmingStateType.OUT_OFF_LEVEL;
+                //}
                 
             }
 
-            return newAction;
         }
 
     }
