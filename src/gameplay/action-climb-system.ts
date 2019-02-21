@@ -34,8 +34,8 @@ module Lemmings {
 
             if (lem.frameIndex  < 4) {
                 // check for top
-                if (!groundMask.hasGroundAt(lem.x, lem.y - 7 - lem.frameIndex)) {
-                    lem.y = lem.y - 10;
+                if (!groundMask.hasGroundAt(lem.x, lem.y - lem.frameIndex - 7)) {
+                    lem.y = lem.y - lem.frameIndex + 2;
                     return LemmingStateType.HOISTING;
                 }
 

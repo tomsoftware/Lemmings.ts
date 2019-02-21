@@ -2,7 +2,7 @@ module Lemmings {
 
     export class DebugView {
 
-        private levelIndex = 3;
+        private levelIndex = 4;
         private levelGroupIndex = 0;
         private gameType: GameTypes;
         private musicIndex = 0;

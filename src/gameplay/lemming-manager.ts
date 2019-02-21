@@ -28,6 +28,8 @@ module Lemmings {
             this.actions[LemmingStateType.BLOCKING] = new ActionBlockerSystem(lemingsSprite, triggerManager);
             this.actions[LemmingStateType.MINEING] = new ActionMineSystem(lemingsSprite, masks);
             this.actions[LemmingStateType.CLIMBING] = new ActionClimbSystem(lemingsSprite);
+            this.actions[LemmingStateType.HOISTING] = new ActionHoistSystem(lemingsSprite);
+            this.actions[LemmingStateType.BASHING] = new ActionBashSystem(lemingsSprite, masks);
             
             this.releaseTickIndex = 99;
         }
@@ -197,6 +199,10 @@ module Lemmings {
             switch (actionType) {
                 case SkillTypes.MINER:
                     this.setLemmingState(lem, LemmingStateType.MINEING);
+                    return true;
+                    
+                case SkillTypes.BASHER:
+                    this.setLemmingState(lem, LemmingStateType.BASHING);
                     return true;
 
                 case SkillTypes.DIGGER:

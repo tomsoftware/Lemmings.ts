@@ -1,5 +1,3 @@
-/// <reference path="position2d.ts"/>
-
 module Lemmings {
 
     export class MouseMoveEventArguemnts extends Position2D {
