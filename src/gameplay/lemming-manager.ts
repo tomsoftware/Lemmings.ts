@@ -11,13 +11,13 @@ module Lemmings {
         private actions: IActionSystem[] = [];
 
 
-        private releaseTickIndex : number = 0;
+        private releaseTickIndex: number = 0;
 
         constructor(private level: Level,
-                    lemingsSprite: LemmingsSprite,
-                    private triggerManager: TriggerManager,
-                    private gameVictoryCondition:GameVictoryCondition,
-                    private masks:MaskProvider) {
+            lemingsSprite: LemmingsSprite,
+            private triggerManager: TriggerManager,
+            private gameVictoryCondition: GameVictoryCondition,
+            private masks: MaskProvider) {
 
             this.actions[LemmingStateType.WALKING] = new ActionWalkSystem(lemingsSprite);
             this.actions[LemmingStateType.FALLING] = new ActionFallSystem(lemingsSprite);
@@ -30,7 +30,7 @@ module Lemmings {
             this.actions[LemmingStateType.CLIMBING] = new ActionClimbSystem(lemingsSprite);
             this.actions[LemmingStateType.HOISTING] = new ActionHoistSystem(lemingsSprite);
             this.actions[LemmingStateType.BASHING] = new ActionBashSystem(lemingsSprite, masks);
-            
+
             this.releaseTickIndex = 99;
         }
 
@@ -42,7 +42,7 @@ module Lemmings {
             lem.x = x;
             lem.y = y;
             lem.id = "Lem" + this.lemmings.length;
-            
+
             this.setLemmingState(lem, LemmingStateType.FALLING);
 
             this.lemmings.push(lem);
@@ -77,7 +77,7 @@ module Lemmings {
                     actionName = lem.action.getActionName()
                 }
 
-               // console.log(lem.id + " :: x:" + lem.x + " y:" + lem.y + " Action: " + actionName);
+                // console.log(lem.id + " :: x:" + lem.x + " y:" + lem.y + " Action: " + actionName);
             }
         }
 
@@ -87,11 +87,11 @@ module Lemmings {
 
             this.releaseTickIndex++;
 
-            if (this.releaseTickIndex >=  (100 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
+            if (this.releaseTickIndex >= (100 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
                 this.releaseTickIndex = 0;
 
                 let entrance = this.level.entrances[0];
-            
+
                 this.addLemming(entrance.x + 24, entrance.y + 14);
 
                 this.gameVictoryCondition.ReleaseOne();
@@ -104,7 +104,7 @@ module Lemmings {
             if (lem.removed) return LemmingStateType.NO_STATE_TYPE;
 
             let triggerType = this.triggerManager.trigger(lem.x, lem.y);
-            
+
             switch (triggerType) {
                 case TriggerTypes.NO_TRIGGER:
                     return LemmingStateType.NO_STATE_TYPE;
@@ -139,10 +139,10 @@ module Lemmings {
             for (let i = 0; i < lems.length; i++) {
                 let lem = lems[i];
 
-                if (lem.action != null){
+                if (lem.action != null) {
                     lem.action.draw(gameDisplay, lem);
                     gameDisplay.setDebugPixel(lem.x, lem.y)
-                } 
+                }
             }
         }
 
@@ -171,7 +171,7 @@ module Lemmings {
 
         /** change the action a Lemming is doing */
         private setLemmingState(lem: Lemming, stateType: LemmingStateType) {
-  
+
             if (stateType == LemmingStateType.OUT_OFF_LEVEL) {
                 lem.action = null;
                 lem.removed = true;
@@ -190,17 +190,17 @@ module Lemmings {
                 console.log(lem.id + " Action: " + lem.action.getActionName());
             }
 
-            
+
         }
 
         /** change the action a Lemming is doing */
-        public doLemmingAction(lem: Lemming, actionType: SkillTypes):boolean {
+        public doLemmingAction(lem: Lemming, actionType: SkillTypes): boolean {
 
             switch (actionType) {
                 case SkillTypes.MINER:
                     this.setLemmingState(lem, LemmingStateType.MINEING);
                     return true;
-                    
+
                 case SkillTypes.BASHER:
                     this.setLemmingState(lem, LemmingStateType.BASHING);
                     return true;
@@ -224,7 +224,7 @@ module Lemmings {
                     return true;
 
                 default:
-                    console.log(lem.id + " Unknown Action: " + actionType);   
+                    console.log(lem.id + " Unknown Action: " + actionType);
             }
         }
     }

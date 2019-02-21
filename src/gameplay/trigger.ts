@@ -11,15 +11,15 @@ module Lemmings {
         private type: TriggerTypes = TriggerTypes.NO_TRIGGER;
         private disableTicksCount: number = 0;
         private disabledUntisTick: number = 0;
-        private soundIndex:number;
+        private soundIndex: number;
 
-        constructor(type: TriggerTypes, x1:number, y1: number, x2:number, y2:number, disableTicksCount:number = 0, soundIndex:number = -1, owner:any = null) {
+        constructor(type: TriggerTypes, x1: number, y1: number, x2: number, y2: number, disableTicksCount: number = 0, soundIndex: number = -1, owner: any = null) {
             this.owner = owner;
             this.type = type;
-            this.x1=Math.min(x1, x2);
-            this.y1=Math.min(y1, y2);
-            this.x2=Math.max(x1, x2);
-            this.y2=Math.max(y1, y2);
+            this.x1 = Math.min(x1, x2);
+            this.y1 = Math.min(y1, y2);
+            this.x2 = Math.max(x1, x2);
+            this.y2 = Math.max(y1, y2);
             this.disableTicksCount = disableTicksCount;
             this.soundIndex = soundIndex;
         }
@@ -36,11 +36,11 @@ module Lemmings {
             return TriggerTypes.NO_TRIGGER;
         }
 
-        public draw(gameDisplay:DisplayImage) {
+        public draw(gameDisplay: DisplayImage) {
             gameDisplay.drawRect(
                 this.x1, this.y1,
-                this.x2-this.x1, this.y2-this.y1,
-                255,0,0 );
+                this.x2 - this.x1, this.y2 - this.y1,
+                255, 0, 0);
         }
 
 

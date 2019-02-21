@@ -6,7 +6,7 @@ module Lemmings {
 
         private sprite: Animation;
 
-        constructor(sprites: LemmingsSprite, private triggerManager:TriggerManager) {
+        constructor(sprites: LemmingsSprite, private triggerManager: TriggerManager) {
             this.sprite = sprites.getAnimation(SpriteTypes.BLOCKING, false);
         }
 
@@ -14,7 +14,7 @@ module Lemmings {
             return "blocking";
         }
 
-        public draw(gameDisplay:DisplayImage, lem: Lemming) {
+        public draw(gameDisplay: DisplayImage, lem: Lemming) {
 
             let frame = this.sprite.getFrame(lem.frameIndex);
 
@@ -23,10 +23,10 @@ module Lemmings {
 
 
         public process(level: Level, lem: Lemming): LemmingStateType {
-            
+
             if (lem.state == 0) {
 
-                let trigger1 = new Trigger(TriggerTypes.BLOCKER_LEFT,  lem.x - 6, lem.y + 4, lem.x - 3, lem.y - 10, 0, 0, lem);
+                let trigger1 = new Trigger(TriggerTypes.BLOCKER_LEFT, lem.x - 6, lem.y + 4, lem.x - 3, lem.y - 10, 0, 0, lem);
                 let trigger2 = new Trigger(TriggerTypes.BLOCKER_RIGHT, lem.x + 7, lem.y + 4, lem.x + 4, lem.y - 10, 0, 0, lem);
 
                 this.triggerManager.add(trigger1);

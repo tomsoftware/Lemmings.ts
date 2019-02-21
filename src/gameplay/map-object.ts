@@ -7,7 +7,7 @@ module Lemmings {
         public animation: Animation;
         public x: number;
         public y: number;
-        public drawProperties : DrawProperties;
+        public drawProperties: DrawProperties;
 
         constructor(ob: LevelElement, objectImg: ObjectImageInfo) {
             this.x = ob.x;

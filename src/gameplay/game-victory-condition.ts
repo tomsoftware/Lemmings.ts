@@ -6,9 +6,9 @@ module Lemmings {
         private releaseCount: number;
         private minReleaseRate: number;
         private releaseRate: number;
-        private survivorCount : number;
-        private leftCount : number;
-        private outCount:number;
+        private survivorCount: number;
+        private leftCount: number;
+        private outCount: number;
 
         public GetNeedCount(): number {
             return this.needCount;
@@ -30,27 +30,27 @@ module Lemmings {
             return this.survivorCount;
         }
 
-        public AddSurvivor():void {
+        public AddSurvivor(): void {
             this.survivorCount++;
         }
 
-        public GetSurvivorPercentage():number {
+        public GetSurvivorPercentage(): number {
             return Math.floor(this.survivorCount / this.releaseCount * 100);
         }
 
-        public GetOutCount():number {
+        public GetOutCount(): number {
             return this.outCount;
         }
 
-        public GetLeftCount() :number {
+        public GetLeftCount(): number {
             return this.leftCount;
         }
 
-        public ReleaseOne() :void {
+        public ReleaseOne(): void {
             this.leftCount--;
             this.outCount++;
         }
-        public RemoveOne() :void {
+        public RemoveOne(): void {
             this.outCount--;
         }
 
@@ -65,7 +65,7 @@ module Lemmings {
 
             this.survivorCount = 0;
             this.outCount = 0;
-            
+
         }
     }
 }

@@ -6,7 +6,7 @@ module Lemmings {
 
         private sprite: Animation;
 
-        constructor(sprites: LemmingsSprite, private gameVictoryCondition:GameVictoryCondition) {
+        constructor(sprites: LemmingsSprite, private gameVictoryCondition: GameVictoryCondition) {
             this.sprite = sprites.getAnimation(SpriteTypes.EXITING, false);
         }
 
@@ -14,7 +14,7 @@ module Lemmings {
             return "exiting";
         }
 
-        public draw(gameDisplay:DisplayImage, lem: Lemming) {
+        public draw(gameDisplay: DisplayImage, lem: Lemming) {
 
             let frame = this.sprite.getFrame(lem.frameIndex);
 
@@ -23,7 +23,7 @@ module Lemmings {
 
 
         public process(level: Level, lem: Lemming): LemmingStateType {
-            
+
             lem.removed = true;
             lem.frameIndex++;
 

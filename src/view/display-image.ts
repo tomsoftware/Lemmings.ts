@@ -6,6 +6,15 @@ module Lemmings {
         private imgData: ImageData;
         private groundMask: SolidLayer;
 
+        public getWidth():number {
+            if (this.imgData == null) return 0;
+            return this.imgData.width;
+        }
+        public getHeight():number {
+            if (this.imgData == null) return 0;
+            return this.imgData.height;
+        }
+
         constructor(private stage: Stage) {
         }
 

@@ -5,17 +5,16 @@ module Lemmings {
     export class ActionDiggSystem implements IActionSystem {
 
         public soundSystem = new SoundSystem();
-        private sprite:Animation[] = [];
+        private sprite: Animation[] = [];
 
-        constructor(sprites:LemmingsSprite){
+        constructor(sprites: LemmingsSprite) {
             this.sprite.push(sprites.getAnimation(SpriteTypes.DIGGING, false));
             this.sprite.push(sprites.getAnimation(SpriteTypes.DIGGING, true));
         }
 
 
-        
-        public draw(gameDisplay:DisplayImage, lem: Lemming) {
-            let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
+        public draw(gameDisplay: DisplayImage, lem: Lemming) {
+            let ani = this.sprite[(lem.lookRight ? 1 : 0)];
 
             let frame = ani.getFrame(lem.frameIndex);
 
@@ -23,17 +22,16 @@ module Lemmings {
         }
 
 
-        public getActionName() : string {
+        public getActionName(): string {
             return "digging";
         }
 
 
-        
-        public process(level:Level, lem: Lemming):LemmingStateType {
+        public process(level: Level, lem: Lemming): LemmingStateType {
 
-             if (lem.state == 0) {
-                this.digRow(level, lem, lem.y-2);
-                this.digRow(level, lem, lem.y-1);
+            if (lem.state == 0) {
+                this.digRow(level, lem, lem.y - 2);
+                this.digRow(level, lem, lem.y - 1);
                 lem.state = 1;
             } else {
                 lem.frameIndex = (lem.frameIndex + 1) % 16;
@@ -49,26 +47,22 @@ module Lemmings {
                     return LemmingStateType.OUT_OFF_LEVEL;
                 }
 
-                if (!this.digRow(level, lem, lem.y-1)) {
+                if (!this.digRow(level, lem, lem.y - 1)) {
                     return LemmingStateType.FALLING;
                 }
-                //if (level.readobjectmap(level,lem->x, lem->y) == OBJECT_STEEL) {
-                    // play sound effect: hitting steel
-                   // play_sound(0x0A);
-                   // return ActionType.WALKING;
-                //}
-                
+
             }
             return LemmingStateType.NO_STATE_TYPE;
         }
 
-        private digRow(level:Level, lem: Lemming, y:number):boolean {
-            let removeCount:number = 0;
+
+        private digRow(level: Level, lem: Lemming, y: number): boolean {
+            let removeCount: number = 0;
             let groundMask = level.getGroundMaskLayer();
 
-            for (let x=lem.x-4; x < lem.x + 5; x++) {
+            for (let x = lem.x - 4; x < lem.x + 5; x++) {
                 if (groundMask.hasGroundAt(x, y)) {
-                    level.clearGroundAt(x,y);
+                    level.clearGroundAt(x, y);
                     removeCount++;
                 }
             }

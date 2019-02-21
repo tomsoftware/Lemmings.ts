@@ -4,21 +4,21 @@ module Lemmings {
 
         public soundSystem = new SoundSystem();
 
-        private sprite:Animation[] = [];
-        
-        constructor(sprites:LemmingsSprite){
+        private sprite: Animation[] = [];
+
+        constructor(sprites: LemmingsSprite) {
             this.sprite.push(sprites.getAnimation(SpriteTypes.POSTCLIMBING, false));
             this.sprite.push(sprites.getAnimation(SpriteTypes.POSTCLIMBING, true));
         }
 
-        public getActionName() : string {
+        public getActionName(): string {
             return "hoist";
         }
 
 
         /** render Leming to gamedisply */
-        public draw(gameDisplay:DisplayImage, lem: Lemming) {
-            let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
+        public draw(gameDisplay: DisplayImage, lem: Lemming) {
+            let ani = this.sprite[(lem.lookRight ? 1 : 0)];
 
             let frame = ani.getFrame(lem.frameIndex);
 
@@ -26,7 +26,7 @@ module Lemmings {
         }
 
 
-        public process(level:Level, lem: Lemming):LemmingStateType {
+        public process(level: Level, lem: Lemming): LemmingStateType {
 
             lem.frameIndex = (lem.frameIndex + 1);
 
@@ -36,9 +36,9 @@ module Lemmings {
             }
 
             if (lem.frameIndex >= 8) {
-                return  LemmingStateType.WALKING;;
+                return LemmingStateType.WALKING;;
             }
-            
+
             return LemmingStateType.NO_STATE_TYPE;
 
         }

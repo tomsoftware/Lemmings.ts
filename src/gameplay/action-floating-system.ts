@@ -3,7 +3,7 @@ module Lemmings {
     export class ActionFloatingSystem implements IActionSystem {
 
         private static floatSpeed: number[] = [3, 3, 3, 3, -1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2];
-        private static floatFrame: number[] = [0, 1, 3, 5,  5, 5, 5, 5, 5, 6, 7, 7, 6, 5, 4, 4];
+        private static floatFrame: number[] = [0, 1, 3, 5, 5, 5, 5, 5, 5, 6, 7, 7, 6, 5, 4, 4];
 
         public soundSystem = new SoundSystem();
 
@@ -21,7 +21,7 @@ module Lemmings {
 
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
-            let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
+            let ani = this.sprite[(lem.lookRight ? 1 : 0)];
 
             let frame = ani.getFrame(ActionFloatingSystem.floatFrame[lem.frameIndex]);
 
@@ -49,7 +49,7 @@ module Lemmings {
                 }
             }
             lem.y += speed;
-        
+
             return LemmingStateType.NO_STATE_TYPE;
         }
 

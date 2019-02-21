@@ -8,12 +8,10 @@ module Lemmings {
 
         }
 
-        public playSound(lem: Lemming, soundId:number) {
-           console.log("Play sound "+ soundId);
+        public playSound(lem: Lemming, soundId: number) {
+            console.log("Play sound " + soundId);
         }
 
-
-  
     }
 
 }

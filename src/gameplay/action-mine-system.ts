@@ -5,10 +5,10 @@ module Lemmings {
     export class ActionMineSystem implements IActionSystem {
 
         public soundSystem = new SoundSystem();
-        private sprite:Animation[] = [];
-        private masks:MaskList[] = [];
+        private sprite: Animation[] = [];
+        private masks: MaskList[] = [];
 
-        constructor(sprites:LemmingsSprite, masks:MaskProvider){
+        constructor(sprites: LemmingsSprite, masks: MaskProvider) {
             this.sprite.push(sprites.getAnimation(SpriteTypes.MINEING, false));
             this.sprite.push(sprites.getAnimation(SpriteTypes.MINEING, true));
 
@@ -17,9 +17,9 @@ module Lemmings {
         }
 
 
-        
-        public draw(gameDisplay:DisplayImage, lem: Lemming) {
-            let ani = this.sprite[ (lem.lookRight ? 1 : 0)];
+
+        public draw(gameDisplay: DisplayImage, lem: Lemming) {
+            let ani = this.sprite[(lem.lookRight ? 1 : 0)];
 
             let frame = ani.getFrame(lem.frameIndex);
 
@@ -27,21 +27,21 @@ module Lemmings {
         }
 
 
-        public getActionName() : string {
+        public getActionName(): string {
             return "mining";
         }
 
 
-        public process(level:Level, lem: Lemming):LemmingStateType {
+        public process(level: Level, lem: Lemming): LemmingStateType {
 
             lem.frameIndex = (lem.frameIndex + 1) % 24;
 
-            switch(lem.frameIndex) {
+            switch (lem.frameIndex) {
                 case 1:
                 case 2:
                     let mask = this.masks[(lem.lookRight ? 1 : 0)];
                     let maskIndex = lem.frameIndex - 1;
-                    
+
                     level.clearGroundWithMask(mask.GetMask(maskIndex), lem.x, lem.y);
                     break;
 

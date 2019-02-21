@@ -1,22 +1,22 @@
 module Lemmings {
 
     export class GameSkills {
-        private skills:SkillTypes[];
-        private selectedSkill:SkillTypes = SkillTypes.CLIMBER;
+        private skills: SkillTypes[];
+        private selectedSkill: SkillTypes = SkillTypes.CLIMBER;
 
-        constructor(level:Level) {
+        constructor(level: Level) {
             this.skills = level.skills;
         }
 
         public onCountChanged = new EventHandler<SkillTypes>();
-        
+
         /** return true if the skill can be redused / used */
-        public canReduseSkill(type:SkillTypes):boolean {
+        public canReduseSkill(type: SkillTypes): boolean {
             return (this.skills[type] <= 0);
         }
 
 
-        public reduseSkill(type:SkillTypes):boolean {
+        public reduseSkill(type: SkillTypes): boolean {
             if (this.skills[type] <= 0) return false;
 
             this.skills[type]--;
@@ -25,13 +25,13 @@ module Lemmings {
             return true;
         }
 
-        public getSkill(type:SkillTypes) {
+        public getSkill(type: SkillTypes) {
             if (!SkillTypes.isValid(type)) return 0;
-            
+
             return this.skills[type];
         }
 
-        public getSelectedSkill():SkillTypes {
+        public getSelectedSkill(): SkillTypes {
             return this.selectedSkill;
         }
 

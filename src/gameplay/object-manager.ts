@@ -1,6 +1,6 @@
 module Lemmings {
 
- 
+
     /** manages all objects on the map */
     export class ObjectManager {
         private objects: MapObject[] = [];

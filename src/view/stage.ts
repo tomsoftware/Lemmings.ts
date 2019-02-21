@@ -93,14 +93,15 @@ module Lemmings {
 
 
         private updateViewPoint(stageImage:StageImageProperties, deltaX:number, deltaY:number, deletaZoom:number) {
+            stageImage.viewPoint.scale += deletaZoom * 0.5;
+            stageImage.viewPoint.scale = this.limitValue(0.5, stageImage.viewPoint.scale, 10);
+
             stageImage.viewPoint.x += deltaX / stageImage.viewPoint.scale;
             stageImage.viewPoint.y += deltaY / stageImage.viewPoint.scale;
-            stageImage.viewPoint.scale += deletaZoom * 0.5;
 
-            stageImage.viewPoint.x = this.limitValue(0, stageImage.viewPoint.x, stageImage.width);
-            stageImage.viewPoint.y = this.limitValue(0, stageImage.viewPoint.y, stageImage.height);
-            stageImage.viewPoint.scale = this.limitValue(0.5, stageImage.viewPoint.scale, 10);
-            
+            stageImage.viewPoint.x = this.limitValue(0, stageImage.viewPoint.x, stageImage.display.getWidth() - stageImage.width / stageImage.viewPoint.scale);
+            stageImage.viewPoint.y = this.limitValue(0, stageImage.viewPoint.y, stageImage.display.getHeight() - stageImage.height / stageImage.viewPoint.scale);
+
             /// redraw
             if (stageImage.display != null) {
                 this.clear(stageImage);
@@ -110,7 +111,10 @@ module Lemmings {
         }
 
         private limitValue(minLimit:number, value:number, maxLimit:number) :number {
-            return Math.min(Math.max(minLimit, value), maxLimit);
+
+            let useMax = Math.max(minLimit, maxLimit);
+            
+            return Math.min(Math.max(minLimit, value), useMax);
         }
 
         public updateStageSize() {
@@ -222,7 +226,9 @@ module Lemmings {
             }
 
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
-            ctx.drawImage(display.cav, display.viewPoint.x, display.viewPoint.y, dW, dH, display.x, display.y, Math.trunc(dW * display.viewPoint.scale), Math.trunc(dH * display.viewPoint.scale));
+            ctx.drawImage(display.cav, 
+                display.viewPoint.x, display.viewPoint.y, dW, dH, 
+                display.x, display.y, Math.trunc(dW * display.viewPoint.scale), Math.trunc(dH * display.viewPoint.scale));
 
         }
     }

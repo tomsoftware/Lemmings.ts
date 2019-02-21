@@ -2,18 +2,18 @@ module Lemmings {
 
     export class MouseMoveEventArguemnts extends Position2D {
         /** delta the mouse move Y */
-        public deltaX : number = 0;
+        public deltaX: number = 0;
         /** delta the mouse move Y */
-        public deltaY : number = 0;
+        public deltaY: number = 0;
 
-        public button:boolean = false;
+        public button: boolean = false;
 
         /** position the user starts pressed the mouse */
-        public mouseDownX:number = 0;
+        public mouseDownX: number = 0;
         /** position the user starts pressed the mouse */
-        public mouseDownY:number = 0;
+        public mouseDownY: number = 0;
 
-        constructor(x:number = 0, y:number = 0, deltaX:number = 0, deltaY:number = 0, button:boolean = false) { 
+        constructor(x: number = 0, y: number = 0, deltaX: number = 0, deltaY: number = 0, button: boolean = false) {
             super(x, y);
             this.deltaX = deltaX;
             this.deltaY = deltaY;
@@ -22,10 +22,10 @@ module Lemmings {
     }
 
     export class ZoomEventArguemnts extends Position2D {
-        public deltaZoom:number;
+        public deltaZoom: number;
 
-        constructor(x:number = 0, y:number = 0, deltaZoom:number = 0) {
-            super(x,y);
+        constructor(x: number = 0, y: number = 0, deltaZoom: number = 0) {
+            super(x, y);
             this.deltaZoom = deltaZoom;
         }
     }
@@ -70,7 +70,7 @@ module Lemmings {
             listenElement.addEventListener("touchstart", (e: TouchEvent) => {
                 let relativePos = this.getRelativePosition(listenElement, e.touches[0].clientX, e.touches[0].clientY);
                 this.handelMouseDown(relativePos, 1);
-                
+
                 e.stopPropagation();
                 e.preventDefault();
                 return false;
@@ -127,7 +127,7 @@ module Lemmings {
 
 
 
-        private getRelativePosition(element: HTMLElement, clientX:number, clientY:number):Position2D {
+        private getRelativePosition(element: HTMLElement, clientX: number, clientY: number): Position2D {
 
             var rect = element.getBoundingClientRect();
 
@@ -135,11 +135,11 @@ module Lemmings {
         }
 
 
-        private handelMouseMove(position:Position2D) {
+        private handelMouseMove(position: Position2D) {
 
             //- Move Point of View
             if (this.mouseButton == 0) {
-                
+
                 let deltaX = (this.lastMouseX - position.x);
                 let deltaY = (this.lastMouseY - position.y);
 
@@ -160,7 +160,7 @@ module Lemmings {
             }
         }
 
-        private handelMouseDown(position:Position2D, button:number) {
+        private handelMouseDown(position: Position2D, button: number) {
             //- save start of Mousedown
             this.mouseButton = button;
             this.mouseDownX = position.x;
@@ -168,7 +168,7 @@ module Lemmings {
             this.lastMouseX = position.x;
             this.lastMouseY = position.y;
         }
-        
+
         private handelMouseClear() {
             this.mouseButton = -1;
             this.mouseDownX = 0;
@@ -177,7 +177,7 @@ module Lemmings {
             this.lastMouseY = 0;
         }
 
-        private handelMouseUp(position:Position2D) {
+        private handelMouseUp(position: Position2D) {
             this.handelMouseClear();
 
             /// raise event
@@ -185,8 +185,8 @@ module Lemmings {
         }
 
         /** Zoom view 
-         * todo: zoom to mouse pointer */ 
-        private handeWheel(position:Position2D, deltaY:number) {
+         * todo: zoom to mouse pointer */
+        private handeWheel(position: Position2D, deltaY: number) {
 
             if (deltaY < 0) {
                 this.onZoom.trigger(new ZoomEventArguemnts(position.x, position.y, 1));
