@@ -29,13 +29,11 @@ module Lemmings {
 
         public process(level: Level, lem: Lemming): LemmingStateType {
 
-            let groundMask = level.getGroundMaskLayer();
-
             lem.frameIndex = (lem.frameIndex + 1) % 8;
 
             if (lem.frameIndex < 4) {
                 // check for top
-                if (!groundMask.hasGroundAt(lem.x, lem.y - lem.frameIndex - 7)) {
+                if (!level.hasGroundAt(lem.x, lem.y - lem.frameIndex - 7)) {
                     lem.y = lem.y - lem.frameIndex + 2;
                     return LemmingStateType.HOISTING;
                 }
@@ -45,7 +43,7 @@ module Lemmings {
             else {
                 lem.y--;
 
-                if (groundMask.hasGroundAt(lem.x + (lem.lookRight ? -1 : 1), lem.y - 8)) {
+                if (level.hasGroundAt(lem.x + (lem.lookRight ? -1 : 1), lem.y - 8)) {
 
                     lem.lookRight = !lem.lookRight;
                     lem.x += (lem.lookRight ? 2 : -2);

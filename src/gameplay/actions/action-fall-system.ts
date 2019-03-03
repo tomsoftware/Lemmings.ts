@@ -28,8 +28,6 @@ module Lemmings {
 
         public process(level: Level, lem: Lemming): LemmingStateType {
 
-            let groundMask = level.getGroundMaskLayer();
-
             lem.frameIndex++;
             if (lem.state > 16 && (lem.hasParachute)) {
                 return LemmingStateType.FLOATING;
@@ -38,7 +36,7 @@ module Lemmings {
             // fall down!
             let i: number = 0;
             for (; i < 3; i++) {
-                if (groundMask.hasGroundAt(lem.x, lem.y + i)) {
+                if (level.hasGroundAt(lem.x, lem.y + i)) {
                     break;
                 }
             }

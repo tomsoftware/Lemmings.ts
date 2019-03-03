@@ -30,11 +30,9 @@ module Lemmings {
 
             lem.frameIndex++;
 
-            let ground = level.getGroundMaskLayer();
-
             let i = 0;
             for (; i < 2; i++) {
-                if (!ground.hasGroundAt(lem.x, lem.y + i - 1)) { // really -1?
+                if (!level.hasGroundAt(lem.x, lem.y + i - 1)) { // really -1?
                     break;
                 }
             }

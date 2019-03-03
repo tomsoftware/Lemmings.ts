@@ -27,6 +27,12 @@ module Lemmings {
             this.groundMask[index] = 0;
         }
 
+        /** clear a point  */
+        public setGroundAt(x: number, y: number) {
+            let index = x + y * this.width;
+
+            this.groundMask[index] = 1;
+        }
 
         constructor(width: number, height: number, mask: Int8Array=null) {
             this.width = width;

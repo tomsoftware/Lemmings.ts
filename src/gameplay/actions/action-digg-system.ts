@@ -58,10 +58,9 @@ module Lemmings {
 
         private digRow(level: Level, lem: Lemming, y: number): boolean {
             let removeCount: number = 0;
-            let groundMask = level.getGroundMaskLayer();
 
             for (let x = lem.x - 4; x < lem.x + 5; x++) {
-                if (groundMask.hasGroundAt(x, y)) {
+                if (level.hasGroundAt(x, y)) {
                     level.clearGroundAt(x, y);
                     removeCount++;
                 }

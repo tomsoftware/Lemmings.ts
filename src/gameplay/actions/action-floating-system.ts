@@ -37,12 +37,10 @@ module Lemmings {
                 lem.frameIndex = 8;
             }
 
-            let groundMask = level.getGroundMaskLayer();
-
             let speed = ActionFloatingSystem.floatSpeed[lem.frameIndex];
 
             for (let i = 0; i < speed; i++) {
-                if (groundMask.hasGroundAt(lem.x, lem.y + i)) {
+                if (level.hasGroundAt(lem.x, lem.y + i)) {
                     // landed
                     lem.y += i;
                     return LemmingStateType.WALKING;

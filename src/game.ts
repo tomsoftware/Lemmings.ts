@@ -113,6 +113,14 @@ module Lemmings {
             this.gameTimer.continue();
         }
 
+        /** end the game */
+        public stop() {
+            this.gameTimer.suspend();
+            this.gameTimer = null;
+
+        }
+
+
         /** return the game Timer for this game */
         public getGameTimer(): GameTimer {
             return this.gameTimer;

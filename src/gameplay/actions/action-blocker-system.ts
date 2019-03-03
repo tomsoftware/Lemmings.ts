@@ -36,7 +36,7 @@ module Lemmings {
             }
 
             lem.frameIndex++;
-            if (!level.groundMask.hasGroundAt(lem.x, lem.y + 1)) {
+            if (!level.hasGroundAt(lem.x, lem.y + 1)) {
                 this.triggerManager.removeByOwner(lem);
 
                 return LemmingStateType.FALLING;

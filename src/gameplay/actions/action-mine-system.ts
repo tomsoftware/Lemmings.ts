@@ -51,7 +51,7 @@ module Lemmings {
                 case 15:
                     lem.x += lem.lookRight ? 1 : -1;
 
-                    if (!level.groundMask.hasGroundAt(lem.x, lem.y)) {
+                    if (!level.hasGroundAt(lem.x, lem.y)) {
                         return LemmingStateType.FALLING;
                     }
                     break;

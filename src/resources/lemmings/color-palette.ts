@@ -25,6 +25,18 @@ module Lemmings {
 			return this.data[index];
 		}
 
+		public getR(index: number): number {
+			return this.data[index] & 0xFF;
+		}
+
+		public getG(index: number): number {
+			return (this.data[index] >> 8) & 0xFF;
+		}
+
+		public getB(index: number): number {
+			return (this.data[index] >> 16) & 0xFF;
+		}
+
 		/** set color from R,G,B */
 		public setColorRGB(index: number, r: number, g: number, b: number) {
 

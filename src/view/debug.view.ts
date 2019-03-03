@@ -192,6 +192,9 @@ module Lemmings {
 
         private loadLevel() {
             if (this.gameResources == null) return;
+            if (this.game != null) {
+                this.game.stop();
+            }
 
             this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
                 .then((level) => {

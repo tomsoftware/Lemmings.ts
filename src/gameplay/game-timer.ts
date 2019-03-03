@@ -20,9 +20,16 @@ module Lemmings {
 
         /** Pause the game */
         public suspend() {
-            if (this.gameTimerHandler != 0)
+            if (this.gameTimerHandler != 0) {
                 clearInterval(this.gameTimerHandler);
+            }
             this.gameTimerHandler = 0;
+        }
+
+        /** End the game */
+        public stop() {
+            this.suspend();
+            this.onGameTick.dispose();
         }
 
 

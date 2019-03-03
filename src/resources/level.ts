@@ -102,11 +102,27 @@ module Lemmings {
             for(let d_y=0; d_y<mask.height; d_y++) {
                 for(let d_x=0; d_x<mask.width; d_x++) {
                     if(!mask.at(d_x, d_y)) {
-                        this.clearGroundAt(x +d_x ,y+d_y);
+                        this.clearGroundAt(x + d_x, y + d_y);
                     }
                 }
             }
 
+        }
+
+        /** set a point in the map to solid ground  */
+        public setGroundAt(x: number, y: number, palletIndex:number) {
+
+            this.groundMask.setGroundAt(x, y);
+
+            let index = (y * this.width + x) * 4;
+            this.groundImage[index + 0] = this.colorPalette.getR(palletIndex);
+            this.groundImage[index + 1] = this.colorPalette.getG(palletIndex);
+            this.groundImage[index + 2] = this.colorPalette.getB(palletIndex);
+        }
+
+        /** checks if a point is solid ground  */
+        public hasGroundAt(x: number, y: number): boolean {
+            return this.groundMask.hasGroundAt(x, y);
         }
 
 
@@ -121,6 +137,7 @@ module Lemmings {
             this.groundImage[index + 1] = 0; // G
             this.groundImage[index + 2] = 0; // B
         }
+
 
         public setGroundImage(img: Uint8ClampedArray) {
             this.groundImage = new Uint8ClampedArray(img);
