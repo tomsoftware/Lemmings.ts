@@ -24,6 +24,12 @@ module Lemmings {
             return "digging";
         }
 
+        public triggerLemAction(lem: Lemming): boolean {
+            lem.setAction(this);
+
+            return true;
+        }
+
 
         public process(level: Level, lem: Lemming): LemmingStateType {
 

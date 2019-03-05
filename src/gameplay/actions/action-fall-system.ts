@@ -15,6 +15,10 @@ module Lemmings {
             return "falling";
         }
 
+        public triggerLemAction(lem: Lemming): boolean {
+            return false;
+        }
+
 
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {

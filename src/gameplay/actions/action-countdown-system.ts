@@ -14,14 +14,19 @@ module Lemmings {
             return "countdown";
         }
 
+        public triggerLemAction(lem: Lemming): boolean {
+            return lem.setCountDown(this);
+        }
 
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
-            if (lem.countdown <= 0) {
+            let count = lem.getCountDownTime();
+
+            if (count <= 0) {
                 return;
             }
 
-            let numberFrame = this.numberMasks.GetMask(lem.countdown >> 4);
+            let numberFrame = this.numberMasks.GetMask(count);
 
             gameDisplay.drawMask(numberFrame, lem.x, lem.y);
         }
@@ -37,7 +42,8 @@ module Lemmings {
             lem.countdown--;
 
             if (lem.countdown == 0){
-                return LemmingStateType.EXPLODING;
+                lem.setCountDown(null);
+                return LemmingStateType.OHNO;
             }
             
             return LemmingStateType.NO_STATE_TYPE;

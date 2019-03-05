@@ -19,6 +19,16 @@ module Lemmings {
         }
 
 
+        public triggerLemAction(lem: Lemming): boolean {
+            if (lem.hasParachute) {
+                return false;
+            }
+
+            lem.hasParachute = true;
+            return true;
+        }
+
+
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];

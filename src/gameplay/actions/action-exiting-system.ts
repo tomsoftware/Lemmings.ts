@@ -14,6 +14,10 @@ module Lemmings {
             return "exiting";
         }
 
+        public triggerLemAction(lem: Lemming): boolean {
+            return false;
+        }
+        
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
 
             let frame = this.sprite.getFrame(lem.frameIndex);

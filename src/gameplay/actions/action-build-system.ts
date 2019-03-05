@@ -17,6 +17,12 @@ module Lemmings {
         }
 
 
+        public triggerLemAction(lem: Lemming): boolean {
+            lem.setAction(this);
+
+            return true;
+        }
+
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];

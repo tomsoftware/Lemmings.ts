@@ -15,6 +15,9 @@ module Lemmings {
             return "hoist";
         }
 
+        public triggerLemAction(lem: Lemming): boolean {
+            return false;
+        }
 
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
@@ -28,7 +31,7 @@ module Lemmings {
 
         public process(level: Level, lem: Lemming): LemmingStateType {
 
-            lem.frameIndex = (lem.frameIndex + 1);
+            lem.frameIndex++;
 
             if (lem.frameIndex <= 4) {
                 lem.y -= 2;

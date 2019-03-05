@@ -16,6 +16,15 @@ module Lemmings {
             return "climbing";
         }
 
+        public triggerLemAction(lem: Lemming): boolean {
+            if (lem.canClimb) {
+                return false;
+            }
+
+            lem.canClimb = true;
+            return true;
+        }
+
 
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {

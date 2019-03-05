@@ -25,6 +25,12 @@ module Lemmings {
             return "walk";
         }
 
+
+        public triggerLemAction(lem: Lemming): boolean {
+            return false;
+        }
+
+
         private getGroundStepDelta(groundMask: SolidLayer, x: number, y: number): number {
             for (let i = 0; i < 8; i++) {
                 if (!groundMask.hasGroundAt(x, y - i)) {

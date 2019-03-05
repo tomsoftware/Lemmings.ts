@@ -1,6 +1,6 @@
 module Lemmings {
 
-    export class ActionBashSystem {
+    export class ActionBashSystem implements IActionSystem {
 
         public soundSystem = new SoundSystem();
 
@@ -20,6 +20,11 @@ module Lemmings {
             return "bashing";
         }
 
+        public triggerLemAction(lem: Lemming): boolean {
+            lem.setAction(this);
+
+            return true;
+        }
 
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {

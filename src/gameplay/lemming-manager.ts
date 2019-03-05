@@ -9,8 +9,7 @@ module Lemmings {
 
         /** list of all Actions a Lemming can do */
         private actions: IActionSystem[] = [];
-
-        private countdownSystem:ActionCountdownSystem;
+        private skillActions: IActionSystem[] = [];
 
         private releaseTickIndex: number = 0;
 
@@ -18,9 +17,7 @@ module Lemmings {
             lemingsSprite: LemmingsSprite,
             private triggerManager: TriggerManager,
             private gameVictoryCondition: GameVictoryCondition,
-            private masks: MaskProvider) {
-
-            this.countdownSystem =  new ActionCountdownSystem(masks);;
+            masks: MaskProvider) {
 
             this.actions[LemmingStateType.WALKING] = new ActionWalkSystem(lemingsSprite);
             this.actions[LemmingStateType.FALLING] = new ActionFallSystem(lemingsSprite);
@@ -35,24 +32,22 @@ module Lemmings {
             this.actions[LemmingStateType.BASHING] = new ActionBashSystem(lemingsSprite, masks);
             this.actions[LemmingStateType.BUILDING] = new ActionBuildSystem(lemingsSprite);
             this.actions[LemmingStateType.SHRUG] = new ActionShrugSystem(lemingsSprite);
-            this.actions[LemmingStateType.EXPLODING] = this.countdownSystem;
+            this.actions[LemmingStateType.EXPLODING] = new ActionExplodingSystem(lemingsSprite, masks, triggerManager);
+            this.actions[LemmingStateType.OHNO] = new ActionOhNoSystem(lemingsSprite);
+
+
+            this.skillActions[SkillTypes.DIGGER] = this.actions[LemmingStateType.DIGGING];
+            this.skillActions[SkillTypes.FLOATER] = this.actions[LemmingStateType.FLOATING];
+            this.skillActions[SkillTypes.BLOCKER] = this.actions[LemmingStateType.BLOCKING];
+            this.skillActions[SkillTypes.MINER] = this.actions[LemmingStateType.MINEING];
+            this.skillActions[SkillTypes.CLIMBER] = this.actions[LemmingStateType.CLIMBING];
+            this.skillActions[SkillTypes.BASHER] = this.actions[LemmingStateType.BASHING];
+            this.skillActions[SkillTypes.BUILDER] = this.actions[LemmingStateType.BUILDING];
+            this.skillActions[SkillTypes.BOMBER] =  new ActionCountdownSystem(masks);
 
             this.releaseTickIndex = 99;
         }
 
-        /** Add a new Lemming to the manager */
-        public addLemming(x: number, y: number) {
-
-            let lem = new Lemming();
-
-            lem.x = x;
-            lem.y = y;
-            lem.id = "Lem" + this.lemmings.length;
-
-            this.setLemmingState(lem, LemmingStateType.FALLING);
-
-            this.lemmings.push(lem);
-        }
 
 
         private ProcessNewAction(lem:Lemming, newAction: LemmingStateType):boolean {
@@ -75,12 +70,9 @@ module Lemmings {
 
                 let lem = lems[i];
 
-                if ((lem.action == null) || (lem.removed)) continue;
+                if (lem.removed) continue;
 
-                let newAction = this.countdownSystem.process(this.level, lem);
-                this.ProcessNewAction(lem, newAction);
-
-                newAction = lem.action.process(this.level, lem);
+                let newAction = lem.process(this.level);
                 this.ProcessNewAction(lem, newAction);
 
                 let triggerAction = this.runTrigger(lem);
@@ -96,6 +88,17 @@ module Lemmings {
                 */
             }
         }
+
+        /** Add a new Lemming to the manager */
+        public addLemming(x: number, y: number) {
+
+            let lem = new Lemming(x, y, this.lemmings.length);
+
+            this.setLemmingState(lem, LemmingStateType.FALLING);
+
+            this.lemmings.push(lem);
+        }
+
 
         /** let a new lemming be born from a entrance  */
         private addNewLemmings() {
@@ -151,113 +154,65 @@ module Lemmings {
             let lems = this.lemmings;
 
             for (let i = 0; i < lems.length; i++) {
-                let lem = lems[i];
-
-                if (lem.action != null) {
-                    this.countdownSystem.draw(gameDisplay, lem);
-
-                    lem.action.draw(gameDisplay, lem);
-                    gameDisplay.setDebugPixel(lem.x, lem.y)
-                }
+                lems[i].render(gameDisplay);
             }
         }
 
         public getLemmingAt(x: number, y: number): Lemming {
             let lems = this.lemmings;
 
+            let minDistance = 99999;
+            let minDistanceLem = null;
+
             for (let i = 0; i < lems.length; i++) {
                 let lem = lems[i];
 
-                let x1 = lem.x - 3;
-                let y1 = lem.y - 9;
-                let x2 = lem.x + 3;
-                let y2 = lem.y - 1;
-
-                //this.clickRect = new Rectangle(x1, y1, x2, y2);
-
-                if ((x >= x1) && (x <= x2) && (y >= y1) && (y < y2)) {
-                    return lem;
+                let distance = lem.getClickDistance(x, y);
+                if ((distance < 0) || (distance >= minDistance)) {
+                    continue;
                 }
+                
+                minDistance = distance;
+                minDistanceLem = lem;
             }
 
-            return null;
+            return minDistanceLem;
         }
 
         /** change the action a Lemming is doing */
         private setLemmingState(lem: Lemming, stateType: LemmingStateType) {
 
             if (stateType == LemmingStateType.OUT_OFF_LEVEL) {
-                lem.action = null;
-                lem.removed = true;
+                lem.remove();
                 this.gameVictoryCondition.RemoveOne();
                 return;
             }
 
             let actionSystem = this.actions[stateType];
 
-            lem.setAction(actionSystem);
-            if (lem.action == null) {
+            if (actionSystem == null) {
+                lem.remove();
+
                 console.log(lem.id + " Action: Error not an action: " + LemmingStateType[stateType]);
                 return;
             }
             else {
-                console.log(lem.id + " Action: " + lem.action.getActionName());
+                console.log(lem.id + " Action: " + actionSystem.getActionName());
             }
 
+            lem.setAction(actionSystem);
 
         }
 
         /** change the action a Lemming is doing */
         public doLemmingAction(lem: Lemming, actionType: SkillTypes): boolean {
-
-            switch (actionType) {
-                case SkillTypes.MINER:
-                    this.setLemmingState(lem, LemmingStateType.MINEING);
-                    return true;
-
-                case SkillTypes.BASHER:
-                    this.setLemmingState(lem, LemmingStateType.BASHING);
-                    return true;
-
-                case SkillTypes.BUILDER:
-                    this.setLemmingState(lem, LemmingStateType.BUILDING);
-                    return true;
-
-                case SkillTypes.DIGGER:
-                    this.setLemmingState(lem, LemmingStateType.DIGGING);
-                    return true;
-
-                case SkillTypes.BLOCKER:
-                    this.setLemmingState(lem, LemmingStateType.BLOCKING);
-                    return true;
-
-                case SkillTypes.BOMBER:
-                    if (lem.countdown > 0) {
-                        return false;
-                    }
-
-                    lem.countdown = 80;
-                    return true;
-
-                case SkillTypes.FLOATER:
-                    if (lem.hasParachute) {
-                        return false;
-                    }
-
-                    lem.hasParachute = true;
-                    return true;
-
-                case SkillTypes.CLIMBER:
-                    if (lem.canClimb) {
-                        return false;
-                    }
-
-                    lem.canClimb = true;
-                    return true;
-
-                default:
-                    console.log(lem.id + " Unknown Action: " + actionType);
+            let actionSystem = this.skillActions[actionType];
+            if (!actionSystem) {
+                console.log(lem.id + " Unknown Action: " + actionType);
+                return;
             }
+
+            actionSystem.triggerLemAction(lem);
         }
     }
 

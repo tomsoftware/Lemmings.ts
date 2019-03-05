@@ -15,7 +15,9 @@ module Lemmings {
             return "jump";
         }
 
-
+        public triggerLemAction(lem: Lemming): boolean {
+            return false;
+        }
 
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];

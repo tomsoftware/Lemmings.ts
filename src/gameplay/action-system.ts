@@ -10,6 +10,9 @@ module Lemmings {
 
         /** render a Lemmings to the GameDisplay */
         draw(gameDisplay: DisplayImage, lem: Lemming): void;
+
+        /** trigger a action by the player */
+        triggerLemAction(lem : Lemming): boolean;
     }
 
 }

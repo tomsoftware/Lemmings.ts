@@ -1,19 +1,17 @@
 module Lemmings {
 
-    export class ActionShrugSystem implements IActionSystem {
+    export class ActionOhNoSystem implements IActionSystem {
 
         public soundSystem = new SoundSystem();
 
-        private sprite: Animation[] = [];
+        private sprite: Animation;
 
         constructor(sprites: LemmingsSprite) {
-
-            this.sprite.push(sprites.getAnimation(SpriteTypes.SHRUGGING, false));
-            this.sprite.push(sprites.getAnimation(SpriteTypes.SHRUGGING, true));
+            this.sprite = sprites.getAnimation(SpriteTypes.OHNO, false);
         }
 
         public getActionName(): string {
-            return "shruging";
+            return "oh-no";
         }
 
         public triggerLemAction(lem: Lemming): boolean {
@@ -22,27 +20,32 @@ module Lemmings {
 
         /** render Leming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
-            let ani = this.sprite[(lem.lookRight ? 1 : 0)];
-
-            let frame = ani.getFrame(lem.frameIndex);
+            let frame = this.sprite.getFrame(lem.frameIndex);
 
             gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
-
 
 
         public process(level: Level, lem: Lemming): LemmingStateType {
 
             lem.frameIndex++;
 
-            if (lem.frameIndex >= 8) {
-                return LemmingStateType.WALKING;
+            if (lem.frameIndex == 16) {
+                // play sound: explosion
+                return LemmingStateType.EXPLODING;
+            }
+
+            // fall down!
+            for (let i = 0; i < 3; i++) {
+                if (!level.hasGroundAt(lem.x, lem.y + 1)) {
+                    lem.y++;
+                    break;
+                }
             }
 
             return LemmingStateType.NO_STATE_TYPE;
 
         }
-
 
     }
 

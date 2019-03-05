@@ -14,6 +14,12 @@ module Lemmings {
             return "blocking";
         }
 
+        public triggerLemAction(lem: Lemming): boolean {
+            lem.setAction(this);
+
+            return true;
+        }
+
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
 
             let frame = this.sprite.getFrame(lem.frameIndex);
