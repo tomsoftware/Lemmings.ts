@@ -11,9 +11,9 @@ module Lemmings {
             this.sprite.push(sprites.getAnimation(SpriteTypes.CLIMBING, true));
         }
 
-        
+
         public getActionName(): string {
-            return "climb";
+            return "climbing";
         }
 
 

@@ -1,6 +1,6 @@
 module Lemmings {
 
-    export class ActionBashSystem implements IActionSystem {
+    export class ActionBashSystem {
 
         public soundSystem = new SoundSystem();
 

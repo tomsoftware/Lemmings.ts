@@ -12,7 +12,7 @@ module Lemmings {
         }
 
         public getActionName(): string {
-            return "fall";
+            return "falling";
         }
 
 

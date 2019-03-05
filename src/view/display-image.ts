@@ -168,6 +168,45 @@ module Lemmings {
             //this.setDebugPixel(posX, posY);
         }
 
+
+        /** copy a frame to the display */
+        public drawMask(mask: Mask, posX: number, posY: number) {
+
+            let srcW = mask.width;
+            let srcH = mask.height;
+            let srcMask = mask.getMask();
+
+            let destW = this.imgData.width;
+            let destH = this.imgData.height;
+            let destData = new Uint32Array(this.imgData.data.buffer);
+
+            let destX = posX - mask.offsetX;
+            let destY = posY - mask.offsetY;
+
+            for (let y = 0; y < srcH; y++) {
+
+                let outY = y + destY;
+                if ((outY < 0) || (outY >= destH)) continue;
+
+                for (let x = 0; x < srcW; x++) {
+                    let srcIndex = ((srcW * y) + x);
+
+                    /// ignore transparent pixels
+                    if (srcMask[srcIndex] == 0) continue;
+
+                    let outX = x + destX;
+                    if ((outX < 0) || (outX >= destW)) continue;
+
+                    let destIndex = ((destW * outY) + outX);
+
+                    destData[destIndex] = 0xFFFFFFFF;
+                }
+            }
+
+            //this.setDebugPixel(posX, posY);
+        }
+        
+
         /** copy a frame to the display */
         public drawFrame(frame: Frame, posX: number, posY: number) {
 

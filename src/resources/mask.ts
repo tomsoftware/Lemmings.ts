@@ -6,7 +6,7 @@ module Lemmings {
 
         public width:number;
         public height:number;
-        public data:Int8Array;
+        private data:Int8Array;
         public offsetX:number;
         public offsetY:number;
 
@@ -18,6 +18,10 @@ module Lemmings {
             if(fr != null) {
                 this.loadFromFile(fr, width, height);
             }
+        }
+
+        public getMask(): Int8Array {
+            return this.data;
         }
 
         /** return true if the given position (x,y) of the mask is set */

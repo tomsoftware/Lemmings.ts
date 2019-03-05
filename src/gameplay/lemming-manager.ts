@@ -10,6 +10,7 @@ module Lemmings {
         /** list of all Actions a Lemming can do */
         private actions: IActionSystem[] = [];
 
+        private countdownSystem:ActionCountdownSystem;
 
         private releaseTickIndex: number = 0;
 
@@ -18,6 +19,8 @@ module Lemmings {
             private triggerManager: TriggerManager,
             private gameVictoryCondition: GameVictoryCondition,
             private masks: MaskProvider) {
+
+            this.countdownSystem =  new ActionCountdownSystem(masks);;
 
             this.actions[LemmingStateType.WALKING] = new ActionWalkSystem(lemingsSprite);
             this.actions[LemmingStateType.FALLING] = new ActionFallSystem(lemingsSprite);
@@ -32,6 +35,7 @@ module Lemmings {
             this.actions[LemmingStateType.BASHING] = new ActionBashSystem(lemingsSprite, masks);
             this.actions[LemmingStateType.BUILDING] = new ActionBuildSystem(lemingsSprite);
             this.actions[LemmingStateType.SHRUG] = new ActionShrugSystem(lemingsSprite);
+            this.actions[LemmingStateType.EXPLODING] = this.countdownSystem;
 
             this.releaseTickIndex = 99;
         }
@@ -51,6 +55,15 @@ module Lemmings {
         }
 
 
+        private ProcessNewAction(lem:Lemming, newAction: LemmingStateType):boolean {
+
+            if (newAction == LemmingStateType.NO_STATE_TYPE) return false;
+
+            this.setLemmingState(lem, newAction);
+            
+            return true;
+        }
+
         /** process all Lemmings one time-step */
         public tick() {
 
@@ -62,24 +75,25 @@ module Lemmings {
 
                 let lem = lems[i];
 
-                if (lem.action == null) continue;
+                if ((lem.action == null) || (lem.removed)) continue;
 
-                let newAction = lem.action.process(this.level, lem);
-                if (newAction != LemmingStateType.NO_STATE_TYPE) {
-                    this.setLemmingState(lem, newAction);
-                }
+                let newAction = this.countdownSystem.process(this.level, lem);
+                this.ProcessNewAction(lem, newAction);
+
+                newAction = lem.action.process(this.level, lem);
+                this.ProcessNewAction(lem, newAction);
 
                 let triggerAction = this.runTrigger(lem);
-                if (triggerAction != LemmingStateType.NO_STATE_TYPE) {
-                    this.setLemmingState(lem, triggerAction);
-                }
+                this.ProcessNewAction(lem, triggerAction);
 
+                /*
                 let actionName = "[Unknown]";
                 if (lem.action != null) {
                     actionName = lem.action.getActionName()
                 }
 
-                // console.log(lem.id + " :: x:" + lem.x + " y:" + lem.y + " Action: " + actionName);
+                console.log(lem.id + " :: x:" + lem.x + " y:" + lem.y + " Action: " + actionName);
+                */
             }
         }
 
@@ -136,19 +150,17 @@ module Lemmings {
         public render(gameDisplay: DisplayImage) {
             let lems = this.lemmings;
 
-            //gameDisplay.drawRectangle(this.clickRect, 255,255,0);
-
             for (let i = 0; i < lems.length; i++) {
                 let lem = lems[i];
 
                 if (lem.action != null) {
+                    this.countdownSystem.draw(gameDisplay, lem);
+
                     lem.action.draw(gameDisplay, lem);
                     gameDisplay.setDebugPixel(lem.x, lem.y)
                 }
             }
         }
-
-        //private clickRect:Rectangle = new Rectangle(0,0,0,0);
 
         public getLemmingAt(x: number, y: number): Lemming {
             let lems = this.lemmings;
@@ -219,13 +231,27 @@ module Lemmings {
                     this.setLemmingState(lem, LemmingStateType.BLOCKING);
                     return true;
 
+                case SkillTypes.BOMBER:
+                    if (lem.countdown > 0) {
+                        return false;
+                    }
+
+                    lem.countdown = 80;
+                    return true;
+
                 case SkillTypes.FLOATER:
-                    if (lem.hasParachute) return false;
+                    if (lem.hasParachute) {
+                        return false;
+                    }
+
                     lem.hasParachute = true;
                     return true;
 
                 case SkillTypes.CLIMBER:
-                    if (lem.canClimb) return false;
+                    if (lem.canClimb) {
+                        return false;
+                    }
+
                     lem.canClimb = true;
                     return true;
 

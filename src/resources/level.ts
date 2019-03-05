@@ -95,13 +95,13 @@ module Lemmings {
         }
 
         /** clear with mask  */
-        public clearGroundWithMask(mask:Mask, x:number, y:number) {
+        public clearGroundWithMask(mask: Mask, x: number, y: number) {
             x += mask.offsetX;
             y += mask.offsetY;
 
-            for(let d_y=0; d_y<mask.height; d_y++) {
-                for(let d_x=0; d_x<mask.width; d_x++) {
-                    if(!mask.at(d_x, d_y)) {
+            for (let d_y = 0; d_y < mask.height; d_y++) {
+                for (let d_x = 0; d_x < mask.width; d_x++) {
+                    if (!mask.at(d_x, d_y)) {
                         this.clearGroundAt(x + d_x, y + d_y);
                     }
                 }
@@ -110,7 +110,7 @@ module Lemmings {
         }
 
         /** set a point in the map to solid ground  */
-        public setGroundAt(x: number, y: number, palletIndex:number) {
+        public setGroundAt(x: number, y: number, palletIndex: number) {
 
             this.groundMask.setGroundAt(x, y);
 

@@ -1,5 +1,3 @@
-/// <reference path="../resources/lemmings-sprite.ts"/>
-
 module Lemmings {
 
     export class ActionDiggSystem implements IActionSystem {

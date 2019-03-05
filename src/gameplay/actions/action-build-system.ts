@@ -32,13 +32,12 @@ module Lemmings {
 
             lem.frameIndex = (lem.frameIndex + 1) % 16;
 
-  
             if (lem.frameIndex == 9) {
-        
+
                 /// lay brick
                 var x = lem.x + (lem.lookRight ? 0 : -4);
-                for (var i=0 ; i < 6; i++) {
-                    level.setGroundAt(x + i, lem.y-1, 7);
+                for (var i = 0; i < 6; i++) {
+                    level.setGroundAt(x + i, lem.y - 1, 7);
                 }
 
                 return LemmingStateType.NO_STATE_TYPE;
@@ -49,9 +48,9 @@ module Lemmings {
 
                 lem.y--;
 
-                for (let i = 0; i < 2; i++){
+                for (let i = 0; i < 2; i++) {
                     lem.x += (lem.lookRight ? 1 : -1);
-                    if (level.hasGroundAt(lem.x, lem.y-1)) {
+                    if (level.hasGroundAt(lem.x, lem.y - 1)) {
                         lem.lookRight = !lem.lookRight;
                         return LemmingStateType.WALKING;
                     }
@@ -62,7 +61,7 @@ module Lemmings {
                     return LemmingStateType.SHRUG;
                 }
 
-                if (level.hasGroundAt(lem.x+(lem.lookRight ? 2 : -2) , lem.y - 9)) {
+                if (level.hasGroundAt(lem.x + (lem.lookRight ? 2 : -2), lem.y - 9)) {
                     lem.lookRight = !lem.lookRight;
                     return LemmingStateType.WALKING;
                 }

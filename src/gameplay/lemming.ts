@@ -11,6 +11,7 @@ module Lemmings {
         public canClimb: boolean = false;
         public hasParachute: boolean = false;
         public removed: boolean = false;
+        public countdown:number = 80;
         public action: IActionSystem;
         public state: number = 0;
         public id: string;
