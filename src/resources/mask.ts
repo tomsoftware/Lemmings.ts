@@ -12,7 +12,7 @@ module Lemmings {
 
         constructor(fr:BinaryReader, width:number, height:number, offsetX:number, offsetY:number) {
             
-            this.offsetX =+ offsetX;
+            this.offsetX = offsetX;
             this.offsetY = offsetY;
 
             if(fr != null) {

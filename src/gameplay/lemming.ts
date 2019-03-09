@@ -105,8 +105,8 @@ module Lemmings {
         /** remove this lemming */
         public remove(): void {
             this.action = null;
-            this.removed = true;
             this.countdownAction = null;
+            this.removed = true;
         }
 
     }

@@ -55,6 +55,7 @@ module Lemmings {
                 if (lem.state > Lemming.LEM_MAX_FALLING) {
                     return LemmingStateType.SPLATTING;
                 }
+                
                 return LemmingStateType.WALKING;
             }
 

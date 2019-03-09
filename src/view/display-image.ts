@@ -6,11 +6,11 @@ module Lemmings {
         private imgData: ImageData;
         private groundMask: SolidLayer;
 
-        public getWidth():number {
+        public getWidth(): number {
             if (this.imgData == null) return 0;
             return this.imgData.width;
         }
-        public getHeight():number {
+        public getHeight(): number {
             if (this.imgData == null) return 0;
             return this.imgData.height;
         }
@@ -57,7 +57,7 @@ module Lemmings {
             this.drawHorizontalLine(rect.x1, rect.y1, rect.x2, red, green, blue);
             this.drawHorizontalLine(rect.x1, rect.y2, rect.x2, red, green, blue);
             this.drawVerticalLine(rect.x1, rect.y1, rect.y2, red, green, blue);
-            this.drawVerticalLine(rect.x2, rect.y1, rect.y2, red, green, blue); 
+            this.drawVerticalLine(rect.x2, rect.y1, rect.y2, red, green, blue);
         }
 
         /** draw a rect to the display */
@@ -121,6 +121,43 @@ module Lemmings {
         }
 
 
+        /** copy a maks frame to the display */
+        public drawMask(mask: Mask, posX: number, posY: number) {
+
+            let srcW = mask.width;
+            let srcH = mask.height;
+            let srcMask = mask.getMask();
+
+            let destW = this.imgData.width;
+            let destH = this.imgData.height;
+            let destData = new Uint32Array(this.imgData.data.buffer);
+
+            let destX = posX + mask.offsetX;
+            let destY = posY + mask.offsetY;
+
+            for (let y = 0; y < srcH; y++) {
+
+                let outY = y + destY;
+                if ((outY < 0) || (outY >= destH)) continue;
+
+                for (let x = 0; x < srcW; x++) {
+                    let srcIndex = ((srcW * y) + x);
+
+                    /// ignore transparent pixels
+                    if (srcMask[srcIndex] == 0) continue;
+
+                    let outX = x + destX;
+                    if ((outX < 0) || (outX >= destW)) continue;
+
+                    let destIndex = ((destW * outY) + outX);
+
+                    destData[destIndex] = 0xFFFFFFFF;
+                }
+            }
+
+            //this.setDebugPixel(posX, posY);
+        }
+
         /** copy a frame to the display - transparent color is changed to (r,g,b) */
         public drawFrameCovered(frame: Frame, posX: number, posY: number, red: number, green: number, blue: number) {
 
@@ -135,8 +172,8 @@ module Lemmings {
             let destH = this.imgData.height;
             let destData = new Uint32Array(this.imgData.data.buffer);
 
-            let destX = posX - frame.offsetX;
-            let destY = posY - frame.offsetY;
+            let destX = posX + frame.offsetX;
+            let destY = posY + frame.offsetY;
 
             red = this.uint8ClampedColor(red);
             green = this.uint8ClampedColor(green);
@@ -170,44 +207,6 @@ module Lemmings {
 
 
         /** copy a frame to the display */
-        public drawMask(mask: Mask, posX: number, posY: number) {
-
-            let srcW = mask.width;
-            let srcH = mask.height;
-            let srcMask = mask.getMask();
-
-            let destW = this.imgData.width;
-            let destH = this.imgData.height;
-            let destData = new Uint32Array(this.imgData.data.buffer);
-
-            let destX = posX - mask.offsetX;
-            let destY = posY - mask.offsetY;
-
-            for (let y = 0; y < srcH; y++) {
-
-                let outY = y + destY;
-                if ((outY < 0) || (outY >= destH)) continue;
-
-                for (let x = 0; x < srcW; x++) {
-                    let srcIndex = ((srcW * y) + x);
-
-                    /// ignore transparent pixels
-                    if (srcMask[srcIndex] == 0) continue;
-
-                    let outX = x + destX;
-                    if ((outX < 0) || (outX >= destW)) continue;
-
-                    let destIndex = ((destW * outY) + outX);
-
-                    destData[destIndex] = 0xFFFFFFFF;
-                }
-            }
-
-            //this.setDebugPixel(posX, posY);
-        }
-        
-
-        /** copy a frame to the display */
         public drawFrame(frame: Frame, posX: number, posY: number) {
 
             let srcW = frame.width;
@@ -219,8 +218,8 @@ module Lemmings {
             let destH = this.imgData.height;
             let destData = new Uint32Array(this.imgData.data.buffer);
 
-            let destX = posX - frame.offsetX;
-            let destY = posY - frame.offsetY;
+            let destX = posX + frame.offsetX;
+            let destY = posY + frame.offsetY;
 
             for (let y = 0; y < srcH; y++) {
 
@@ -258,8 +257,8 @@ module Lemmings {
             let destH = this.imgData.height;
             let destData = new Uint32Array(this.imgData.data.buffer);
 
-            let destX = posX - frame.offsetX;
-            let destY = posY - frame.offsetY;
+            let destX = posX + frame.offsetX;
+            let destY = posY + frame.offsetY;
 
             var upsideDown = destConfig.isUpsideDown;
             var noOverwrite = destConfig.noOverwrite;

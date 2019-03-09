@@ -57,7 +57,7 @@ module Lemmings {
             //- load animation frames from file (fr)
             var animation = new Animation();
 
-            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, -offsetX, -offsetY);
+            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, offsetX, offsetY);
 
             //- add animation to cache -add unidirectional (dir == 0) annimations to both lists
             if (dir >= 0) {
