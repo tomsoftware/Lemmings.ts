@@ -20,6 +20,7 @@ module Lemmings {
             return "bashing";
         }
 
+        /** user called this action */
         public triggerLemAction(lem: Lemming): boolean {
             lem.setAction(this);
 

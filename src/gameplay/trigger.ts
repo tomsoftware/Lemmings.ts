@@ -10,7 +10,7 @@ module Lemmings {
         private y2: number = 0;
         private type: TriggerTypes = TriggerTypes.NO_TRIGGER;
         private disableTicksCount: number = 0;
-        private disabledUntisTick: number = 0;
+        private disabledUntilTick: number = 0;
         private soundIndex: number;
 
         constructor(type: TriggerTypes, x1: number, y1: number, x2: number, y2: number, disableTicksCount: number = 0, soundIndex: number = -1, owner: any = null) {
@@ -26,9 +26,9 @@ module Lemmings {
 
 
         public trigger(x: number, y: number, tick: number): TriggerTypes {
-            if (this.disabledUntisTick <= tick) {
+            if (this.disabledUntilTick <= tick) {
                 if ((x >= this.x1) && (y >= this.y1) && (x <= this.x2) && (y <= this.y2)) {
-                    this.disabledUntisTick = tick + this.disableTicksCount;
+                    this.disabledUntilTick = tick + this.disableTicksCount;
                     return this.type;
                 }
             }

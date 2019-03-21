@@ -5,7 +5,7 @@ module Lemmings {
     export class Level {
 
         /** the background image */
-        private groundImage: Uint8ClampedArray;//ImageData;
+        private groundImage: Uint8ClampedArray;
 
         /** the background mask 0=noGround / 1=ground*/
         public groundMask: SolidLayer = null;

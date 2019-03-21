@@ -16,7 +16,7 @@ module Lemmings {
         public countdownAction: IActionSystem;
         public state: number = 0;
         public id: string;
-
+        private disabled:boolean = false;
 
         constructor(x:number, y:number, id:number) {
             this.x = x;
@@ -102,11 +102,26 @@ module Lemmings {
         }
 
 
+        /** disable this lemming so it can not longer be triggert or
+         *   having selected by the user
+         */
+        public disable(): void {
+            this.disabled = true;
+        }
+
         /** remove this lemming */
         public remove(): void {
             this.action = null;
             this.countdownAction = null;
             this.removed = true;
+        }
+
+        public isDisabled(): boolean {
+            return this.disabled;
+        }
+
+        public isRemoved(): boolean {
+            return (this.action == null);
         }
 
     }

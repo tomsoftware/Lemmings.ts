@@ -27,12 +27,13 @@ module Lemmings {
 
 
         public process(level: Level, lem: Lemming): LemmingStateType {
-
-            lem.removed = true;
+            lem.disable();
+            
             lem.frameIndex++;
 
             if (lem.frameIndex >= 8) {
                 this.gameVictoryCondition.AddSurvivor();
+ 
                 return LemmingStateType.OUT_OFF_LEVEL;
             }
 

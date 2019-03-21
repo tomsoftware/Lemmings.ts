@@ -120,7 +120,9 @@ module Lemmings {
 
 
         private runTrigger(lem: Lemming): LemmingStateType {
-            if (lem.removed) return LemmingStateType.NO_STATE_TYPE;
+            if (lem.isRemoved() || (lem.isDisabled())) {
+                return LemmingStateType.NO_STATE_TYPE;
+            }
 
             let triggerType = this.triggerManager.trigger(lem.x, lem.y);
 
@@ -209,10 +211,10 @@ module Lemmings {
             let actionSystem = this.skillActions[actionType];
             if (!actionSystem) {
                 console.log(lem.id + " Unknown Action: " + actionType);
-                return;
+                return false;
             }
 
-            actionSystem.triggerLemAction(lem);
+            return actionSystem.triggerLemAction(lem);
         }
     }
 

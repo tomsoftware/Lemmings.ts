@@ -1,4 +1,3 @@
-
 module Lemmings {
 
     /** manage the in-game Masks a leming can use to change the map */
@@ -20,8 +19,5 @@ module Lemmings {
             this.maskList[MaskTypes.NUMBERS]   = new MaskList(fr,  8,  8, 10, -1, -19);
 
         }
-
-
     }
-
 }
