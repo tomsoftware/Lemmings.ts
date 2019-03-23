@@ -5,7 +5,7 @@ var Lemmings;
     class GameFactory {
         constructor(rootPath) {
             this.rootPath = rootPath;
-            this.error = new Lemmings.ErrorHandler("GameFactory");
+            this.error = new Lemmings.LogHandler("GameFactory");
             this.fileProvider = new Lemmings.FileProvider(rootPath);
             let configFileReader = this.fileProvider.loadString("config.json");
             this.configReader = new Lemmings.ConfigReader(configFileReader);
@@ -157,6 +157,18 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    var GameStateTypes;
+    (function (GameStateTypes) {
+        GameStateTypes[GameStateTypes["UNKNOWN"] = 0] = "UNKNOWN";
+        GameStateTypes[GameStateTypes["RUNNING"] = 1] = "RUNNING";
+        GameStateTypes[GameStateTypes["FAILED_OUT_OF_TIME"] = 2] = "FAILED_OUT_OF_TIME";
+        GameStateTypes[GameStateTypes["FAILED_LESS_LEMMINGS"] = 3] = "FAILED_LESS_LEMMINGS";
+        GameStateTypes[GameStateTypes["SUCCEEDED"] = 4] = "SUCCEEDED";
+    })(GameStateTypes = Lemmings.GameStateTypes || (Lemmings.GameStateTypes = {}));
+    ;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     var GameTypes;
     (function (GameTypes) {
         GameTypes[GameTypes["UNKNOWN"] = 0] = "UNKNOWN";
@@ -198,12 +210,14 @@ var Lemmings;
     /** provides an game object to controle the game */
     class Game {
         constructor(gameResources) {
-            this.error = new Lemmings.ErrorHandler("Game");
+            this.error = new Lemmings.LogHandler("Game");
             this.gameResources = null;
             this.guiDispaly = null;
             this.dispaly = null;
             this.gameDispaly = null;
             this.gameTimer = null;
+            this.onGameEnd = new Lemmings.EventHandler();
+            this.finalGameState = Lemmings.GameStateTypes.UNKNOWN;
             this.gameResources = gameResources;
         }
         setGameDispaly(dispaly) {
@@ -269,8 +283,10 @@ var Lemmings;
         }
         /** end the game */
         stop() {
-            this.gameTimer.suspend();
+            this.gameTimer.stop();
             this.gameTimer = null;
+            this.onGameEnd.dispose();
+            this.onGameEnd = null;
         }
         /** return the game Timer for this game */
         getGameTimer() {
@@ -280,7 +296,46 @@ var Lemmings;
         onGameTimerTick() {
             /// run game logic
             this.runGameLogic();
+            this.checkForGameOver();
             this.render();
+        }
+        /** return the current state of the game */
+        getGameState() {
+            /// if the game has finised return it's saved state
+            if (this.finalGameState != Lemmings.GameStateTypes.UNKNOWN) {
+                return this.finalGameState;
+            }
+            let hasWon = this.gameVictoryCondition.GetSurvivorsCount() >= this.gameVictoryCondition.GetNeedCount();
+            /// are there any lemmings alive?
+            if ((this.gameVictoryCondition.GetLeftCount() <= 0) && (this.gameVictoryCondition.GetOutCount() <= 0)) {
+                if (hasWon) {
+                    return Lemmings.GameStateTypes.SUCCEEDED;
+                }
+                else {
+                    return Lemmings.GameStateTypes.FAILED_LESS_LEMMINGS;
+                }
+            }
+            /// is the game out of time?
+            if (this.gameTimer.getGameLeftTime() <= 0) {
+                if (hasWon) {
+                    return Lemmings.GameStateTypes.SUCCEEDED;
+                }
+                else {
+                    return Lemmings.GameStateTypes.FAILED_OUT_OF_TIME;
+                }
+            }
+            return Lemmings.GameStateTypes.RUNNING;
+        }
+        /** check if the game  */
+        checkForGameOver() {
+            if (this.finalGameState != Lemmings.GameStateTypes.UNKNOWN) {
+                return;
+            }
+            let state = this.getGameState();
+            if ((state != Lemmings.GameStateTypes.RUNNING) && (state != Lemmings.GameStateTypes.UNKNOWN)) {
+                this.finalGameState = state;
+                this.onGameEnd.trigger(state);
+            }
         }
         /** run the game logic one step in time */
         runGameLogic() {
@@ -300,20 +355,6 @@ var Lemmings;
             }
             this.guiDispaly.redraw();
         }
-        /** return the id of the lemming at a scene position */
-        /*
-        public getLemmingAt(x: number, y:number):Lemming {
-            if (this.lemmingManager == null) return null;
-            return this.lemmingManager.getLemmingAt(x, y);
-        }
-        */
-        /*
-        public setLemmingAction(lem: Lemming, action:ActionType){
-            if (this.lemmingManager == null) return null;
-
-            this.lemmingManager.setLemmingAction(lem, ActionType.DIGG);
-        }
-        */
         getScreenPositionX() {
             return this.level.screenPositionX;
         }
@@ -401,12 +442,21 @@ var Lemmings;
     class GameTimer {
         constructor(level) {
             this.TIME_PER_FRAME_MS = 60;
-            this.speedFactor = 1;
+            this._speedFactor = 1;
             this.gameTimerHandler = 0;
             /** the current game time in number of steps the game has made  */
             this.tickIndex = 0;
+            /** event raising on every tick (one step in time) the game made */
             this.onGameTick = new Lemmings.EventHandler();
-            this.ticksTimeLimit = this.ticksSecondsTo(level.timeLimit * 60);
+            this.ticksTimeLimit = this.secondsToTicks(level.timeLimit * 60);
+        }
+        /** define a factor to speed up >1 or slow down <1 the game */
+        get speedFactor() {
+            return this._speedFactor;
+        }
+        /** set a factor to speed up >1 or slow down <1 the game */
+        set speedFactor(newSpeedFactor) {
+            this._speedFactor = newSpeedFactor;
         }
         /** Pause the game */
         suspend() {
@@ -420,14 +470,24 @@ var Lemmings;
             this.suspend();
             this.onGameTick.dispose();
         }
+        /** toggle between suspend and continue */
+        toggle() {
+            if (this.gameTimerHandler == 0) {
+                this.continue();
+            }
+            else {
+                this.suspend();
+            }
+        }
         /** Run the game timer */
         continue() {
             if (this.gameTimerHandler != 0)
                 return;
             this.gameTimerHandler = setInterval(() => {
                 this.tick();
-            }, (this.TIME_PER_FRAME_MS * this.speedFactor));
+            }, (this.TIME_PER_FRAME_MS / this._speedFactor));
         }
+        /** run the game one step in time */
         tick() {
             this.tickIndex++;
             if (this.onGameTick != null)
@@ -441,20 +501,25 @@ var Lemmings;
         getGameTicks() {
             return this.tickIndex;
         }
-        /** return the past game time in seconds */
-        getGameLeftTimeString() {
+        /** return the left game time in seconds */
+        getGameLeftTime() {
             let leftTicks = this.ticksTimeLimit - this.tickIndex;
             if (leftTicks < 0)
                 leftTicks = 0;
-            let leftSeconds = Math.floor(this.ticksToSeconds(leftTicks));
+            return Math.floor(this.ticksToSeconds(leftTicks));
+        }
+        /** return the left game time in seconds */
+        getGameLeftTimeString() {
+            let leftSeconds = this.getGameLeftTime();
             let secondsStr = "0" + Math.floor(leftSeconds % 60);
             return Math.floor(leftSeconds / 60) + "-" + secondsStr.substr(secondsStr.length - 2, 2);
         }
-        /** convert a game-ticks-time to in game-seconds. Returns Float*/
+        /** convert a game-ticks-time to in game-seconds. Returns Float */
         ticksToSeconds(ticks) {
             return ticks * (this.TIME_PER_FRAME_MS / 1000);
         }
-        ticksSecondsTo(seconds) {
+        /** calc the number ticks form game-time in seconds  */
+        secondsToTicks(seconds) {
             return seconds * (1000 / this.TIME_PER_FRAME_MS);
         }
         /** return the maximum time in seconds to win the game  */
@@ -488,25 +553,32 @@ var Lemmings;
         GetCurrentReleaseRate() {
             return this.releaseRate;
         }
-        GetSurvivorsCount() {
-            return this.survivorCount;
-        }
+        /** one lemming reached the exit */
         AddSurvivor() {
             this.survivorCount++;
         }
+        /** number of rescued lemmings */
+        GetSurvivorsCount() {
+            return this.survivorCount;
+        }
+        /** number of rescued lemmings in percentage */
         GetSurvivorPercentage() {
             return Math.floor(this.survivorCount / this.releaseCount * 100);
         }
+        /** number of alive lemmings out in the level */
         GetOutCount() {
             return this.outCount;
         }
+        /** the number of lemmings not yet released */
         GetLeftCount() {
             return this.leftCount;
         }
+        /** release one new lemming */
         ReleaseOne() {
             this.leftCount--;
             this.outCount++;
         }
+        /** if a lemming die */
         RemoveOne() {
             this.outCount--;
         }
@@ -568,6 +640,7 @@ var Lemmings;
             this.actions[Lemmings.LemmingStateType.SHRUG] = new Lemmings.ActionShrugSystem(lemingsSprite);
             this.actions[Lemmings.LemmingStateType.EXPLODING] = new Lemmings.ActionExplodingSystem(lemingsSprite, masks, triggerManager);
             this.actions[Lemmings.LemmingStateType.OHNO] = new Lemmings.ActionOhNoSystem(lemingsSprite);
+            this.actions[Lemmings.LemmingStateType.SPLATTING] = new Lemmings.ActionExitingSplatter(lemingsSprite);
             this.skillActions[Lemmings.SkillTypes.DIGGER] = this.actions[Lemmings.LemmingStateType.DIGGING];
             this.skillActions[Lemmings.SkillTypes.FLOATER] = this.actions[Lemmings.LemmingStateType.FLOATING];
             this.skillActions[Lemmings.SkillTypes.BLOCKER] = this.actions[Lemmings.LemmingStateType.BLOCKING];
@@ -625,8 +698,9 @@ var Lemmings;
             }
         }
         runTrigger(lem) {
-            if (lem.removed)
+            if (lem.isRemoved() || (lem.isDisabled())) {
                 return Lemmings.LemmingStateType.NO_STATE_TYPE;
+            }
             let triggerType = this.triggerManager.trigger(lem.x, lem.y);
             switch (triggerType) {
                 case Lemmings.TriggerTypes.NO_TRIGGER:
@@ -697,9 +771,9 @@ var Lemmings;
             let actionSystem = this.skillActions[actionType];
             if (!actionSystem) {
                 console.log(lem.id + " Unknown Action: " + actionType);
-                return;
+                return false;
             }
-            actionSystem.triggerLemAction(lem);
+            return actionSystem.triggerLemAction(lem);
         }
     }
     Lemmings.LemmingManager = LemmingManager;
@@ -717,6 +791,7 @@ var Lemmings;
             this.removed = false;
             this.countdown = 0;
             this.state = 0;
+            this.disabled = false;
             this.x = x;
             this.y = y;
             this.id = "Lem" + id;
@@ -766,6 +841,9 @@ var Lemmings;
         }
         /** process this lemming one tick in time */
         process(level) {
+            if ((this.x < 0) || (this.x >= level.width) || (this.y < 0) || (this.y >= level.height + 6)) {
+                return Lemmings.LemmingStateType.OUT_OFF_LEVEL;
+            }
             if (!this.action) {
                 return Lemmings.LemmingStateType.OUT_OFF_LEVEL;
             }
@@ -779,11 +857,22 @@ var Lemmings;
                 return this.action.process(level, this);
             }
         }
+        /** disable this lemming so it can not longer be triggert
+         *   or beeing selected by the user */
+        disable() {
+            this.disabled = true;
+        }
         /** remove this lemming */
         remove() {
             this.action = null;
-            this.removed = true;
             this.countdownAction = null;
+            this.removed = true;
+        }
+        isDisabled() {
+            return this.disabled;
+        }
+        isRemoved() {
+            return (this.action == null);
         }
     }
     Lemming.LEM_MIN_Y = -5;
@@ -899,7 +988,7 @@ var Lemmings;
             this.registerAnimation(Lemmings.SpriteTypes.UMBRELLA, 1, fr, 3, 16, 16, -8, -16, 8); //- pre-umbrella (r)
             this.registerAnimation(Lemmings.SpriteTypes.UMBRELLA, -1, fr, 3, 16, 16, -8, -16, 8); //- umbrella (r)
             this.registerAnimation(Lemmings.SpriteTypes.SPLATTING, 0, fr, 2, 16, 10, -8, -10, 16); //- splatting
-            this.registerAnimation(Lemmings.SpriteTypes.EXITING, 0, fr, 2, 16, 13, -8, -10, 8); //- exiting
+            this.registerAnimation(Lemmings.SpriteTypes.EXITING, 0, fr, 2, 16, 13, -8, -13, 8); //- exiting
             this.registerAnimation(Lemmings.SpriteTypes.FRYING, 1, fr, 4, 16, 14, -8, -10, 14); //- fried
             this.registerAnimation(Lemmings.SpriteTypes.BLOCKING, 0, fr, 2, 16, 10, -8, -10, 16); //- blocking
             this.registerAnimation(Lemmings.SpriteTypes.SHRUGGING, 1, fr, 2, 16, 10, -8, -10, 8); //- shrugging (r)
@@ -917,7 +1006,7 @@ var Lemmings;
         registerAnimation(state, dir, fr, bitsPerPixle, width, height, offsetX, offsetY, frames) {
             //- load animation frames from file (fr)
             var animation = new Lemmings.Animation();
-            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, -offsetX, -offsetY);
+            animation.loadFromFile(fr, bitsPerPixle, width, height, frames, this.colorPalette, offsetX, offsetY);
             //- add animation to cache -add unidirectional (dir == 0) annimations to both lists
             if (dir >= 0) {
                 this.lemmingAnimation[this.typeToIndex(state, true)] = animation;
@@ -958,7 +1047,9 @@ var Lemmings;
             let triggerIndex = (this.triggers.length - 1);
             while (triggerIndex >= 0) {
                 triggerIndex = this.triggers.findIndex((t) => t.owner == owner);
-                this.triggers.splice(triggerIndex, 1);
+                if (triggerIndex >= 0) {
+                    this.triggers.splice(triggerIndex, 1);
+                }
             }
         }
         /** add a new trigger to the manager */
@@ -1002,7 +1093,7 @@ var Lemmings;
             this.y2 = 0;
             this.type = Lemmings.TriggerTypes.NO_TRIGGER;
             this.disableTicksCount = 0;
-            this.disabledUntisTick = 0;
+            this.disabledUntilTick = 0;
             this.owner = owner;
             this.type = type;
             this.x1 = Math.min(x1, x2);
@@ -1013,9 +1104,9 @@ var Lemmings;
             this.soundIndex = soundIndex;
         }
         trigger(x, y, tick) {
-            if (this.disabledUntisTick <= tick) {
+            if (this.disabledUntilTick <= tick) {
                 if ((x >= this.x1) && (y >= this.y1) && (x <= this.x2) && (y <= this.y2)) {
-                    this.disabledUntisTick = tick + this.disableTicksCount;
+                    this.disabledUntilTick = tick + this.disableTicksCount;
                     return this.type;
                 }
             }
@@ -1042,6 +1133,7 @@ var Lemmings;
         getActionName() {
             return "bashing";
         }
+        /** user called this action */
         triggerLemAction(lem) {
             lem.setAction(this);
             return true;
@@ -1352,7 +1444,7 @@ var Lemmings;
             gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
         process(level, lem) {
-            lem.removed = true;
+            lem.disable();
             lem.frameIndex++;
             if (lem.frameIndex >= 8) {
                 this.gameVictoryCondition.AddSurvivor();
@@ -1386,6 +1478,7 @@ var Lemmings;
             gameDisplay.drawFrame(frame, lem.x, lem.y);
         }
         process(level, lem) {
+            lem.remove();
             lem.frameIndex++;
             if (lem.frameIndex == 1) {
                 this.triggerManager.removeByOwner(lem);
@@ -1684,6 +1777,34 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    class ActionExitingSplatter {
+        constructor(sprites) {
+            this.soundSystem = new Lemmings.SoundSystem();
+            this.sprite = sprites.getAnimation(Lemmings.SpriteTypes.SPLATTING, false);
+        }
+        getActionName() {
+            return "splatter";
+        }
+        triggerLemAction(lem) {
+            return false;
+        }
+        draw(gameDisplay, lem) {
+            let frame = this.sprite.getFrame(lem.frameIndex);
+            gameDisplay.drawFrame(frame, lem.x, lem.y);
+        }
+        process(level, lem) {
+            lem.disable();
+            lem.frameIndex++;
+            if (lem.frameIndex >= 16) {
+                return Lemmings.LemmingStateType.OUT_OFF_LEVEL;
+            }
+            return Lemmings.LemmingStateType.NO_STATE_TYPE;
+        }
+    }
+    Lemmings.ActionExitingSplatter = ActionExitingSplatter;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     class ActionWalkSystem {
         constructor(sprites) {
             this.sprite = [];
@@ -1795,75 +1916,6 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    /** read the config.json file */
-    class ConfigReader {
-        constructor(configFile) {
-            this.error = new Lemmings.ErrorHandler("ConfigReader");
-            this.configs = new Promise((resolve, reject) => {
-                configFile.then((jsonString) => {
-                    let configJson = this.parseConfig(jsonString);
-                    resolve(configJson);
-                });
-            });
-        }
-        /** return the game config for a given GameType */
-        getConfig(gameType) {
-            return new Promise((resolve, reject) => {
-                this.configs.then((configs) => {
-                    let config = configs.find((type) => type.gametype == gameType);
-                    if (config == null) {
-                        this.error.log("config for GameTypes:" + Lemmings.GameTypes.toString(gameType) + " not found!");
-                        reject();
-                        return;
-                    }
-                    resolve(config);
-                });
-            });
-        }
-        /** pars the config file */
-        parseConfig(jsonData) {
-            let gameConfigs = [];
-            try {
-                var config = JSON.parse(jsonData);
-            }
-            catch (e) {
-                this.error.log("Unable to parse config", e);
-                return gameConfigs;
-            }
-            /// for all game types
-            for (let c = 0; c < config.length; c++) {
-                let newConfig = new Lemmings.GameConfig();
-                let configData = config[c];
-                newConfig.name = configData["name"];
-                newConfig.path = configData["path"];
-                newConfig.gametype = Lemmings.GameTypes.fromString(configData["gametype"]);
-                /// read level config
-                if (configData["level.useoddtable"] != null) {
-                    newConfig.level.useOddTable = (!!configData["level.useoddtable"]);
-                }
-                newConfig.level.order = configData["level.order"];
-                newConfig.level.filePrefix = configData["level.filePrefix"];
-                newConfig.level.groups = configData["level.groups"];
-                /// read audio config
-                newConfig.audioConfig.version = configData["audio.version"];
-                newConfig.audioConfig.adlibChannelConfigPosition = configData["audio.adlibChannelConfigPosition"];
-                newConfig.audioConfig.dataOffset = configData["audio.dataOffset"];
-                newConfig.audioConfig.frequenciesOffset = configData["audio.frequenciesOffset"];
-                newConfig.audioConfig.octavesOffset = configData["audio.octavesOffset"];
-                newConfig.audioConfig.frequenciesCountOffset = configData["audio.frequenciesCountOffset"];
-                newConfig.audioConfig.instructionsOffset = configData["audio.instructionsOffset"];
-                newConfig.audioConfig.soundIndexTablePosition = configData["audio.soundIndexTablePosition"];
-                newConfig.audioConfig.soundDataOffset = configData["audio.soundDataOffset"];
-                newConfig.audioConfig.numberOfTracks = configData["audio.numberOfTracks"];
-                gameConfigs.push(newConfig);
-            }
-            return gameConfigs;
-        }
-    }
-    Lemmings.ConfigReader = ConfigReader;
-})(Lemmings || (Lemmings = {}));
-var Lemmings;
-(function (Lemmings) {
     /** defines the way a image is drawn to the stage */
     class DrawProperties {
         constructor(isUpsideDown, noOverwrite, onlyOverwrite, isErase) {
@@ -1877,32 +1929,6 @@ var Lemmings;
         }
     }
     Lemmings.DrawProperties = DrawProperties;
-})(Lemmings || (Lemmings = {}));
-var Lemmings;
-(function (Lemmings) {
-    /** handel error logging */
-    class ErrorHandler {
-        constructor(moduleName) {
-            this._moduleName = moduleName;
-        }
-        /** log an error */
-        log(msg, exeption) {
-            console.log(this._moduleName + "\t" + msg);
-            if (exeption) {
-                console.log(this._moduleName + "\t" + exeption.message);
-            }
-        }
-        /** write a debug message. If [msg] is not a String it is displayed: as {prop:value} */
-        debug(msg) {
-            if (typeof msg === 'string') {
-                console.log(this._moduleName + "\t" + msg);
-            }
-            else {
-                console.dir(msg);
-            }
-        }
-    }
-    Lemmings.ErrorHandler = ErrorHandler;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -2102,7 +2128,7 @@ var Lemmings;
         constructor(fileProvider, config) {
             this.fileProvider = fileProvider;
             this.config = config;
-            this.error = new Lemmings.ErrorHandler("LevelLoader");
+            this.error = new Lemmings.LogHandler("LevelLoader");
             this.levelIndexResolve = new Lemmings.LevelIndexResolve(config);
         }
         /** return the map and it's config */
@@ -2332,8 +2358,8 @@ var Lemmings;
             this.maskList[Lemmings.MaskTypes.BASHING_L] = new Lemmings.MaskList(fr, 16, 10, 4, -8, -10);
             this.maskList[Lemmings.MaskTypes.MINEING_R] = new Lemmings.MaskList(fr, 16, 13, 2, -8, -12);
             this.maskList[Lemmings.MaskTypes.MINEING_L] = new Lemmings.MaskList(fr, 16, 13, 2, -8, -12);
-            this.maskList[Lemmings.MaskTypes.EXPLODING] = new Lemmings.MaskList(fr, 16, 22, 1, 0, 0);
-            this.maskList[Lemmings.MaskTypes.NUMBERS] = new Lemmings.MaskList(fr, 8, 8, 10, 0, 0);
+            this.maskList[Lemmings.MaskTypes.EXPLODING] = new Lemmings.MaskList(fr, 16, 22, 1, -8, -14);
+            this.maskList[Lemmings.MaskTypes.NUMBERS] = new Lemmings.MaskList(fr, 8, 8, 10, -1, -19);
         }
         GetMask(maskTypes) {
             return this.maskList[maskTypes];
@@ -2358,7 +2384,7 @@ var Lemmings;
     /** a mask */
     class Mask {
         constructor(fr, width, height, offsetX, offsetY) {
-            this.offsetX = +offsetX;
+            this.offsetX = offsetX;
             this.offsetY = offsetY;
             if (fr != null) {
                 this.loadFromFile(fr, width, height);
@@ -2525,7 +2551,7 @@ var Lemmings;
     /** Class to provide a read pointer and readfunctions to a binary Buffer */
     class BinaryReader {
         constructor(dataArray, offset = 0, length, filename = "[unknown]") {
-            this._error = new Lemmings.ErrorHandler("BinaryReader");
+            this._error = new Lemmings.LogHandler("BinaryReader");
             this.filename = filename;
             if (offset == null)
                 offset = 0;
@@ -2701,7 +2727,7 @@ var Lemmings;
     /** Bit Stream Writer class */
     class BitWriter {
         constructor(bitReader, outLength) {
-            this.error = new Lemmings.ErrorHandler("BitWriter");
+            this.error = new Lemmings.LogHandler("BitWriter");
             this.outData = new Uint8Array(outLength);
             this.outPos = outLength;
             this.bitReader = bitReader;
@@ -2749,14 +2775,13 @@ var Lemmings;
     }
     Lemmings.BitWriter = BitWriter;
 })(Lemmings || (Lemmings = {}));
-/// <reference path="../error-handler.ts"/>
 var Lemmings;
 (function (Lemmings) {
     /** Read the container file and return the unpacked parts of it  */
     class FileContainer {
         /** read the content of the container  */
         constructor(content) {
-            this.error = new Lemmings.ErrorHandler("FileContainer");
+            this.error = new Lemmings.LogHandler("FileContainer");
             this.read(content);
         }
         /** Unpack a part (chunks / segments) of the file and return it */
@@ -2811,7 +2836,6 @@ var Lemmings;
     Lemmings.FileContainer = FileContainer;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="binary-reader.ts"/>
-/// <reference path="../error-handler.ts"/>
 var Lemmings;
 (function (Lemmings) {
     /**
@@ -2820,7 +2844,7 @@ var Lemmings;
     class FileProvider {
         constructor(rootPath) {
             this.rootPath = rootPath;
-            this._errorHandler = new Lemmings.ErrorHandler("FileProvider");
+            this._errorHandler = new Lemmings.LogHandler("FileProvider");
         }
         /** load binary data from URL: rootPath + [path] + filename */
         loadBinary(path, filename = null) {
@@ -2878,7 +2902,6 @@ var Lemmings;
     }
     Lemmings.FileProvider = FileProvider;
 })(Lemmings || (Lemmings = {}));
-/// <reference path="../error-handler.ts"/>
 var Lemmings;
 (function (Lemmings) {
     /** represents a part/chunk of a file and is  */
@@ -2898,7 +2921,7 @@ var Lemmings;
             this.unknown1 = 0;
             /** position of this part/chunk in the container */
             this.index = 0;
-            this.error = new Lemmings.ErrorHandler("UnpackFilePart");
+            this.error = new Lemmings.LogHandler("UnpackFilePart");
             this.fileReader = fileReader;
             this.unpackingDone = false;
         }
@@ -3005,7 +3028,6 @@ var Lemmings;
     Lemmings.ColorPalette = ColorPalette;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="../error-handler.ts"/>
 /// <reference path="./color-palette.ts"/>
 var Lemmings;
 (function (Lemmings) {
@@ -3089,7 +3111,6 @@ var Lemmings;
     Lemmings.TerrainImageInfo = TerrainImageInfo;
 })(Lemmings || (Lemmings = {}));
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="../error-handler.ts"/>
 /// <reference path="./color-palette.ts"/>
 /// <reference path="./object-image-info.ts"/>
 /// <reference path="./terrain-image-info.ts"/>
@@ -3116,7 +3137,7 @@ var Lemmings;
             /** the color palette stored in this file */
             this.groundPalette = new Lemmings.ColorPalette();
             this.colorPalette = new Lemmings.ColorPalette();
-            this.error = new Lemmings.ErrorHandler("GroundReader");
+            this.error = new Lemmings.LogHandler("GroundReader");
             if (groundFile.length != 1056) {
                 this.error.log("groundFile " + groundFile.filename + " has wrong size: " + groundFile.length);
                 return;
@@ -3298,7 +3319,7 @@ var Lemmings;
             this.objects = [];
             this.terrains = [];
             this.steel = [];
-            this.error = new Lemmings.ErrorHandler("LevelReader");
+            this.error = new Lemmings.LogHandler("LevelReader");
             this.readLevelInfo(fr);
             this.readLevelObjects(fr);
             this.readLevelTerrain(fr);
@@ -3410,7 +3431,7 @@ var Lemmings;
     class OddTableReader {
         constructor(oddfile) {
             this.levelProperties = [];
-            this.error = new Lemmings.ErrorHandler("OddTableReader");
+            this.error = new Lemmings.LogHandler("OddTableReader");
             this.read(oddfile);
         }
         /** return the Level for a given levelNumber - LevelNumber is counting all levels from first to last of the game
@@ -3544,7 +3565,7 @@ var Lemmings;
     class VgaspecReader {
         constructor(vgaspecFile) {
             this.levelProperties = [];
-            this.error = new Lemmings.ErrorHandler("VgaspecReader");
+            this.error = new Lemmings.LogHandler("VgaspecReader");
             /** the color palette stored in this file */
             this.groundPalette = new Lemmings.ColorPalette();
             this.read(vgaspecFile);
@@ -3691,7 +3712,7 @@ var Lemmings;
             this.unused = 0;
             /** only play if this is true */
             this.playingState = SoundImagChannelState.NONE;
-            this.error = new Lemmings.ErrorHandler("AdliChannels");
+            this.error = new Lemmings.LogHandler("AdliChannels");
             this.fileConfig = audioConfig;
             this.reader = new Lemmings.BinaryReader(reader);
         }
@@ -4093,7 +4114,7 @@ var Lemmings;
         }
         /** write debug info to console */
         debug() {
-            let error = new Lemmings.ErrorHandler("SoundImagePlayer");
+            let error = new Lemmings.LogHandler("SoundImagePlayer");
             error.debug(this.fileConfig);
             error.debug("channelCount: " + this.channelCount);
             error.debug("songHeaderPosition: " + this.songHeaderPosition);
@@ -5568,7 +5589,7 @@ var Lemmings;
 (function (Lemmings) {
     class AudioPlayer {
         constructor(src) {
-            this.error = new Lemmings.ErrorHandler("AudioPlayer");
+            this.error = new Lemmings.LogHandler("AudioPlayer");
             this.queue = []; //Float32Array[] = [];
             this.PCM_FRAME_SIZE = 64 * 4;
             this.FRAMES_IN_OUTBUFFER = 32;
@@ -5684,6 +5705,75 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
+    /** read the config.json file */
+    class ConfigReader {
+        constructor(configFile) {
+            this.error = new Lemmings.LogHandler("ConfigReader");
+            this.configs = new Promise((resolve, reject) => {
+                configFile.then((jsonString) => {
+                    let configJson = this.parseConfig(jsonString);
+                    resolve(configJson);
+                });
+            });
+        }
+        /** return the game config for a given GameType */
+        getConfig(gameType) {
+            return new Promise((resolve, reject) => {
+                this.configs.then((configs) => {
+                    let config = configs.find((type) => type.gametype == gameType);
+                    if (config == null) {
+                        this.error.log("config for GameTypes:" + Lemmings.GameTypes.toString(gameType) + " not found!");
+                        reject();
+                        return;
+                    }
+                    resolve(config);
+                });
+            });
+        }
+        /** pars the config file */
+        parseConfig(jsonData) {
+            let gameConfigs = [];
+            try {
+                var config = JSON.parse(jsonData);
+            }
+            catch (e) {
+                this.error.log("Unable to parse config", e);
+                return gameConfigs;
+            }
+            /// for all game types
+            for (let c = 0; c < config.length; c++) {
+                let newConfig = new Lemmings.GameConfig();
+                let configData = config[c];
+                newConfig.name = configData["name"];
+                newConfig.path = configData["path"];
+                newConfig.gametype = Lemmings.GameTypes.fromString(configData["gametype"]);
+                /// read level config
+                if (configData["level.useoddtable"] != null) {
+                    newConfig.level.useOddTable = (!!configData["level.useoddtable"]);
+                }
+                newConfig.level.order = configData["level.order"];
+                newConfig.level.filePrefix = configData["level.filePrefix"];
+                newConfig.level.groups = configData["level.groups"];
+                /// read audio config
+                newConfig.audioConfig.version = configData["audio.version"];
+                newConfig.audioConfig.adlibChannelConfigPosition = configData["audio.adlibChannelConfigPosition"];
+                newConfig.audioConfig.dataOffset = configData["audio.dataOffset"];
+                newConfig.audioConfig.frequenciesOffset = configData["audio.frequenciesOffset"];
+                newConfig.audioConfig.octavesOffset = configData["audio.octavesOffset"];
+                newConfig.audioConfig.frequenciesCountOffset = configData["audio.frequenciesCountOffset"];
+                newConfig.audioConfig.instructionsOffset = configData["audio.instructionsOffset"];
+                newConfig.audioConfig.soundIndexTablePosition = configData["audio.soundIndexTablePosition"];
+                newConfig.audioConfig.soundDataOffset = configData["audio.soundDataOffset"];
+                newConfig.audioConfig.numberOfTracks = configData["audio.numberOfTracks"];
+                gameConfigs.push(newConfig);
+            }
+            return gameConfigs;
+        }
+    }
+    Lemmings.ConfigReader = ConfigReader;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     class EventHandler {
         constructor() {
             this.handlers = [];
@@ -5704,6 +5794,32 @@ var Lemmings;
         }
     }
     Lemmings.EventHandler = EventHandler;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    /** handel error logging */
+    class LogHandler {
+        constructor(moduleName) {
+            this._moduleName = moduleName;
+        }
+        /** log an error */
+        log(msg, exeption) {
+            console.log(this._moduleName + "\t" + msg);
+            if (exeption) {
+                console.log(this._moduleName + "\t" + exeption.message);
+            }
+        }
+        /** write a debug message. If [msg] is not a String it is displayed: as {prop:value} */
+        debug(msg) {
+            if (typeof msg === 'string') {
+                console.log(this._moduleName + "\t" + msg);
+            }
+            else {
+                console.dir(msg);
+            }
+        }
+    }
+    Lemmings.LogHandler = LogHandler;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -5759,6 +5875,8 @@ var Lemmings;
             this.elementSelectedGame = null;
             this.elementSelectLevelGroup = null;
             this.elementLevelName = null;
+            this.elementGameState = null;
+            this.gameSpeedFactor = 1;
             this._gameCanvas = null;
         }
         set gameCanvas(el) {
@@ -5780,19 +5898,39 @@ var Lemmings;
                 .then(game => {
                 game.setGameDispaly(this.stage.getGameDisplay());
                 game.setGuiDisplay(this.stage.getGuiDisplay());
+                game.getGameTimer().speedFactor = this.gameSpeedFactor;
                 game.start();
+                this.updateGameStateText(Lemmings.GameStateTypes.RUNNING);
+                game.onGameEnd.on((state) => {
+                    this.updateGameStateText(state);
+                    this.stage.startFadeOut();
+                });
                 this.game = game;
             });
         }
+        updateGameStateText(state) {
+            if (this.elementGameState) {
+                this.elementGameState.innerHTML = Lemmings.GameStateTypes[state];
+            }
+        }
         /** pause the game */
         suspend() {
+            if (this.game == null) {
+                return;
+            }
             this.game.getGameTimer().suspend();
         }
         /** continue the game after pause/suspend */
         continue() {
+            if (this.game == null) {
+                return;
+            }
             this.game.getGameTimer().continue();
         }
         nextFrame() {
+            if (this.game == null) {
+                return;
+            }
             this.game.getGameTimer().tick();
         }
         playMusic(moveInterval) {
@@ -5823,6 +5961,13 @@ var Lemmings;
                 this.soundPlayer.stop();
                 this.soundPlayer = null;
             }
+        }
+        selectSpeedFactor(newSpeed) {
+            if (this.game == null) {
+                return;
+            }
+            this.gameSpeedFactor = newSpeed;
+            this.game.getGameTimer().speedFactor = newSpeed;
         }
         playSound(moveInterval) {
             this.stopSound();
@@ -5885,7 +6030,9 @@ var Lemmings;
                 return;
             if (this.game != null) {
                 this.game.stop();
+                this.game = null;
             }
+            this.updateGameStateText(Lemmings.GameStateTypes.UNKNOWN);
             this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
                 .then((level) => {
                 if (level == null)
@@ -5896,6 +6043,7 @@ var Lemmings;
                 if (this.stage != null) {
                     let gameDisplay = this.stage.getGameDisplay();
                     gameDisplay.clear();
+                    this.stage.resetFade();
                     level.render(gameDisplay);
                     gameDisplay.redraw();
                 }
@@ -5999,6 +6147,34 @@ var Lemmings;
                 destData[destIndex + 3] = 255;
             }
         }
+        /** copy a maks frame to the display */
+        drawMask(mask, posX, posY) {
+            let srcW = mask.width;
+            let srcH = mask.height;
+            let srcMask = mask.getMask();
+            let destW = this.imgData.width;
+            let destH = this.imgData.height;
+            let destData = new Uint32Array(this.imgData.data.buffer);
+            let destX = posX + mask.offsetX;
+            let destY = posY + mask.offsetY;
+            for (let y = 0; y < srcH; y++) {
+                let outY = y + destY;
+                if ((outY < 0) || (outY >= destH))
+                    continue;
+                for (let x = 0; x < srcW; x++) {
+                    let srcIndex = ((srcW * y) + x);
+                    /// ignore transparent pixels
+                    if (srcMask[srcIndex] == 0)
+                        continue;
+                    let outX = x + destX;
+                    if ((outX < 0) || (outX >= destW))
+                        continue;
+                    let destIndex = ((destW * outY) + outX);
+                    destData[destIndex] = 0xFFFFFFFF;
+                }
+            }
+            //this.setDebugPixel(posX, posY);
+        }
         /** copy a frame to the display - transparent color is changed to (r,g,b) */
         drawFrameCovered(frame, posX, posY, red, green, blue) {
             let srcW = frame.width;
@@ -6009,8 +6185,8 @@ var Lemmings;
             let destW = this.imgData.width;
             let destH = this.imgData.height;
             let destData = new Uint32Array(this.imgData.data.buffer);
-            let destX = posX - frame.offsetX;
-            let destY = posY - frame.offsetY;
+            let destX = posX + frame.offsetX;
+            let destY = posY + frame.offsetY;
             red = this.uint8ClampedColor(red);
             green = this.uint8ClampedColor(green);
             blue = this.uint8ClampedColor(blue);
@@ -6036,34 +6212,6 @@ var Lemmings;
             //this.setDebugPixel(posX, posY);
         }
         /** copy a frame to the display */
-        drawMask(mask, posX, posY) {
-            let srcW = mask.width;
-            let srcH = mask.height;
-            let srcMask = mask.getMask();
-            let destW = this.imgData.width;
-            let destH = this.imgData.height;
-            let destData = new Uint32Array(this.imgData.data.buffer);
-            let destX = posX - mask.offsetX;
-            let destY = posY - mask.offsetY;
-            for (let y = 0; y < srcH; y++) {
-                let outY = y + destY;
-                if ((outY < 0) || (outY >= destH))
-                    continue;
-                for (let x = 0; x < srcW; x++) {
-                    let srcIndex = ((srcW * y) + x);
-                    /// ignore transparent pixels
-                    if (srcMask[srcIndex] == 0)
-                        continue;
-                    let outX = x + destX;
-                    if ((outX < 0) || (outX >= destW))
-                        continue;
-                    let destIndex = ((destW * outY) + outX);
-                    destData[destIndex] = 0xFFFFFFFF;
-                }
-            }
-            //this.setDebugPixel(posX, posY);
-        }
-        /** copy a frame to the display */
         drawFrame(frame, posX, posY) {
             let srcW = frame.width;
             let srcH = frame.height;
@@ -6072,8 +6220,8 @@ var Lemmings;
             let destW = this.imgData.width;
             let destH = this.imgData.height;
             let destData = new Uint32Array(this.imgData.data.buffer);
-            let destX = posX - frame.offsetX;
-            let destY = posY - frame.offsetY;
+            let destX = posX + frame.offsetX;
+            let destY = posY + frame.offsetY;
             for (let y = 0; y < srcH; y++) {
                 let outY = y + destY;
                 if ((outY < 0) || (outY >= destH))
@@ -6101,8 +6249,8 @@ var Lemmings;
             let destW = this.imgData.width;
             let destH = this.imgData.height;
             let destData = new Uint32Array(this.imgData.data.buffer);
-            let destX = posX - frame.offsetX;
-            let destY = posY - frame.offsetY;
+            let destX = posX + frame.offsetX;
+            let destY = posY + frame.offsetY;
             var upsideDown = destConfig.isUpsideDown;
             var noOverwrite = destConfig.noOverwrite;
             var onlyOverwrite = destConfig.onlyOverwrite;
@@ -6219,9 +6367,13 @@ var Lemmings;
         /** init the display */
         setGuiDisplay(dispaly) {
             this.dispaly = dispaly;
+            /// handle user input in gui
             this.dispaly.onMouseClick.on((e) => {
                 if (e.y > 15) {
-                    let panelIndex = e.x / 16;
+                    let panelIndex = Math.trunc(e.x / 16);
+                    if (panelIndex == 10) {
+                        this.gameTimer.toggle();
+                    }
                     let newSkill = this.getSkillByPanelIndex(panelIndex);
                     if (newSkill == Lemmings.SkillTypes.UNKNOWN)
                         return;
@@ -6309,11 +6461,6 @@ var Lemmings;
         }
         /** draw a white rectangle border to the panel */
         drawSelection(dispaly, panelIndex) {
-            /// clear selection
-            //for (let i = 2; i < 10; i++) {
-            //    if (i == panelIndex) continue;
-            //    dispaly.drawRect(16 * i, 16, 16, 23, 0, 0, 0);
-            //}
             /// draw selection
             dispaly.drawRect(16 * panelIndex, 16, 16, 23, 255, 255, 255);
         }
@@ -6376,10 +6523,15 @@ var Lemmings;
         }
     }
     Lemmings.StageImageProperties = StageImageProperties;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
     /** handel the display / output of game, gui, ... */
     class Stage {
         constructor(canvasForOutput) {
             this.controller = null;
+            this.fadeTimer = 0;
+            this.fadeAlpha = 0;
             this.controller = new Lemmings.UserInputManager(canvasForOutput);
             this.controller.onMouseClick.on((e) => {
                 let stageImage = this.getStageImageAt(e.x, e.y);
@@ -6418,8 +6570,8 @@ var Lemmings;
                 this.updateViewPoint(stageImage, 0, 0, e.deltaZoom);
             });
             this.stageCav = canvasForOutput;
-            this.gameImgProps = new StageImageProperties();
-            this.guiImgProps = new StageImageProperties();
+            this.gameImgProps = new Lemmings.StageImageProperties();
+            this.guiImgProps = new Lemmings.StageImageProperties();
             this.guiImgProps.viewPoint = new Lemmings.ViewPoint(0, 0, 2);
             this.updateStageSize();
             this.clear();
@@ -6508,6 +6660,22 @@ var Lemmings;
                 ctx.fillRect(stageImage.x, stageImage.y, stageImage.width, stageImage.height);
             }
         }
+        resetFade() {
+            this.fadeAlpha = 0;
+            if (this.fadeTimer != 0) {
+                clearInterval(this.fadeTimer);
+                this.fadeTimer = 0;
+            }
+        }
+        startFadeOut() {
+            this.resetFade();
+            this.fadeTimer = setInterval(() => {
+                this.fadeAlpha = Math.min(this.fadeAlpha + 0.02, 1);
+                if (this.fadeAlpha <= 0) {
+                    clearInterval(this.fadeTimer);
+                }
+            }, 40);
+        }
         /** draw everything to the stage/display */
         draw(display, img) {
             if (display.ctx == null)
@@ -6522,6 +6690,7 @@ var Lemmings;
             ctx.imageSmoothingEnabled = false;
             let outH = display.height;
             let outW = display.width;
+            ctx.globalAlpha = 1;
             //- Display Layers
             var dW = img.width - display.viewPoint.x; //- display width
             if ((dW * display.viewPoint.scale) > outW) {
@@ -6533,6 +6702,12 @@ var Lemmings;
             }
             //- drawImage(image,sx,sy,sw,sh,dx,dy,dw,dh)
             ctx.drawImage(display.cav, display.viewPoint.x, display.viewPoint.y, dW, dH, display.x, display.y, Math.trunc(dW * display.viewPoint.scale), Math.trunc(dH * display.viewPoint.scale));
+            //- apply fading
+            if (this.fadeAlpha != 0) {
+                ctx.globalAlpha = this.fadeAlpha;
+                ctx.fillStyle = "black";
+                ctx.fillRect(display.x, display.y, Math.trunc(dW * display.viewPoint.scale), Math.trunc(dH * display.viewPoint.scale));
+            }
         }
     }
     Lemmings.Stage = Stage;

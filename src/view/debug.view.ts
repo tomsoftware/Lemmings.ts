@@ -51,7 +51,7 @@ module Lemmings {
                     game.setGameDispaly(this.stage.getGameDisplay());
                     game.setGuiDisplay(this.stage.getGuiDisplay());
 
-                    game.getGameTimer().speedFactor = this.gameSpeedFactor ;
+                    game.getGameTimer().speedFactor = this.gameSpeedFactor;
 
                     game.start();
 

@@ -11,17 +11,20 @@ module Lemmings {
         private ticksTimeLimit: number;
 
         constructor(level: Level) {
-            this.ticksTimeLimit = this.ticksSecondsTo(level.timeLimit * 60);
+            this.ticksTimeLimit = this.secondsToTicks(level.timeLimit * 60);
         }
 
+        /** define a factor to speed up >1 or slow down <1 the game */
         public get speedFactor():number {
             return this._speedFactor;
         }
+
+        /** set a factor to speed up >1 or slow down <1 the game */
         public set speedFactor(newSpeedFactor:number) {
             this._speedFactor = newSpeedFactor;
         }
 
-
+        /** event raising on every tick (one step in time) the game made */
         public onGameTick = new EventHandler<void>();
 
 
@@ -39,6 +42,14 @@ module Lemmings {
             this.onGameTick.dispose();
         }
 
+        /** toggle between suspend and continue */
+        public toggle() {
+            if (this.gameTimerHandler == 0) {
+                this.continue();
+            } else {
+                this.suspend();
+            }
+        }
 
         /** Run the game timer */
         public continue() {
@@ -49,6 +60,7 @@ module Lemmings {
             }, (this.TIME_PER_FRAME_MS / this._speedFactor));
         }
 
+        /** run the game one step in time */
         public tick() {
             this.tickIndex++;
 
@@ -81,12 +93,13 @@ module Lemmings {
             return Math.floor(leftSeconds / 60) + "-" + secondsStr.substr(secondsStr.length - 2, 2);
         }
 
-        /** convert a game-ticks-time to in game-seconds. Returns Float*/
+        /** convert a game-ticks-time to in game-seconds. Returns Float */
         public ticksToSeconds(ticks: number): number {
             return ticks * (this.TIME_PER_FRAME_MS / 1000);
         }
 
-        public ticksSecondsTo(seconds: number): number {
+        /** calc the number ticks form game-time in seconds  */
+        public secondsToTicks(seconds: number): number {
             return seconds * (1000 / this.TIME_PER_FRAME_MS);
         }
 

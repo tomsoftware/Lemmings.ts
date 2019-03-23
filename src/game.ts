@@ -146,13 +146,16 @@ module Lemmings {
         /** return the current state of the game */
         public getGameState():GameStateTypes {
 
-            /// if the game hase finised return it's saved state
+            /// if the game has finised return it's saved state
             if (this.finalGameState != GameStateTypes.UNKNOWN) {
                 return this.finalGameState;
             }
 
+            let hasWon = this.gameVictoryCondition.GetSurvivorsCount() >= this.gameVictoryCondition.GetNeedCount();
+
+            /// are there any lemmings alive?
             if ((this.gameVictoryCondition.GetLeftCount() <= 0) && (this.gameVictoryCondition.GetOutCount() <= 0)) {
-                if (this.gameVictoryCondition.GetSurvivorsCount() >= this.gameVictoryCondition.GetNeedCount()) {
+                if (hasWon) {
                     return GameStateTypes.SUCCEEDED;
                 }
                 else {
@@ -160,8 +163,15 @@ module Lemmings {
                 }
             }
 
+            /// is the game out of time?
             if (this.gameTimer.getGameLeftTime() <= 0) {
-                return GameStateTypes.FAILED_OUT_OF_TIME;
+                if (hasWon) {
+                    return GameStateTypes.SUCCEEDED;
+                }
+                else {
+                    return GameStateTypes.FAILED_OUT_OF_TIME;
+                }
+          
             }
 
             return GameStateTypes.RUNNING;

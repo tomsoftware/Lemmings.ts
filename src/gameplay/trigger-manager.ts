@@ -20,7 +20,9 @@ module Lemmings {
 
             while (triggerIndex >= 0) {
                 triggerIndex = this.triggers.findIndex((t) => t.owner == owner);
-                this.triggers.splice(triggerIndex, 1);
+                if (triggerIndex >= 0) {
+                    this.triggers.splice(triggerIndex, 1);
+                }
             }
 
         }

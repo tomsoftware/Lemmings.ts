@@ -34,9 +34,15 @@ module Lemmings {
         public setGuiDisplay(dispaly: DisplayImage) {
             this.dispaly = dispaly;
 
+            /// handle user input in gui
             this.dispaly.onMouseClick.on((e) => {
                 if (e.y > 15) {
-                    let panelIndex = e.x / 16;
+                    let panelIndex = Math.trunc(e.x / 16);
+
+                    if (panelIndex == 10) {
+                        this.gameTimer.toggle();   
+                    }
+
                     let newSkill = this.getSkillByPanelIndex(panelIndex);
                     if (newSkill == SkillTypes.UNKNOWN) return;
 
@@ -140,13 +146,6 @@ module Lemmings {
 
         /** draw a white rectangle border to the panel */
         private drawSelection(dispaly: DisplayImage, panelIndex: number) {
-
-            /// clear selection
-            //for (let i = 2; i < 10; i++) {
-            //    if (i == panelIndex) continue;
-            //    dispaly.drawRect(16 * i, 16, 16, 23, 0, 0, 0);
-            //}
-
             /// draw selection
             dispaly.drawRect(16 * panelIndex, 16, 16, 23, 255, 255, 255);
         }

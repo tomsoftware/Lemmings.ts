@@ -34,7 +34,8 @@ module Lemmings {
             this.actions[LemmingStateType.SHRUG] = new ActionShrugSystem(lemingsSprite);
             this.actions[LemmingStateType.EXPLODING] = new ActionExplodingSystem(lemingsSprite, masks, triggerManager);
             this.actions[LemmingStateType.OHNO] = new ActionOhNoSystem(lemingsSprite);
-
+            this.actions[LemmingStateType.SPLATTING] = new ActionExitingSplatter(lemingsSprite);
+            
 
             this.skillActions[SkillTypes.DIGGER] = this.actions[LemmingStateType.DIGGING];
             this.skillActions[SkillTypes.FLOATER] = this.actions[LemmingStateType.FLOATING];

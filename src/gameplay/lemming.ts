@@ -84,6 +84,10 @@ module Lemmings {
         /** process this lemming one tick in time */
         public process(level:Level) : LemmingStateType {
 
+            if ((this.x < 0) || (this.x >= level.width) || (this.y < 0) || (this.y >= level.height + 6)) {
+                return LemmingStateType.OUT_OFF_LEVEL;
+            }
+
             if (!this.action) {
                 return LemmingStateType.OUT_OFF_LEVEL;
             }
@@ -102,9 +106,8 @@ module Lemmings {
         }
 
 
-        /** disable this lemming so it can not longer be triggert or
-         *   having selected by the user
-         */
+        /** disable this lemming so it can not longer be triggert 
+         *   or beeing selected by the user */
         public disable(): void {
             this.disabled = true;
         }
