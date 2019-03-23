@@ -4,7 +4,7 @@ module Lemmings {
     export class GameFactory {
 
         private configReader:ConfigReader;
-        private error : ErrorHandler = new ErrorHandler("GameFactory");
+        private error : LogHandler = new LogHandler("GameFactory");
         private fileProvider : FileProvider;
 
         constructor(private rootPath: string) {

@@ -42,7 +42,7 @@ module Lemmings {
 
 
     private reader: BinaryReader;
-    private error: ErrorHandler = new ErrorHandler("AdliChannels");
+    private error: LogHandler = new LogHandler("AdliChannels");
 
     private fileConfig: AudioConfig
 

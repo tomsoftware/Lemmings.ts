@@ -25,7 +25,7 @@ module Lemmings {
     public terrains: LevelElement[] = [];
     public steel: Range[] = [];
 
-    private error = new ErrorHandler("LevelReader");
+    private error = new LogHandler("LevelReader");
 
     /// Load a Level
     constructor(fr: BinaryReader) {

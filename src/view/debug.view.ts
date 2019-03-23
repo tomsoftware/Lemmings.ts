@@ -21,13 +21,15 @@ module Lemmings {
         public elementSelectedGame: HTMLSelectElement = null;
         public elementSelectLevelGroup: HTMLSelectElement = null;
         public elementLevelName: HTMLElement = null;
+        public elementGameState: HTMLElement = null;
 
+        private gameSpeedFactor = 1;
         private _gameCanvas: HTMLCanvasElement = null;
 
 
         public set gameCanvas(el:HTMLCanvasElement){
             this._gameCanvas = el;
-   
+            
             this.stage = new Stage(el);
         }
             
@@ -49,23 +51,50 @@ module Lemmings {
                     game.setGameDispaly(this.stage.getGameDisplay());
                     game.setGuiDisplay(this.stage.getGuiDisplay());
 
+                    game.getGameTimer().speedFactor = this.gameSpeedFactor ;
+
                     game.start();
+
+                    this.updateGameStateText(GameStateTypes.RUNNING);
+
+                    game.onGameEnd.on((state) => {
+                        this.updateGameStateText(state);
+                        this.stage.startFadeOut();
+                    })
 
                     this.game = game;
                 });
         }
 
+        private updateGameStateText(state:GameStateTypes) {
+            if (this.elementGameState) {
+                this.elementGameState.innerHTML = GameStateTypes[state];
+            }
+        }
+
         /** pause the game */
         public suspend() {
+            if (this.game == null) {
+                return;
+            }
+
             this.game.getGameTimer().suspend(); 
         }
 
         /** continue the game after pause/suspend */
         public continue() {
+            if (this.game == null) {
+                return;
+            }
+            
             this.game.getGameTimer().continue(); 
         }
 
         public nextFrame() {
+            if (this.game == null) {
+                return;
+            }
+            
             this.game.getGameTimer().tick();
         }
 
@@ -103,6 +132,15 @@ module Lemmings {
                 this.soundPlayer.stop();
                 this.soundPlayer = null;
             }
+        }
+
+        public selectSpeedFactor(newSpeed: number) {
+            if (this.game == null) {
+                return;
+            }
+
+            this.gameSpeedFactor = newSpeed;
+            this.game.getGameTimer().speedFactor = newSpeed;
         }
 
         public playSound(moveInterval: number) {
@@ -194,7 +232,10 @@ module Lemmings {
             if (this.gameResources == null) return;
             if (this.game != null) {
                 this.game.stop();
+                this.game = null;
             }
+
+            this.updateGameStateText(GameStateTypes.UNKNOWN);
 
             this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
                 .then((level) => {
@@ -207,6 +248,7 @@ module Lemmings {
                     if (this.stage != null){
                         let gameDisplay = this.stage.getGameDisplay();
                         gameDisplay.clear();
+                        this.stage.resetFade();
                         level.render(gameDisplay);
                         gameDisplay.redraw();
                     }

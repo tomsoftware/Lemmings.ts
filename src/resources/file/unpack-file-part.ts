@@ -1,5 +1,3 @@
-/// <reference path="../error-handler.ts"/>
-
 module Lemmings {
 
 	/** represents a part/chunk of a file and is  */
@@ -26,7 +24,7 @@ module Lemmings {
 		/** is the unpacking done? */
 		private unpackingDone : boolean;
 
-		private error : ErrorHandler = new ErrorHandler("UnpackFilePart");
+		private error : LogHandler = new LogHandler("UnpackFilePart");
 
 		constructor(fileReader : BinaryReader){
 			this.fileReader = fileReader;

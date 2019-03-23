@@ -6,7 +6,7 @@ module Lemmings {
     /** read the VGASPECx.DAT file : it is a image used for the ground */
     export class VgaspecReader {
         private levelProperties: LevelProperties[] = []
-        private error = new ErrorHandler("VgaspecReader");
+        private error = new LogHandler("VgaspecReader");
         public img:Frame;
 
         /** the color palette stored in this file */

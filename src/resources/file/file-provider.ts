@@ -1,5 +1,4 @@
 /// <reference path="binary-reader.ts"/>
-/// <reference path="../error-handler.ts"/>
 
 module Lemmings {
 
@@ -8,7 +7,7 @@ module Lemmings {
   */
   export class FileProvider {
 
-    private _errorHandler: ErrorHandler = new ErrorHandler("FileProvider");
+    private _errorHandler: LogHandler = new LogHandler("FileProvider");
 
 
     constructor(private rootPath:string) {

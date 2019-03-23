@@ -4,7 +4,7 @@
     export class LevelLoader {
 
 
-        private error : ErrorHandler = new ErrorHandler("LevelLoader");
+        private error : LogHandler = new LogHandler("LevelLoader");
         private levelIndexResolve : LevelIndexResolve;
 
         constructor(private fileProvider:FileProvider, private config: GameConfig) {

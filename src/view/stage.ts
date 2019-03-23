@@ -1,31 +1,5 @@
 module Lemmings {
 
-    export class StageImageProperties {
-        public ctx: CanvasRenderingContext2D;
-        public cav: HTMLCanvasElement;
-        /** X position to display this Image */
-        public x:number = 0;
-        /** Y position to display this Image */
-        public y:number = 0;
-
-        public width:number = 0;
-        public height:number = 0;
-
-        public display : DisplayImage = null;
-        public viewPoint: ViewPoint = new ViewPoint(0, 0, 1);
-
-        public createImage(width:number, height:number) {
-            this.cav = document.createElement('canvas');
-
-            this.cav.width = width;
-            this.cav.height = height;
-
-            this.ctx = this.cav.getContext("2d");
-
-            return this.ctx.createImageData(width, height);
-        }
-    }
-
 
     /** handel the display / output of game, gui, ... */
     export class Stage {
@@ -193,17 +167,45 @@ module Lemmings {
             }
         }
 
+        private fadeTimer:number = 0;
+        private fadeAlpha:number = 0;
+
+        public resetFade() {
+            this.fadeAlpha = 0;
+
+            if (this.fadeTimer != 0) {
+                clearInterval(this.fadeTimer);
+                this.fadeTimer = 0;
+            }
+        }
+
+        public startFadeOut() {
+
+            this.resetFade();
+
+            this.fadeTimer = setInterval(() => {
+                this.fadeAlpha = Math.min(this.fadeAlpha + 0.02, 1);
+
+                if (this.fadeAlpha <= 0) {
+                    clearInterval(this.fadeTimer);
+                }
+            }, 40);
+            
+        }
 
         /** draw everything to the stage/display */
         private draw(display:StageImageProperties, img:ImageData) {
             
             if (display.ctx == null) return;
 
+  
+
             /// write image to context
             display.ctx.putImageData(img, 0, 0);
             
             let ctx = this.stageCav.getContext("2d");
-        
+
+
             //@ts-ignore
             ctx.mozImageSmoothingEnabled = false;
             //@ts-ignore
@@ -213,6 +215,7 @@ module Lemmings {
             let outH = display.height;
             let outW = display.width;
 
+            ctx.globalAlpha = 1;
 
             //- Display Layers
             var dW = img.width - display.viewPoint.x; //- display width
@@ -230,6 +233,13 @@ module Lemmings {
                 display.viewPoint.x, display.viewPoint.y, dW, dH, 
                 display.x, display.y, Math.trunc(dW * display.viewPoint.scale), Math.trunc(dH * display.viewPoint.scale));
 
+            //- apply fading
+            if (this.fadeAlpha != 0) {
+                ctx.globalAlpha = this.fadeAlpha;
+                ctx.fillStyle = "black";
+                ctx.fillRect(display.x, display.y, Math.trunc(dW * display.viewPoint.scale), Math.trunc(dH * display.viewPoint.scale));
+            }
+            
         }
     }
 }

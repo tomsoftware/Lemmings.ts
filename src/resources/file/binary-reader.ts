@@ -3,7 +3,7 @@ module Lemmings {
   /** Class to provide a read pointer and readfunctions to a binary Buffer */
   export class BinaryReader {
     
-    private _error : ErrorHandler = new ErrorHandler("BinaryReader");
+    private _error : LogHandler = new LogHandler("BinaryReader");
     public filename:string;
     protected data : Uint8Array;
     protected hiddenOffset : number;

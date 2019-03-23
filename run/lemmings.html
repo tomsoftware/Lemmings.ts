@@ -24,8 +24,9 @@
         debugView.elementSelectedGame = document.getElementById("selectgame");
         debugView.elementSelectLevelGroup = document.getElementById("selectlevelgroup");
         debugView.elementLevelName = document.getElementById("levelName");
+        debugView.elementGameState = document.getElementById("gameState"); 
         debugView.gameCanvas = document.getElementById("gameCanvas");
-
+        
         debugView.selectGame();
     }
 
@@ -51,8 +52,23 @@
     <input type="button" onclick="debugView.moveToLevel(1)" value=" &#9658;&#10073;" />
 
     &nbsp;
+    Game: 
+    <input type="button" onclick="debugView.start()" value=" &gt;" />
+    <input type="button" onclick="debugView.suspend()" value=" ||" />
+    <input type="button" onclick="debugView.nextFrame()" value=" +1" />
 
-    <input type="button" onclick="debugView.run()" value=" run()" />
+    Speed:
+
+    <select onChange="debugView.selectSpeedFactor(this.value)" id="selectspeedfactor">
+      <option value="0.2">--</option>
+      <option value="0.5">-</option>
+      <option value="1" selected="selected">normal</option>
+      <option value="2">+</option>
+      <option value="3">++</option>
+      <option value="4">+++</option>
+    </select>
+
+    <span id="gameState"></span>
 
     <br />
 
@@ -82,3 +98,7 @@
     </div>
   </body>
 </html>
+
+
+
+

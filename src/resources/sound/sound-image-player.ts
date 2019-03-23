@@ -207,7 +207,7 @@ module Lemmings {
     /** write debug info to console */
     public debug() {
 
-      let error = new ErrorHandler("SoundImagePlayer");
+      let error = new LogHandler("SoundImagePlayer");
 
       error.debug(this.fileConfig);
       error.debug("channelCount: " + this.channelCount);

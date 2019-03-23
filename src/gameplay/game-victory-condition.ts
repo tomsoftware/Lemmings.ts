@@ -26,30 +26,38 @@ module Lemmings {
             return this.releaseRate;
         }
 
-        public GetSurvivorsCount(): number {
-            return this.survivorCount;
-        }
-
+        /** one lemming reached the exit */
         public AddSurvivor(): void {
             this.survivorCount++;
         }
 
+        /** number of rescued lemmings */
+        public GetSurvivorsCount(): number {
+            return this.survivorCount;
+        }
+
+        /** number of rescued lemmings in percentage */
         public GetSurvivorPercentage(): number {
             return Math.floor(this.survivorCount / this.releaseCount * 100);
         }
 
+        /** number of alive lemmings out in the level */
         public GetOutCount(): number {
             return this.outCount;
         }
 
+        /** the number of lemmings not yet released */
         public GetLeftCount(): number {
             return this.leftCount;
         }
 
+        /** release one new lemming */
         public ReleaseOne(): void {
             this.leftCount--;
             this.outCount++;
         }
+
+        /** if a lemming die */
         public RemoveOne(): void {
             this.outCount--;
         }

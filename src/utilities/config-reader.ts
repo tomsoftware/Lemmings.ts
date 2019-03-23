@@ -4,7 +4,7 @@
     export class ConfigReader {
 
         private configs: Promise<GameConfig[]>;
-        private error : ErrorHandler = new ErrorHandler("ConfigReader");
+        private error : LogHandler = new LogHandler("ConfigReader");
 
 
         constructor(configFile: Promise<string>) {

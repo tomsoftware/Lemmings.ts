@@ -1,12 +1,10 @@
-/// <reference path="../error-handler.ts"/>
-
 module Lemmings {
 	
 	/** Read the container file and return the unpacked parts of it  */
 	export class FileContainer {
 
 		private parts: UnpackFilePart[];
-		private error : ErrorHandler = new ErrorHandler("FileContainer");
+		private error : LogHandler = new LogHandler("FileContainer");
 
 		/** read the content of the container  */
 		constructor (content: BinaryReader) {

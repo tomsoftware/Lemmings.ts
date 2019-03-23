@@ -1,7 +1,7 @@
 module Lemmings {
 
   /** handel error logging */
-  export class ErrorHandler {
+  export class LogHandler {
     private _moduleName: string;
 
     constructor(moduleName: string) {

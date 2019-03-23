@@ -9,7 +9,7 @@ module Lemmings {
 		private outData : Uint8Array;
 		private outPos : number;
 		private bitReader : BitReader;
-		private error : ErrorHandler = new ErrorHandler("BitWriter");
+		private error : LogHandler = new LogHandler("BitWriter");
 
 		constructor(bitReader : BitReader, outLength: number) {
 			this.outData = new Uint8Array(outLength);

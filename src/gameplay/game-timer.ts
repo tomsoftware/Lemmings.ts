@@ -3,7 +3,7 @@ module Lemmings {
     export class GameTimer {
         readonly TIME_PER_FRAME_MS: number = 60;
 
-        private speedFactor: number = 1;
+        private _speedFactor: number = 1;
 
         private gameTimerHandler: number = 0;
         /** the current game time in number of steps the game has made  */
@@ -12,6 +12,13 @@ module Lemmings {
 
         constructor(level: Level) {
             this.ticksTimeLimit = this.ticksSecondsTo(level.timeLimit * 60);
+        }
+
+        public get speedFactor():number {
+            return this._speedFactor;
+        }
+        public set speedFactor(newSpeedFactor:number) {
+            this._speedFactor = newSpeedFactor;
         }
 
 
@@ -39,7 +46,7 @@ module Lemmings {
 
             this.gameTimerHandler = setInterval(() => {
                 this.tick();
-            }, (this.TIME_PER_FRAME_MS * this.speedFactor));
+            }, (this.TIME_PER_FRAME_MS / this._speedFactor));
         }
 
         public tick() {
@@ -58,12 +65,17 @@ module Lemmings {
             return this.tickIndex;
         }
 
-        /** return the past game time in seconds */
-        public getGameLeftTimeString(): string {
+        /** return the left game time in seconds */
+        public getGameLeftTime(): number {
             let leftTicks = this.ticksTimeLimit - this.tickIndex;
             if (leftTicks < 0) leftTicks = 0;
 
-            let leftSeconds = Math.floor(this.ticksToSeconds(leftTicks));
+            return Math.floor(this.ticksToSeconds(leftTicks));
+        }
+
+        /** return the left game time in seconds */
+        public getGameLeftTimeString(): string {
+            let leftSeconds = this.getGameLeftTime();
             let secondsStr = "0" + Math.floor(leftSeconds % 60);
 
             return Math.floor(leftSeconds / 60) + "-" + secondsStr.substr(secondsStr.length - 2, 2);

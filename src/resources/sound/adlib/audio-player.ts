@@ -5,7 +5,7 @@
 module Lemmings {
     export class AudioPlayer  {
 
-        private error = new ErrorHandler("AudioPlayer");
+        private error = new LogHandler("AudioPlayer");
 
         public context:AudioContext;
         public source:AudioBufferSourceNode;

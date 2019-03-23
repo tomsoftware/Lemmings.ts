@@ -3,7 +3,7 @@ module Lemmings {
     /** provides an game object to controle the game */
     export class Game {
 
-        private error: ErrorHandler = new ErrorHandler("Game");
+        private error: LogHandler = new LogHandler("Game");
         private gameResources: GameResources = null;
         private levelGroupIndex: number;
         private levelIndex: number;
@@ -22,6 +22,10 @@ module Lemmings {
         private gameTimer: GameTimer = null;
 
         private skills: GameSkills;
+
+        public onGameEnd = new EventHandler<GameStateTypes>();
+
+        private finalGameState:GameStateTypes = GameStateTypes.UNKNOWN;
 
         constructor(gameResources: GameResources) {
             this.gameResources = gameResources;
@@ -115,8 +119,11 @@ module Lemmings {
 
         /** end the game */
         public stop() {
-            this.gameTimer.suspend();
+            this.gameTimer.stop();
             this.gameTimer = null;
+
+            this.onGameEnd.dispose();
+            this.onGameEnd = null;
 
         }
 
@@ -126,13 +133,54 @@ module Lemmings {
             return this.gameTimer;
         }
 
+
         /** run one step in game time and render the result */
         private onGameTimerTick() {
+
             /// run game logic
             this.runGameLogic();
+            this.checkForGameOver();
             this.render();
         }
 
+        /** return the current state of the game */
+        public getGameState():GameStateTypes {
+
+            /// if the game hase finised return it's saved state
+            if (this.finalGameState != GameStateTypes.UNKNOWN) {
+                return this.finalGameState;
+            }
+
+            if ((this.gameVictoryCondition.GetLeftCount() <= 0) && (this.gameVictoryCondition.GetOutCount() <= 0)) {
+                if (this.gameVictoryCondition.GetSurvivorsCount() >= this.gameVictoryCondition.GetNeedCount()) {
+                    return GameStateTypes.SUCCEEDED;
+                }
+                else {
+                    return GameStateTypes.FAILED_LESS_LEMMINGS;
+                }
+            }
+
+            if (this.gameTimer.getGameLeftTime() <= 0) {
+                return GameStateTypes.FAILED_OUT_OF_TIME;
+            }
+
+            return GameStateTypes.RUNNING;
+
+        }
+
+        /** check if the game  */
+        private checkForGameOver() {
+            if (this.finalGameState != GameStateTypes.UNKNOWN) {
+                return;
+            }
+
+            let state = this.getGameState();
+
+            if ((state != GameStateTypes.RUNNING) && (state != GameStateTypes.UNKNOWN)) {
+                this.finalGameState = state;
+                this.onGameEnd.trigger(state);
+            }
+        }
 
         /** run the game logic one step in time */
         public runGameLogic() {
@@ -157,22 +205,6 @@ module Lemmings {
 
             this.guiDispaly.redraw();
         }
-
-        /** return the id of the lemming at a scene position */
-        /*
-        public getLemmingAt(x: number, y:number):Lemming {
-            if (this.lemmingManager == null) return null;
-            return this.lemmingManager.getLemmingAt(x, y);
-        }
-        */
-
-        /*
-        public setLemmingAction(lem: Lemming, action:ActionType){
-            if (this.lemmingManager == null) return null;
-
-            this.lemmingManager.setLemmingAction(lem, ActionType.DIGG);
-        }
-        */
 
 
 

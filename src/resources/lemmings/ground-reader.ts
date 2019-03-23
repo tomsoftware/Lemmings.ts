@@ -1,5 +1,4 @@
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="../error-handler.ts"/>
 /// <reference path="./color-palette.ts"/>
 /// <reference path="./object-image-info.ts"/>
 /// <reference path="./terrain-image-info.ts"/>
@@ -27,7 +26,7 @@ module Lemmings {
     public colorPalette = new ColorPalette();
 
 
-    private error = new ErrorHandler("GroundReader");
+    private error = new LogHandler("GroundReader");
 
 
 

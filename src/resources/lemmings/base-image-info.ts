@@ -1,5 +1,4 @@
 /// <reference path="../file/binary-reader.ts"/>
-/// <reference path="../error-handler.ts"/>
 /// <reference path="./color-palette.ts"/>
 
 

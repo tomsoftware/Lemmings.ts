@@ -90,7 +90,7 @@ module Lemmings {
         }
 
         /** Add a new Lemming to the manager */
-        public addLemming(x: number, y: number) {
+        private addLemming(x: number, y: number) {
 
             let lem = new Lemming(x, y, this.lemmings.length);
 
