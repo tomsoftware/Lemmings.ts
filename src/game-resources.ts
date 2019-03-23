@@ -41,7 +41,7 @@ module Lemmings {
         }
 
 
-        /** return the Lemings animations */
+        /** return the Lemmings animations */
         public getLemmingsSprite(colorPalette:ColorPalette): Promise<LemmingsSprite> {
 
             return new Promise<LemmingsSprite>((resolve, reject) => {

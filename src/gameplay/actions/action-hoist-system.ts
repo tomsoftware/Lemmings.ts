@@ -19,7 +19,7 @@ module Lemmings {
             return false;
         }
 
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
 

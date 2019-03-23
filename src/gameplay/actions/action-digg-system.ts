@@ -45,10 +45,7 @@ module Lemmings {
                 lem.y++;
 
                 if (level.isOutOfLevel(lem.y)) {
-                    // play sound: fall out of level
-                    this.soundSystem.playSound(lem, 0x13);
-                    lem.removed = true;
-                    return LemmingStateType.OUT_OFF_LEVEL;
+                    return LemmingStateType.FALLING;
                 }
 
                 if (!this.digRow(level, lem, lem.y - 1)) {

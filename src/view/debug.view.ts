@@ -73,6 +73,15 @@ module Lemmings {
         }
 
         /** pause the game */
+        public cheat() {
+            if (this.game == null) {
+                return;
+            }
+
+            this.game.cheat();
+        }
+
+        /** pause the game */
         public suspend() {
             if (this.game == null) {
                 return;

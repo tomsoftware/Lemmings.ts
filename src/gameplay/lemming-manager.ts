@@ -14,27 +14,28 @@ module Lemmings {
         private releaseTickIndex: number = 0;
 
         constructor(private level: Level,
-            lemingsSprite: LemmingsSprite,
+            lemmingsSprite: LemmingsSprite,
             private triggerManager: TriggerManager,
             private gameVictoryCondition: GameVictoryCondition,
             masks: MaskProvider) {
 
-            this.actions[LemmingStateType.WALKING] = new ActionWalkSystem(lemingsSprite);
-            this.actions[LemmingStateType.FALLING] = new ActionFallSystem(lemingsSprite);
-            this.actions[LemmingStateType.JUMPING] = new ActionJumpSystem(lemingsSprite);
-            this.actions[LemmingStateType.DIGGING] = new ActionDiggSystem(lemingsSprite);
-            this.actions[LemmingStateType.EXITING] = new ActionExitingSystem(lemingsSprite, gameVictoryCondition);
-            this.actions[LemmingStateType.FLOATING] = new ActionFloatingSystem(lemingsSprite);
-            this.actions[LemmingStateType.BLOCKING] = new ActionBlockerSystem(lemingsSprite, triggerManager);
-            this.actions[LemmingStateType.MINEING] = new ActionMineSystem(lemingsSprite, masks);
-            this.actions[LemmingStateType.CLIMBING] = new ActionClimbSystem(lemingsSprite);
-            this.actions[LemmingStateType.HOISTING] = new ActionHoistSystem(lemingsSprite);
-            this.actions[LemmingStateType.BASHING] = new ActionBashSystem(lemingsSprite, masks);
-            this.actions[LemmingStateType.BUILDING] = new ActionBuildSystem(lemingsSprite);
-            this.actions[LemmingStateType.SHRUG] = new ActionShrugSystem(lemingsSprite);
-            this.actions[LemmingStateType.EXPLODING] = new ActionExplodingSystem(lemingsSprite, masks, triggerManager);
-            this.actions[LemmingStateType.OHNO] = new ActionOhNoSystem(lemingsSprite);
-            this.actions[LemmingStateType.SPLATTING] = new ActionExitingSplatter(lemingsSprite);
+            this.actions[LemmingStateType.WALKING] = new ActionWalkSystem(lemmingsSprite);
+            this.actions[LemmingStateType.FALLING] = new ActionFallSystem(lemmingsSprite);
+            this.actions[LemmingStateType.JUMPING] = new ActionJumpSystem(lemmingsSprite);
+            this.actions[LemmingStateType.DIGGING] = new ActionDiggSystem(lemmingsSprite);
+            this.actions[LemmingStateType.EXITING] = new ActionExitingSystem(lemmingsSprite, gameVictoryCondition);
+            this.actions[LemmingStateType.FLOATING] = new ActionFloatingSystem(lemmingsSprite);
+            this.actions[LemmingStateType.BLOCKING] = new ActionBlockerSystem(lemmingsSprite, triggerManager);
+            this.actions[LemmingStateType.MINEING] = new ActionMineSystem(lemmingsSprite, masks);
+            this.actions[LemmingStateType.CLIMBING] = new ActionClimbSystem(lemmingsSprite);
+            this.actions[LemmingStateType.HOISTING] = new ActionHoistSystem(lemmingsSprite);
+            this.actions[LemmingStateType.BASHING] = new ActionBashSystem(lemmingsSprite, masks);
+            this.actions[LemmingStateType.BUILDING] = new ActionBuildSystem(lemmingsSprite);
+            this.actions[LemmingStateType.SHRUG] = new ActionShrugSystem(lemmingsSprite);
+            this.actions[LemmingStateType.EXPLODING] = new ActionExplodingSystem(lemmingsSprite, masks, triggerManager);
+            this.actions[LemmingStateType.OHNO] = new ActionOhNoSystem(lemmingsSprite);
+            this.actions[LemmingStateType.SPLATTING] = new ActionSplatterSystem(lemmingsSprite);
+            this.actions[LemmingStateType.DROWNING] = new ActionDrowningSystem(lemmingsSprite);
             
 
             this.skillActions[SkillTypes.DIGGER] = this.actions[LemmingStateType.DIGGING];

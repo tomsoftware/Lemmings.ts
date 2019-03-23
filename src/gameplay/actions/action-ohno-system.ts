@@ -18,7 +18,7 @@ module Lemmings {
             return false;
         }
 
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
             let frame = this.sprite.getFrame(lem.frameIndex);
 

@@ -12,7 +12,7 @@ module Lemmings {
 
         /** return true if the skill can be redused / used */
         public canReduseSkill(type: SkillTypes): boolean {
-            return (this.skills[type] <= 0);
+            return (this.skills[type] > 0);
         }
 
 
@@ -40,6 +40,14 @@ module Lemmings {
         public setSelectetSkill(skill: SkillTypes) {
             this.selectedSkill = skill;
             this.onSelectionChanged.trigger();
+        }
+
+        /** increase the amount of actions for all skills */
+        public cheat() {
+            for(let i = 0; i < this.skills.length; i++) {
+                this.skills[i] = 99;
+                this.onCountChanged.trigger(i);
+            }
         }
 
     }

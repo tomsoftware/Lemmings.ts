@@ -1,6 +1,6 @@
 module Lemmings {
 
-    /** manage the in-game Masks a leming can use to change the map */
+    /** manage the in-game masks a lemming can use to change the map */
     export class MaskProvider {
 
         private maskList:MaskList[] = [];

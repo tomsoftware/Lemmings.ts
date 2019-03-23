@@ -18,7 +18,7 @@ module Lemmings {
             return lem.setCountDown(this);
         }
 
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
             let count = lem.getCountDownTime();
 

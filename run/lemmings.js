@@ -62,7 +62,7 @@ var Lemmings;
             });
             return this.mainDat;
         }
-        /** return the Lemings animations */
+        /** return the Lemmings animations */
         getLemmingsSprite(colorPalette) {
             return new Promise((resolve, reject) => {
                 this.getMainDat().then(container => {
@@ -268,7 +268,7 @@ var Lemmings;
                     }
                     this.objectManager = new Lemmings.ObjectManager(this.gameTimer);
                     this.objectManager.addRange(this.level.objects);
-                    this.gameDispaly = new Lemmings.GameDisplay(this.skills, this.level, this.lemmingManager, this.objectManager, this.triggerManager);
+                    this.gameDispaly = new Lemmings.GameDisplay(this, this.skills, this.level, this.lemmingManager, this.objectManager, this.triggerManager);
                     if (this.dispaly != null) {
                         this.gameDispaly.setGuiDisplay(this.dispaly);
                     }
@@ -291,6 +291,20 @@ var Lemmings;
         /** return the game Timer for this game */
         getGameTimer() {
             return this.gameTimer;
+        }
+        /** increase the amount of skills */
+        cheat() {
+            this.skills.cheat();
+        }
+        /** trigger a lemming to do an action */
+        triggerLemming(lem, selectedSkill) {
+            if (this.skills.canReduseSkill(selectedSkill)) {
+                /// set the skill
+                if (this.lemmingManager.doLemmingAction(lem, selectedSkill)) {
+                    /// reduce the available skill count
+                    this.skills.reduseSkill(selectedSkill);
+                }
+            }
         }
         /** run one step in game time and render the result */
         onGameTimerTick() {
@@ -413,7 +427,7 @@ var Lemmings;
         }
         /** return true if the skill can be redused / used */
         canReduseSkill(type) {
-            return (this.skills[type] <= 0);
+            return (this.skills[type] > 0);
         }
         reduseSkill(type) {
             if (this.skills[type] <= 0)
@@ -433,6 +447,13 @@ var Lemmings;
         setSelectetSkill(skill) {
             this.selectedSkill = skill;
             this.onSelectionChanged.trigger();
+        }
+        /** increase the amount of actions for all skills */
+        cheat() {
+            for (let i = 0; i < this.skills.length; i++) {
+                this.skills[i] = 99;
+                this.onCountChanged.trigger(i);
+            }
         }
     }
     Lemmings.GameSkills = GameSkills;
@@ -615,7 +636,7 @@ var Lemmings;
 var Lemmings;
 (function (Lemmings) {
     class LemmingManager {
-        constructor(level, lemingsSprite, triggerManager, gameVictoryCondition, masks) {
+        constructor(level, lemmingsSprite, triggerManager, gameVictoryCondition, masks) {
             this.level = level;
             this.triggerManager = triggerManager;
             this.gameVictoryCondition = gameVictoryCondition;
@@ -625,22 +646,23 @@ var Lemmings;
             this.actions = [];
             this.skillActions = [];
             this.releaseTickIndex = 0;
-            this.actions[Lemmings.LemmingStateType.WALKING] = new Lemmings.ActionWalkSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.FALLING] = new Lemmings.ActionFallSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.JUMPING] = new Lemmings.ActionJumpSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.DIGGING] = new Lemmings.ActionDiggSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.EXITING] = new Lemmings.ActionExitingSystem(lemingsSprite, gameVictoryCondition);
-            this.actions[Lemmings.LemmingStateType.FLOATING] = new Lemmings.ActionFloatingSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.BLOCKING] = new Lemmings.ActionBlockerSystem(lemingsSprite, triggerManager);
-            this.actions[Lemmings.LemmingStateType.MINEING] = new Lemmings.ActionMineSystem(lemingsSprite, masks);
-            this.actions[Lemmings.LemmingStateType.CLIMBING] = new Lemmings.ActionClimbSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.HOISTING] = new Lemmings.ActionHoistSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.BASHING] = new Lemmings.ActionBashSystem(lemingsSprite, masks);
-            this.actions[Lemmings.LemmingStateType.BUILDING] = new Lemmings.ActionBuildSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.SHRUG] = new Lemmings.ActionShrugSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.EXPLODING] = new Lemmings.ActionExplodingSystem(lemingsSprite, masks, triggerManager);
-            this.actions[Lemmings.LemmingStateType.OHNO] = new Lemmings.ActionOhNoSystem(lemingsSprite);
-            this.actions[Lemmings.LemmingStateType.SPLATTING] = new Lemmings.ActionExitingSplatter(lemingsSprite);
+            this.actions[Lemmings.LemmingStateType.WALKING] = new Lemmings.ActionWalkSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.FALLING] = new Lemmings.ActionFallSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.JUMPING] = new Lemmings.ActionJumpSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.DIGGING] = new Lemmings.ActionDiggSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.EXITING] = new Lemmings.ActionExitingSystem(lemmingsSprite, gameVictoryCondition);
+            this.actions[Lemmings.LemmingStateType.FLOATING] = new Lemmings.ActionFloatingSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.BLOCKING] = new Lemmings.ActionBlockerSystem(lemmingsSprite, triggerManager);
+            this.actions[Lemmings.LemmingStateType.MINEING] = new Lemmings.ActionMineSystem(lemmingsSprite, masks);
+            this.actions[Lemmings.LemmingStateType.CLIMBING] = new Lemmings.ActionClimbSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.HOISTING] = new Lemmings.ActionHoistSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.BASHING] = new Lemmings.ActionBashSystem(lemmingsSprite, masks);
+            this.actions[Lemmings.LemmingStateType.BUILDING] = new Lemmings.ActionBuildSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.SHRUG] = new Lemmings.ActionShrugSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.EXPLODING] = new Lemmings.ActionExplodingSystem(lemmingsSprite, masks, triggerManager);
+            this.actions[Lemmings.LemmingStateType.OHNO] = new Lemmings.ActionOhNoSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.SPLATTING] = new Lemmings.ActionSplatterSystem(lemmingsSprite);
+            this.actions[Lemmings.LemmingStateType.DROWNING] = new Lemmings.ActionDrowningSystem(lemmingsSprite);
             this.skillActions[Lemmings.SkillTypes.DIGGER] = this.actions[Lemmings.LemmingStateType.DIGGING];
             this.skillActions[Lemmings.SkillTypes.FLOATER] = this.actions[Lemmings.LemmingStateType.FLOATING];
             this.skillActions[Lemmings.SkillTypes.BLOCKER] = this.actions[Lemmings.LemmingStateType.BLOCKING];
@@ -1138,7 +1160,7 @@ var Lemmings;
             lem.setAction(this);
             return true;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
@@ -1244,7 +1266,7 @@ var Lemmings;
             lem.setAction(this);
             return true;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
@@ -1303,7 +1325,7 @@ var Lemmings;
             lem.canClimb = true;
             return true;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
@@ -1345,7 +1367,7 @@ var Lemmings;
         triggerLemAction(lem) {
             return lem.setCountDown(this);
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let count = lem.getCountDownTime();
             if (count <= 0) {
@@ -1401,10 +1423,7 @@ var Lemmings;
             if (!(lem.frameIndex & 0x07)) {
                 lem.y++;
                 if (level.isOutOfLevel(lem.y)) {
-                    // play sound: fall out of level
-                    this.soundSystem.playSound(lem, 0x13);
-                    lem.removed = true;
-                    return Lemmings.LemmingStateType.OUT_OFF_LEVEL;
+                    return Lemmings.LemmingStateType.FALLING;
                 }
                 if (!this.digRow(level, lem, lem.y - 1)) {
                     return Lemmings.LemmingStateType.FALLING;
@@ -1424,6 +1443,40 @@ var Lemmings;
         }
     }
     Lemmings.ActionDiggSystem = ActionDiggSystem;
+})(Lemmings || (Lemmings = {}));
+var Lemmings;
+(function (Lemmings) {
+    class ActionDrowningSystem {
+        constructor(sprites) {
+            this.soundSystem = new Lemmings.SoundSystem();
+            this.sprite = sprites.getAnimation(Lemmings.SpriteTypes.DROWNING, false);
+        }
+        getActionName() {
+            return "drowning";
+        }
+        triggerLemAction(lem) {
+            return false;
+        }
+        draw(gameDisplay, lem) {
+            let frame = this.sprite.getFrame(lem.frameIndex);
+            gameDisplay.drawFrame(frame, lem.x, lem.y);
+        }
+        process(level, lem) {
+            lem.disable();
+            lem.frameIndex++;
+            if (lem.frameIndex >= 16) {
+                return Lemmings.LemmingStateType.OUT_OFF_LEVEL;
+            }
+            if (!level.hasGroundAt(lem.x + (lem.lookRight ? 8 : -8), lem.y)) {
+                lem.x += (lem.lookRight ? 1 : -1);
+            }
+            else {
+                lem.lookRight = !lem.lookRight;
+            }
+            return Lemmings.LemmingStateType.NO_STATE_TYPE;
+        }
+    }
+    Lemmings.ActionDrowningSystem = ActionDrowningSystem;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -1470,7 +1523,7 @@ var Lemmings;
         triggerLemAction(lem) {
             return false;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             if (lem.frameIndex != 0)
                 return;
@@ -1507,7 +1560,7 @@ var Lemmings;
         triggerLemAction(lem) {
             return false;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
@@ -1560,7 +1613,7 @@ var Lemmings;
             lem.hasParachute = true;
             return true;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(ActionFloatingSystem.floatFrame[lem.frameIndex]);
@@ -1603,7 +1656,7 @@ var Lemmings;
         triggerLemAction(lem) {
             return false;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
@@ -1721,7 +1774,7 @@ var Lemmings;
         triggerLemAction(lem) {
             return false;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let frame = this.sprite.getFrame(lem.frameIndex);
             gameDisplay.drawFrame(frame, lem.x, lem.y);
@@ -1759,7 +1812,7 @@ var Lemmings;
         triggerLemAction(lem) {
             return false;
         }
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         draw(gameDisplay, lem) {
             let ani = this.sprite[(lem.lookRight ? 1 : 0)];
             let frame = ani.getFrame(lem.frameIndex);
@@ -1777,7 +1830,7 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    class ActionExitingSplatter {
+    class ActionSplatterSystem {
         constructor(sprites) {
             this.soundSystem = new Lemmings.SoundSystem();
             this.sprite = sprites.getAnimation(Lemmings.SpriteTypes.SPLATTING, false);
@@ -1801,7 +1854,7 @@ var Lemmings;
             return Lemmings.LemmingStateType.NO_STATE_TYPE;
         }
     }
-    Lemmings.ActionExitingSplatter = ActionExitingSplatter;
+    Lemmings.ActionSplatterSystem = ActionSplatterSystem;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -2350,7 +2403,7 @@ var Lemmings;
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
-    /** manage the in-game Masks a leming can use to change the map */
+    /** manage the in-game masks a lemming can use to change the map */
     class MaskProvider {
         constructor(fr) {
             this.maskList = [];
@@ -5914,6 +5967,13 @@ var Lemmings;
             }
         }
         /** pause the game */
+        cheat() {
+            if (this.game == null) {
+                return;
+            }
+            this.game.cheat();
+        }
+        /** pause the game */
         suspend() {
             if (this.game == null) {
                 return;
@@ -6302,7 +6362,8 @@ var Lemmings;
 var Lemmings;
 (function (Lemmings) {
     class GameDisplay {
-        constructor(gameSkills, level, lemmingManager, objectManager, triggerManager) {
+        constructor(game, gameSkills, level, lemmingManager, objectManager, triggerManager) {
+            this.game = game;
             this.gameSkills = gameSkills;
             this.level = level;
             this.lemmingManager = lemmingManager;
@@ -6317,13 +6378,7 @@ var Lemmings;
                 if (lem == null)
                     return;
                 let selectedSkill = this.gameSkills.getSelectedSkill();
-                if (this.gameSkills.canReduseSkill(selectedSkill) || (true)) {
-                    /// set the skill
-                    if (this.lemmingManager.doLemmingAction(lem, selectedSkill)) {
-                        /// reduce the available skill count
-                        this.gameSkills.reduseSkill(selectedSkill);
-                    }
-                }
+                this.game.triggerLemming(lem, selectedSkill);
             });
         }
         render() {

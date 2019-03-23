@@ -4,6 +4,16 @@ module Lemmings {
 
         private dispaly: DisplayImage = null;
 
+        constructor(
+            private game:Game,
+            private gameSkills: GameSkills,
+            private level: Level,
+            private lemmingManager: LemmingManager,
+            private objectManager: ObjectManager, 
+            private triggerManager: TriggerManager) {
+        }
+
+
         public setGuiDisplay(dispaly: DisplayImage) {
             this.dispaly = dispaly;
 
@@ -13,24 +23,8 @@ module Lemmings {
 
                 let selectedSkill = this.gameSkills.getSelectedSkill();
 
-                if (this.gameSkills.canReduseSkill(selectedSkill) || (true)) {
-                    /// set the skill
-                    if (this.lemmingManager.doLemmingAction(lem, selectedSkill)) {
-                        /// reduce the available skill count
-                        this.gameSkills.reduseSkill(selectedSkill)
-                    }  
-                }
-
+                this.game.triggerLemming(lem, selectedSkill);
             });
-        }
-
-
-        constructor(
-            private gameSkills: GameSkills,
-            private level: Level,
-            private lemmingManager: LemmingManager,
-            private objectManager: ObjectManager, 
-            private triggerManager: TriggerManager) {
         }
 
 

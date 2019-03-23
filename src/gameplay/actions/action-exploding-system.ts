@@ -20,7 +20,7 @@ module Lemmings {
             return false;
         }
 
-        /** render Leming to gamedisply */
+        /** render Lemming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
 
             if (lem.frameIndex != 0) return;

@@ -1,17 +1,17 @@
 module Lemmings {
 
-    export class ActionSplatterSystem implements IActionSystem {
+    export class ActionDrowningSystem implements IActionSystem {
 
         public soundSystem = new SoundSystem();
 
         private sprite: Animation;
 
         constructor(sprites: LemmingsSprite) {
-            this.sprite = sprites.getAnimation(SpriteTypes.SPLATTING, false);
+            this.sprite = sprites.getAnimation(SpriteTypes.DROWNING, false);
         }
 
         public getActionName(): string {
-            return "splatter";
+            return "drowning";
         }
 
         public triggerLemAction(lem: Lemming): boolean {
@@ -35,6 +35,13 @@ module Lemmings {
                 return LemmingStateType.OUT_OFF_LEVEL;
             }
 
+            if (!level.hasGroundAt(lem.x + (lem.lookRight ? 8 : -8), lem.y)) {
+                lem.x += (lem.lookRight ? 1 : -1);
+            }
+            else {
+                lem.lookRight = !lem.lookRight;
+            }
+            
             return LemmingStateType.NO_STATE_TYPE;
         }
 
