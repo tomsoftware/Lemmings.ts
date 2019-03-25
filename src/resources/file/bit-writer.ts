@@ -9,7 +9,7 @@ module Lemmings {
 		private outData : Uint8Array;
 		private outPos : number;
 		private bitReader : BitReader;
-		private error : LogHandler = new LogHandler("BitWriter");
+		private log : LogHandler = new LogHandler("BitWriter");
 
 		constructor(bitReader : BitReader, outLength: number) {
 			this.outData = new Uint8Array(outLength);
@@ -20,7 +20,7 @@ module Lemmings {
 		/** copy lenght bytes from the reader */
 		public copyRawData(length : number) {
 			if (this.outPos - length < 0) {
-				this.error.log("copyRawData: out of out buffer");
+				this.log.log("copyRawData: out of out buffer");
 				length = this.outPos;
 				return;
 			}
@@ -39,14 +39,14 @@ module Lemmings {
 
 			/// is offset in range?
 			if (this.outPos + offset > this.outData.length) {
-				this.error.log("copyReferencedData: offset out of range");
+				this.log.log("copyReferencedData: offset out of range");
 				offset = 0;
 				return;
 			}
 
 			/// is lenght in range
 			if (this.outPos - length < 0) {
-				this.error.log("copyReferencedData: out of out buffer");
+				this.log.log("copyReferencedData: out of out buffer");
 				length = this.outPos;
 				return;
 			}

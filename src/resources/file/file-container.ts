@@ -4,7 +4,7 @@ module Lemmings {
 	export class FileContainer {
 
 		private parts: UnpackFilePart[];
-		private error : LogHandler = new LogHandler("FileContainer");
+		private log : LogHandler = new LogHandler("FileContainer");
 
 		/** read the content of the container  */
 		constructor (content: BinaryReader) {
@@ -14,7 +14,7 @@ module Lemmings {
 		/** Unpack a part (chunks / segments) of the file and return it */
 		public getPart(index : number) : BinaryReader {
 			if ((index < 0) || (index >= this.parts.length)) {
-				this.error.log("getPart("+ index +") Out of index!");
+				this.log.log("getPart("+ index +") Out of index!");
 				return new BinaryReader();
 			}
 			return this.parts[index].unpack();	
@@ -62,7 +62,7 @@ module Lemmings {
 
 				/// check if the data are valid
 				if ((part.offset < 0) || (size > 0xFFFFFF) || (size < 10)) {
-					this.error.log("out of sync "+ fileReader.filename);
+					this.log.log("out of sync "+ fileReader.filename);
 					break;
 				}
 
@@ -75,7 +75,7 @@ module Lemmings {
 				pos += size;
 			}
 
-			this.error.debug(fileReader.filename +" has "+ this.parts.length +" file-parts.")
+			this.log.debug(fileReader.filename +" has "+ this.parts.length +" file-parts.")
 		}
 	}
 }						

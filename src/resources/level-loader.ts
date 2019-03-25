@@ -3,16 +3,11 @@
     /** Bootstrap the Level loading */
     export class LevelLoader {
 
-
-        private error : LogHandler = new LogHandler("LevelLoader");
         private levelIndexResolve : LevelIndexResolve;
 
         constructor(private fileProvider:FileProvider, private config: GameConfig) {
             this.levelIndexResolve = new LevelIndexResolve(config);
-          
         }
-
-
       
         /** return the map and it's config */
         public getLevel(levelMode:number, levelIndex:number):Promise<Level> {

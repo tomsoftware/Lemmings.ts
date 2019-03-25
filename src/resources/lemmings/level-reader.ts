@@ -25,7 +25,7 @@ module Lemmings {
     public terrains: LevelElement[] = [];
     public steel: Range[] = [];
 
-    private error = new LogHandler("LevelReader");
+    private log = new LogHandler("LevelReader");
 
     /// Load a Level
     constructor(fr: BinaryReader) {
@@ -36,7 +36,7 @@ module Lemmings {
       this.readSteelArea(fr);
       this.readLevelName(fr);
 
-      this.error.debug(this);
+      this.log.debug(this);
     }
 
 
@@ -150,7 +150,7 @@ module Lemmings {
 
         if ((pos == 0) && (size == 0)) continue;
         if (unknown != 0) {
-          this.error.log("Error in readSteelArea() : unknown != 0");
+          this.log.log("Error in readSteelArea() : unknown != 0");
           continue;
         }
 
@@ -170,7 +170,7 @@ module Lemmings {
     private readLevelName(fr: BinaryReader) {
       /// at the end of the 
       this.levelProperties.levelName = fr.readString(32, 0x07E0);
-      this.error.debug("Level Name: " + this.levelProperties.levelName);
+      this.log.debug("Level Name: " + this.levelProperties.levelName);
     }
 
 

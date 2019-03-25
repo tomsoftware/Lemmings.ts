@@ -7,7 +7,7 @@ module Lemmings {
   */
   export class FileProvider {
 
-    private _errorHandler: LogHandler = new LogHandler("FileProvider");
+    private log: LogHandler = new LogHandler("FileProvider");
 
 
     constructor(private rootPath:string) {
@@ -19,7 +19,7 @@ module Lemmings {
 
       let url = this.rootPath + path + ((filename==null)? "" : "/"+ filename);
 
-      this._errorHandler.debug("loading:"+ url);
+      this.log.debug("loading:"+ url);
 
       return new Promise( (resolve, reject) => {
         var xhr = new XMLHttpRequest();
@@ -32,14 +32,14 @@ module Lemmings {
 
           } else {
 
-            this._errorHandler.log("error load file:"+ url);
+            this.log.log("error load file:"+ url);
             reject({ status: xhr.status, statusText: xhr.statusText });
           }
         };
 
 
         xhr.onerror = () => {
-          this._errorHandler.log("error load file:"+ url);
+          this.log.log("error load file:"+ url);
           reject({ status: xhr.status, statusText: xhr.statusText });
         };
 
@@ -54,7 +54,7 @@ module Lemmings {
     /** load string data from URL */
     public loadString(url: string): Promise<string> {
 
-      this._errorHandler.log("Load file as string: " + url);
+      this.log.log("Load file as string: " + url);
 
       return new Promise((resolve, reject) => {
 
@@ -65,7 +65,7 @@ module Lemmings {
         }
 
         xhr.onerror = () => {
-           this._errorHandler.log("error load file:"+ url);
+           this.log.log("error load file:"+ url);
            reject({ status: xhr.status, statusText: xhr.statusText });
         }
 

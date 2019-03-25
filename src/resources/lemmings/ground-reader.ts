@@ -26,7 +26,7 @@ module Lemmings {
     public colorPalette = new ColorPalette();
 
 
-    private error = new LogHandler("GroundReader");
+    private log = new LogHandler("GroundReader");
 
 
 
@@ -37,7 +37,7 @@ module Lemmings {
     constructor(groundFile: BinaryReader,  vgaTerrar: BinaryReader, vgaObject: BinaryReader) {
 
       if (groundFile.length != 1056) {
-        this.error.log("groundFile "+ groundFile.filename +" has wrong size: "+ groundFile.length);
+        this.log.log("groundFile "+ groundFile.filename +" has wrong size: "+ groundFile.length);
         return;
       }
 
@@ -129,7 +129,7 @@ module Lemmings {
         img.palette = colorPalett;
 
         if (frO.eof()) {
-          this.error.log("readObjectImages() : unexpected end of file: " + frO.filename);
+          this.log.log("readObjectImages() : unexpected end of file: " + frO.filename);
           return;
         }
 
@@ -156,7 +156,7 @@ module Lemmings {
         img.frameCount = 1;
 
         if (frO.eof()) {
-          this.error.log("readTerrainImages() : unexpected end of file! " + frO.filename);
+          this.log.log("readTerrainImages() : unexpected end of file! " + frO.filename);
           return;
         }
 

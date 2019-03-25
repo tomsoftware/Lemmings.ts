@@ -6,7 +6,7 @@ module Lemmings {
     /** The Odd Table has a list of LevelProperties to describe alternative starting conditions for a level  */
     export class OddTableReader {
         private levelProperties: LevelProperties[] = []
-        private error = new LogHandler("OddTableReader");
+        private log = new LogHandler("OddTableReader");
 
         /** return the Level for a given levelNumber - LevelNumber is counting all levels from first to last of the game 
          *  Odd-Tables are only used for the "Original Lemmings" Game 
@@ -48,12 +48,12 @@ module Lemmings {
                 prop.skills[SkillTypes.DIGGER] = fr.readWord();
 
                 prop.levelName = fr.readString(32);
-                this.error.debug("Level (" + i + ") Name: " + prop.levelName + " " + prop.needCount + " " + prop.timeLimit);
+                this.log.debug("Level (" + i + ") Name: " + prop.levelName + " " + prop.needCount + " " + prop.timeLimit);
 
                 this.levelProperties.push(prop);
             }
 
-            this.error.debug("levelProperties: " + this.levelProperties.length);
+            this.log.debug("levelProperties: " + this.levelProperties.length);
         }
 
     }

@@ -12,6 +12,7 @@ module Lemmings {
    * played. 
   */
   export class SoundImagePlayer {
+    private log = new LogHandler("SoundImagePlayer");
 
     private reader: BinaryReader
 
@@ -207,17 +208,15 @@ module Lemmings {
     /** write debug info to console */
     public debug() {
 
-      let error = new LogHandler("SoundImagePlayer");
+      this.log.debug(this.fileConfig);
+      this.log.debug("channelCount: " + this.channelCount);
 
-      error.debug(this.fileConfig);
-      error.debug("channelCount: " + this.channelCount);
+      this.log.debug("songHeaderPosition: " + this.songHeaderPosition);
+      this.log.debug("unknownWord: " + this.unknownWord);
 
-      error.debug("songHeaderPosition: " + this.songHeaderPosition);
-      error.debug("unknownWord: " + this.unknownWord);
-
-      error.debug("waitCycles: " + this.waitCycles);
-      error.debug("currentCycle: " + this.currentCycle);
-      error.debug("instrumentPos: " + this.instrumentPos);
+      this.log.debug("waitCycles: " + this.waitCycles);
+      this.log.debug("currentCycle: " + this.currentCycle);
+      this.log.debug("instrumentPos: " + this.instrumentPos);
     }
 
   }

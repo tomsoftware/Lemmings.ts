@@ -3,7 +3,7 @@ module Lemmings {
   /** Class to provide a read pointer and readfunctions to a binary Buffer */
   export class BinaryReader {
     
-    private _error : LogHandler = new LogHandler("BinaryReader");
+    private log : LogHandler = new LogHandler("BinaryReader");
     public filename:string;
     protected data : Uint8Array;
     protected hiddenOffset : number;
@@ -22,34 +22,34 @@ module Lemmings {
       if (dataArray == null) {
           this.data = new Uint8Array(0);
           dataLenght = 0;
-          this._error.log("BinaryReader from NULL; size:"+ 0);
+          this.log.log("BinaryReader from NULL; size:"+ 0);
 
       } else if (dataArray instanceof BinaryReader) {
           //- if dataArray is BinaryReader use there data
           this.data = dataArray.data;
           dataLenght = dataArray.length;
-          this._error.log("BinaryReader from BinaryReader; size:"+ dataLenght);
+          this.log.log("BinaryReader from BinaryReader; size:"+ dataLenght);
 
       } else if (dataArray instanceof Uint8Array){
           this.data = dataArray;
           dataLenght = dataArray.byteLength;
-          this._error.log("BinaryReader from Uint8Array; size:"+ dataLenght);
+          this.log.log("BinaryReader from Uint8Array; size:"+ dataLenght);
           
       }
       else if (dataArray instanceof ArrayBuffer){
           this.data = new Uint8Array(dataArray);
           dataLenght = dataArray.byteLength;
-          this._error.log("BinaryReader from ArrayBuffer; size:"+ dataLenght);
+          this.log.log("BinaryReader from ArrayBuffer; size:"+ dataLenght);
       }
       else if (dataArray instanceof Blob){
           this.data = new Uint8Array(<any>dataArray);
           dataLenght = this.data.byteLength;
-          this._error.log("BinaryReader from Blob; size:"+ dataLenght);
+          this.log.log("BinaryReader from Blob; size:"+ dataLenght);
       }      
       else {
           this.data = dataArray;
           dataLenght = this.data.length;
-          this._error.log("BinaryReader from unknown: "+ dataArray + "; size:"+ dataLenght);
+          this.log.log("BinaryReader from unknown: "+ dataArray + "; size:"+ dataLenght);
       }
 
       if (length == null) length = dataLenght - offset;
@@ -67,7 +67,7 @@ module Lemmings {
       if (offset != null) this.pos = (offset + this.hiddenOffset);
 
       if ((this.pos < 0) || (this.pos > this.data.length)) {
-        this._error.log("read out of data: "+ this.filename +" - size: "+ this.data.length +" @ "+ this.pos);
+        this.log.log("read out of data: "+ this.filename +" - size: "+ this.data.length +" @ "+ this.pos);
         return 0;
       }
 

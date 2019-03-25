@@ -40,9 +40,8 @@ module Lemmings {
 
     public instrumentPos: number;
 
-
     private reader: BinaryReader;
-    private error: LogHandler = new LogHandler("AdliChannels");
+    private log: LogHandler = new LogHandler("AdliChannels");
 
     private fileConfig: AudioConfig
 
@@ -304,7 +303,7 @@ module Lemmings {
 
 
         case 3:
-          this.error.log("not implemented - end of song");
+          this.log.log("not implemented - end of song");
           // Todo: 
           ///-- reset all chanels ----
 
@@ -344,7 +343,7 @@ module Lemmings {
           break;
 
         default:
-          this.error.log("unknown command in part3");
+          this.log.log("unknown command in part3");
       }
 
 

@@ -5,8 +5,7 @@ module Lemmings {
 
     /** read the VGASPECx.DAT file : it is a image used for the ground */
     export class VgaspecReader {
-        private levelProperties: LevelProperties[] = []
-        private error = new LogHandler("VgaspecReader");
+        private log = new LogHandler("VgaspecReader");
         public img:Frame;
 
         /** the color palette stored in this file */
@@ -22,7 +21,7 @@ module Lemmings {
 
             let fc = new FileContainer(fr);
             if (fc.count() != 1){
-                this.error.log("No FileContainer found!");
+                this.log.log("No FileContainer found!");
                 return;
             }
 
@@ -118,7 +117,7 @@ module Lemmings {
             }
 
             if (fr.eof()) {
-                this.error.log("readPalettes() : unexpected end of file!: " + fr.filename);
+                this.log.log("readPalettes() : unexpected end of file!: " + fr.filename);
                 return;
             }
 

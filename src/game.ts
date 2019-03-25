@@ -3,7 +3,7 @@ module Lemmings {
     /** provides an game object to controle the game */
     export class Game {
 
-        private error: LogHandler = new LogHandler("Game");
+        private log: LogHandler = new LogHandler("Game");
         private gameResources: GameResources = null;
         private levelGroupIndex: number;
         private levelIndex: number;
@@ -208,9 +208,9 @@ module Lemmings {
         }
 
         /** run the game logic one step in time */
-        public runGameLogic() {
+        private runGameLogic() {
             if (this.level == null) {
-                this.error.log("level not loaded!");
+                this.log.log("level not loaded!");
                 return;
             }
 

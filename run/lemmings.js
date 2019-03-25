@@ -5,7 +5,6 @@ var Lemmings;
     class GameFactory {
         constructor(rootPath) {
             this.rootPath = rootPath;
-            this.error = new Lemmings.LogHandler("GameFactory");
             this.fileProvider = new Lemmings.FileProvider(rootPath);
             let configFileReader = this.fileProvider.loadString("config.json");
             this.configReader = new Lemmings.ConfigReader(configFileReader);
@@ -17,6 +16,10 @@ var Lemmings;
                 this.getGameResources(gameType)
                     .then(res => resolve(new Lemmings.Game(res)));
             });
+        }
+        /** return the config of a game type */
+        getConfig(gameType) {
+            return this.configReader.getConfig(gameType);
         }
         /** return a Game Resources that gaves access to images, maps, sounds  */
         getGameResources(gameType) {
@@ -166,6 +169,30 @@ var Lemmings;
         GameStateTypes[GameStateTypes["SUCCEEDED"] = 4] = "SUCCEEDED";
     })(GameStateTypes = Lemmings.GameStateTypes || (Lemmings.GameStateTypes = {}));
     ;
+    (function (GameStateTypes) {
+        function toString(type) {
+            return GameStateTypes[type];
+        }
+        GameStateTypes.toString = toString;
+        function length() {
+            return 5;
+        }
+        GameStateTypes.length = length;
+        function isValid(type) {
+            return ((type > GameStateTypes.UNKNOWN) && (type < this.lenght()));
+        }
+        GameStateTypes.isValid = isValid;
+        /** return the GameStateTypes with the given name */
+        function fromString(typeName) {
+            typeName = typeName.trim().toUpperCase();
+            for (let i = 0; i < this.length(); i++) {
+                if (GameStateTypes[i] == typeName)
+                    return i;
+            }
+            return GameStateTypes.UNKNOWN;
+        }
+        GameStateTypes.fromString = fromString;
+    })(GameStateTypes = Lemmings.GameStateTypes || (Lemmings.GameStateTypes = {}));
 })(Lemmings || (Lemmings = {}));
 var Lemmings;
 (function (Lemmings) {
@@ -210,7 +237,7 @@ var Lemmings;
     /** provides an game object to controle the game */
     class Game {
         constructor(gameResources) {
-            this.error = new Lemmings.LogHandler("Game");
+            this.log = new Lemmings.LogHandler("Game");
             this.gameResources = null;
             this.guiDispaly = null;
             this.dispaly = null;
@@ -354,7 +381,7 @@ var Lemmings;
         /** run the game logic one step in time */
         runGameLogic() {
             if (this.level == null) {
-                this.error.log("level not loaded!");
+                this.log.log("level not loaded!");
                 return;
             }
             this.lemmingManager.tick();
@@ -412,6 +439,12 @@ var Lemmings;
              *     ->  (FileId * 10 + FilePart) * (useOddTabelEntry? -1 : 1)
              */
             this.order = [];
+        }
+        getGroupLength(groupIndex) {
+            if ((groupIndex < 0) || (groupIndex > this.order.length)) {
+                return 0;
+            }
+            return this.order[groupIndex].length;
         }
     }
     Lemmings.LevelConfig = LevelConfig;
@@ -2181,7 +2214,6 @@ var Lemmings;
         constructor(fileProvider, config) {
             this.fileProvider = fileProvider;
             this.config = config;
-            this.error = new Lemmings.LogHandler("LevelLoader");
             this.levelIndexResolve = new Lemmings.LevelIndexResolve(config);
         }
         /** return the map and it's config */
@@ -2604,7 +2636,7 @@ var Lemmings;
     /** Class to provide a read pointer and readfunctions to a binary Buffer */
     class BinaryReader {
         constructor(dataArray, offset = 0, length, filename = "[unknown]") {
-            this._error = new Lemmings.LogHandler("BinaryReader");
+            this.log = new Lemmings.LogHandler("BinaryReader");
             this.filename = filename;
             if (offset == null)
                 offset = 0;
@@ -2612,33 +2644,33 @@ var Lemmings;
             if (dataArray == null) {
                 this.data = new Uint8Array(0);
                 dataLenght = 0;
-                this._error.log("BinaryReader from NULL; size:" + 0);
+                this.log.log("BinaryReader from NULL; size:" + 0);
             }
             else if (dataArray instanceof BinaryReader) {
                 //- if dataArray is BinaryReader use there data
                 this.data = dataArray.data;
                 dataLenght = dataArray.length;
-                this._error.log("BinaryReader from BinaryReader; size:" + dataLenght);
+                this.log.log("BinaryReader from BinaryReader; size:" + dataLenght);
             }
             else if (dataArray instanceof Uint8Array) {
                 this.data = dataArray;
                 dataLenght = dataArray.byteLength;
-                this._error.log("BinaryReader from Uint8Array; size:" + dataLenght);
+                this.log.log("BinaryReader from Uint8Array; size:" + dataLenght);
             }
             else if (dataArray instanceof ArrayBuffer) {
                 this.data = new Uint8Array(dataArray);
                 dataLenght = dataArray.byteLength;
-                this._error.log("BinaryReader from ArrayBuffer; size:" + dataLenght);
+                this.log.log("BinaryReader from ArrayBuffer; size:" + dataLenght);
             }
             else if (dataArray instanceof Blob) {
                 this.data = new Uint8Array(dataArray);
                 dataLenght = this.data.byteLength;
-                this._error.log("BinaryReader from Blob; size:" + dataLenght);
+                this.log.log("BinaryReader from Blob; size:" + dataLenght);
             }
             else {
                 this.data = dataArray;
                 dataLenght = this.data.length;
-                this._error.log("BinaryReader from unknown: " + dataArray + "; size:" + dataLenght);
+                this.log.log("BinaryReader from unknown: " + dataArray + "; size:" + dataLenght);
             }
             if (length == null)
                 length = dataLenght - offset;
@@ -2651,7 +2683,7 @@ var Lemmings;
             if (offset != null)
                 this.pos = (offset + this.hiddenOffset);
             if ((this.pos < 0) || (this.pos > this.data.length)) {
-                this._error.log("read out of data: " + this.filename + " - size: " + this.data.length + " @ " + this.pos);
+                this.log.log("read out of data: " + this.filename + " - size: " + this.data.length + " @ " + this.pos);
                 return 0;
             }
             let v = this.data[this.pos];
@@ -2780,7 +2812,7 @@ var Lemmings;
     /** Bit Stream Writer class */
     class BitWriter {
         constructor(bitReader, outLength) {
-            this.error = new Lemmings.LogHandler("BitWriter");
+            this.log = new Lemmings.LogHandler("BitWriter");
             this.outData = new Uint8Array(outLength);
             this.outPos = outLength;
             this.bitReader = bitReader;
@@ -2788,7 +2820,7 @@ var Lemmings;
         /** copy lenght bytes from the reader */
         copyRawData(length) {
             if (this.outPos - length < 0) {
-                this.error.log("copyRawData: out of out buffer");
+                this.log.log("copyRawData: out of out buffer");
                 length = this.outPos;
                 return;
             }
@@ -2803,13 +2835,13 @@ var Lemmings;
             var offset = this.bitReader.read(offsetBitCount) + 1;
             /// is offset in range?
             if (this.outPos + offset > this.outData.length) {
-                this.error.log("copyReferencedData: offset out of range");
+                this.log.log("copyReferencedData: offset out of range");
                 offset = 0;
                 return;
             }
             /// is lenght in range
             if (this.outPos - length < 0) {
-                this.error.log("copyReferencedData: out of out buffer");
+                this.log.log("copyReferencedData: out of out buffer");
                 length = this.outPos;
                 return;
             }
@@ -2834,13 +2866,13 @@ var Lemmings;
     class FileContainer {
         /** read the content of the container  */
         constructor(content) {
-            this.error = new Lemmings.LogHandler("FileContainer");
+            this.log = new Lemmings.LogHandler("FileContainer");
             this.read(content);
         }
         /** Unpack a part (chunks / segments) of the file and return it */
         getPart(index) {
             if ((index < 0) || (index >= this.parts.length)) {
-                this.error.log("getPart(" + index + ") Out of index!");
+                this.log.log("getPart(" + index + ") Out of index!");
                 return new Lemmings.BinaryReader();
             }
             return this.parts[index].unpack();
@@ -2874,7 +2906,7 @@ var Lemmings;
                 part.index = this.parts.length;
                 /// check if the data are valid
                 if ((part.offset < 0) || (size > 0xFFFFFF) || (size < 10)) {
-                    this.error.log("out of sync " + fileReader.filename);
+                    this.log.log("out of sync " + fileReader.filename);
                     break;
                 }
                 //- add part
@@ -2883,7 +2915,7 @@ var Lemmings;
                 /// jump to next part
                 pos += size;
             }
-            this.error.debug(fileReader.filename + " has " + this.parts.length + " file-parts.");
+            this.log.debug(fileReader.filename + " has " + this.parts.length + " file-parts.");
         }
     }
     Lemmings.FileContainer = FileContainer;
@@ -2897,12 +2929,12 @@ var Lemmings;
     class FileProvider {
         constructor(rootPath) {
             this.rootPath = rootPath;
-            this._errorHandler = new Lemmings.LogHandler("FileProvider");
+            this.log = new Lemmings.LogHandler("FileProvider");
         }
         /** load binary data from URL: rootPath + [path] + filename */
         loadBinary(path, filename = null) {
             let url = this.rootPath + path + ((filename == null) ? "" : "/" + filename);
-            this._errorHandler.debug("loading:" + url);
+            this.log.debug("loading:" + url);
             return new Promise((resolve, reject) => {
                 var xhr = new XMLHttpRequest();
                 xhr.onload = () => {
@@ -2911,12 +2943,12 @@ var Lemmings;
                         resolve(reader);
                     }
                     else {
-                        this._errorHandler.log("error load file:" + url);
+                        this.log.log("error load file:" + url);
                         reject({ status: xhr.status, statusText: xhr.statusText });
                     }
                 };
                 xhr.onerror = () => {
-                    this._errorHandler.log("error load file:" + url);
+                    this.log.log("error load file:" + url);
                     reject({ status: xhr.status, statusText: xhr.statusText });
                 };
                 xhr.open("GET", url);
@@ -2926,14 +2958,14 @@ var Lemmings;
         }
         /** load string data from URL */
         loadString(url) {
-            this._errorHandler.log("Load file as string: " + url);
+            this.log.log("Load file as string: " + url);
             return new Promise((resolve, reject) => {
                 let xhr = new XMLHttpRequest();
                 xhr.onload = (oEvent) => {
                     resolve(xhr.response);
                 };
                 xhr.onerror = () => {
-                    this._errorHandler.log("error load file:" + url);
+                    this.log.log("error load file:" + url);
                     reject({ status: xhr.status, statusText: xhr.statusText });
                 };
                 /// setup query
@@ -2974,7 +3006,7 @@ var Lemmings;
             this.unknown1 = 0;
             /** position of this part/chunk in the container */
             this.index = 0;
-            this.error = new Lemmings.LogHandler("UnpackFilePart");
+            this.log = new Lemmings.LogHandler("UnpackFilePart");
             this.fileReader = fileReader;
             this.unpackingDone = false;
         }
@@ -3022,10 +3054,10 @@ var Lemmings;
                 }
             }
             if (this.checksum == bitReader.getCurrentChecksum()) {
-                this.error.debug("doUnpacking(" + fileReader.filename + ") done! ");
+                this.log.debug("doUnpacking(" + fileReader.filename + ") done! ");
             }
             else {
-                this.error.log("doUnpacking(" + fileReader.filename + ") : Checksum mismatch! ");
+                this.log.log("doUnpacking(" + fileReader.filename + ") : Checksum mismatch! ");
             }
             /// create FileReader from buffer
             var outReader = outBuffer.getFileReader(fileReader.filename + "[" + this.index + "]");
@@ -3190,9 +3222,9 @@ var Lemmings;
             /** the color palette stored in this file */
             this.groundPalette = new Lemmings.ColorPalette();
             this.colorPalette = new Lemmings.ColorPalette();
-            this.error = new Lemmings.LogHandler("GroundReader");
+            this.log = new Lemmings.LogHandler("GroundReader");
             if (groundFile.length != 1056) {
-                this.error.log("groundFile " + groundFile.filename + " has wrong size: " + groundFile.length);
+                this.log.log("groundFile " + groundFile.filename + " has wrong size: " + groundFile.length);
                 return;
             }
             let BYTE_SIZE_OF_OBJECTS = 28 * 16;
@@ -3254,7 +3286,7 @@ var Lemmings;
                 img.trap_sound_effect_id = frO.readByte();
                 img.palette = colorPalett;
                 if (frO.eof()) {
-                    this.error.log("readObjectImages() : unexpected end of file: " + frO.filename);
+                    this.log.log("readObjectImages() : unexpected end of file: " + frO.filename);
                     return;
                 }
                 //- add Object
@@ -3275,7 +3307,7 @@ var Lemmings;
                 img.palette = colorPalette;
                 img.frameCount = 1;
                 if (frO.eof()) {
-                    this.error.log("readTerrainImages() : unexpected end of file! " + frO.filename);
+                    this.log.log("readTerrainImages() : unexpected end of file! " + frO.filename);
                     return;
                 }
                 //- add Object
@@ -3372,13 +3404,13 @@ var Lemmings;
             this.objects = [];
             this.terrains = [];
             this.steel = [];
-            this.error = new Lemmings.LogHandler("LevelReader");
+            this.log = new Lemmings.LogHandler("LevelReader");
             this.readLevelInfo(fr);
             this.readLevelObjects(fr);
             this.readLevelTerrain(fr);
             this.readSteelArea(fr);
             this.readLevelName(fr);
-            this.error.debug(this);
+            this.log.debug(this);
         }
         /** read general Level information */
         readLevelInfo(fr) {
@@ -3457,7 +3489,7 @@ var Lemmings;
                 if ((pos == 0) && (size == 0))
                     continue;
                 if (unknown != 0) {
-                    this.error.log("Error in readSteelArea() : unknown != 0");
+                    this.log.log("Error in readSteelArea() : unknown != 0");
                     continue;
                 }
                 newRange.x = (pos & 0x01FF) * 4 - 16;
@@ -3471,7 +3503,7 @@ var Lemmings;
         readLevelName(fr) {
             /// at the end of the 
             this.levelProperties.levelName = fr.readString(32, 0x07E0);
-            this.error.debug("Level Name: " + this.levelProperties.levelName);
+            this.log.debug("Level Name: " + this.levelProperties.levelName);
         }
     }
     Lemmings.LevelReader = LevelReader;
@@ -3484,7 +3516,7 @@ var Lemmings;
     class OddTableReader {
         constructor(oddfile) {
             this.levelProperties = [];
-            this.error = new Lemmings.LogHandler("OddTableReader");
+            this.log = new Lemmings.LogHandler("OddTableReader");
             this.read(oddfile);
         }
         /** return the Level for a given levelNumber - LevelNumber is counting all levels from first to last of the game
@@ -3516,10 +3548,10 @@ var Lemmings;
                 prop.skills[Lemmings.SkillTypes.MINER] = fr.readWord();
                 prop.skills[Lemmings.SkillTypes.DIGGER] = fr.readWord();
                 prop.levelName = fr.readString(32);
-                this.error.debug("Level (" + i + ") Name: " + prop.levelName + " " + prop.needCount + " " + prop.timeLimit);
+                this.log.debug("Level (" + i + ") Name: " + prop.levelName + " " + prop.needCount + " " + prop.timeLimit);
                 this.levelProperties.push(prop);
             }
-            this.error.debug("levelProperties: " + this.levelProperties.length);
+            this.log.debug("levelProperties: " + this.levelProperties.length);
         }
     }
     Lemmings.OddTableReader = OddTableReader;
@@ -3617,8 +3649,7 @@ var Lemmings;
     /** read the VGASPECx.DAT file : it is a image used for the ground */
     class VgaspecReader {
         constructor(vgaspecFile) {
-            this.levelProperties = [];
-            this.error = new Lemmings.LogHandler("VgaspecReader");
+            this.log = new Lemmings.LogHandler("VgaspecReader");
             /** the color palette stored in this file */
             this.groundPalette = new Lemmings.ColorPalette();
             this.read(vgaspecFile);
@@ -3628,7 +3659,7 @@ var Lemmings;
             fr.setOffset(0);
             let fc = new Lemmings.FileContainer(fr);
             if (fc.count() != 1) {
-                this.error.log("No FileContainer found!");
+                this.log.log("No FileContainer found!");
                 return;
             }
             /// we only need the first part
@@ -3701,7 +3732,7 @@ var Lemmings;
                 this.groundPalette.setColorRGB(i, r, g, b);
             }
             if (fr.eof()) {
-                this.error.log("readPalettes() : unexpected end of file!: " + fr.filename);
+                this.log.log("readPalettes() : unexpected end of file!: " + fr.filename);
                 return;
             }
         }
@@ -3765,7 +3796,7 @@ var Lemmings;
             this.unused = 0;
             /** only play if this is true */
             this.playingState = SoundImagChannelState.NONE;
-            this.error = new Lemmings.LogHandler("AdliChannels");
+            this.log = new Lemmings.LogHandler("AdliChannels");
             this.fileConfig = audioConfig;
             this.reader = new Lemmings.BinaryReader(reader);
         }
@@ -3938,7 +3969,7 @@ var Lemmings;
                     this.waitTime = this.waitSum;
                     return -1;
                 case 3:
-                    this.error.log("not implemented - end of song");
+                    this.log.log("not implemented - end of song");
                     // Todo: 
                     ///-- reset all chanels ----
                     /*
@@ -3970,7 +4001,7 @@ var Lemmings;
                     cmdPos++;
                     break;
                 default:
-                    this.error.log("unknown command in part3");
+                    this.log.log("unknown command in part3");
             }
             return cmdPos;
         }
@@ -4050,6 +4081,7 @@ var Lemmings;
     class SoundImagePlayer {
         constructor(reader, audioConfig) {
             this.audioConfig = audioConfig;
+            this.log = new Lemmings.LogHandler("SoundImagePlayer");
             /** every track is composed of several channel. */
             this.channels = [];
             this.currentCycle = 0;
@@ -4167,14 +4199,13 @@ var Lemmings;
         }
         /** write debug info to console */
         debug() {
-            let error = new Lemmings.LogHandler("SoundImagePlayer");
-            error.debug(this.fileConfig);
-            error.debug("channelCount: " + this.channelCount);
-            error.debug("songHeaderPosition: " + this.songHeaderPosition);
-            error.debug("unknownWord: " + this.unknownWord);
-            error.debug("waitCycles: " + this.waitCycles);
-            error.debug("currentCycle: " + this.currentCycle);
-            error.debug("instrumentPos: " + this.instrumentPos);
+            this.log.debug(this.fileConfig);
+            this.log.debug("channelCount: " + this.channelCount);
+            this.log.debug("songHeaderPosition: " + this.songHeaderPosition);
+            this.log.debug("unknownWord: " + this.unknownWord);
+            this.log.debug("waitCycles: " + this.waitCycles);
+            this.log.debug("currentCycle: " + this.currentCycle);
+            this.log.debug("instrumentPos: " + this.instrumentPos);
         }
     }
     Lemmings.SoundImagePlayer = SoundImagePlayer;
@@ -5761,7 +5792,7 @@ var Lemmings;
     /** read the config.json file */
     class ConfigReader {
         constructor(configFile) {
-            this.error = new Lemmings.LogHandler("ConfigReader");
+            this.log = new Lemmings.LogHandler("ConfigReader");
             this.configs = new Promise((resolve, reject) => {
                 configFile.then((jsonString) => {
                     let configJson = this.parseConfig(jsonString);
@@ -5775,7 +5806,7 @@ var Lemmings;
                 this.configs.then((configs) => {
                     let config = configs.find((type) => type.gametype == gameType);
                     if (config == null) {
-                        this.error.log("config for GameTypes:" + Lemmings.GameTypes.toString(gameType) + " not found!");
+                        this.log.log("config for GameTypes:" + Lemmings.GameTypes.toString(gameType) + " not found!");
                         reject();
                         return;
                     }
@@ -5790,7 +5821,7 @@ var Lemmings;
                 var config = JSON.parse(jsonData);
             }
             catch (e) {
-                this.error.log("Unable to parse config", e);
+                this.log.log("Unable to parse config", e);
                 return gameConfigs;
             }
             /// for all game types
@@ -5912,7 +5943,8 @@ var Lemmings;
 (function (Lemmings) {
     class DebugView {
         constructor() {
-            this.levelIndex = 4;
+            this.log = new Lemmings.LogHandler("DebugView");
+            this.levelIndex = 0;
             this.levelGroupIndex = 0;
             this.musicIndex = 0;
             this.soundIndex = 0;
@@ -5930,10 +5962,14 @@ var Lemmings;
             this.elementLevelName = null;
             this.elementGameState = null;
             this.gameSpeedFactor = 1;
-            this._gameCanvas = null;
+            /// split the hash of the url in parts + reverse + add 0 items
+            let hashParts = window.location.hash.substr(1).split(",", 3).reverse().push(...["0", "0", "0"]);
+            this.levelIndex = this.strToNum(hashParts[0]);
+            this.levelGroupIndex = this.strToNum(hashParts[1]);
+            this.gameType = this.strToNum(hashParts[2]) + 1;
+            this.log.log("selected level: " + Lemmings.GameTypes.toString(this.gameType) + " : " + this.levelIndex + " / " + this.levelGroupIndex);
         }
         set gameCanvas(el) {
-            this._gameCanvas = el;
             this.stage = new Lemmings.Stage(el);
         }
         /** start or continue the game */
@@ -5953,18 +5989,24 @@ var Lemmings;
                 game.setGuiDisplay(this.stage.getGuiDisplay());
                 game.getGameTimer().speedFactor = this.gameSpeedFactor;
                 game.start();
-                this.updateGameStateText(Lemmings.GameStateTypes.RUNNING);
-                game.onGameEnd.on((state) => {
-                    this.updateGameStateText(state);
-                    this.stage.startFadeOut();
-                });
+                this.changeHtmlText(this.elementGameState, Lemmings.GameStateTypes.toString(Lemmings.GameStateTypes.RUNNING));
+                game.onGameEnd.on((state) => this.onGameEnd(state));
                 this.game = game;
             });
         }
-        updateGameStateText(state) {
-            if (this.elementGameState) {
-                this.elementGameState.innerHTML = Lemmings.GameStateTypes[state];
-            }
+        onGameEnd(state) {
+            this.changeHtmlText(this.elementGameState, Lemmings.GameStateTypes.toString(state));
+            this.stage.startFadeOut();
+            window.setTimeout(() => {
+                if (state == Lemmings.GameStateTypes.SUCCEEDED) {
+                    /// move to next level
+                    this.moveToLevel(1);
+                }
+                else {
+                    /// redo this level
+                    this.moveToLevel(0);
+                }
+            }, 2500);
         }
         /** pause the game */
         cheat() {
@@ -5993,6 +6035,13 @@ var Lemmings;
             }
             this.game.getGameTimer().tick();
         }
+        selectSpeedFactor(newSpeed) {
+            if (this.game == null) {
+                return;
+            }
+            this.gameSpeedFactor = newSpeed;
+            this.game.getGameTimer().speedFactor = newSpeed;
+        }
         playMusic(moveInterval) {
             this.stopMusic();
             if (!this.gameResources)
@@ -6001,9 +6050,7 @@ var Lemmings;
                 moveInterval = 0;
             this.musicIndex += moveInterval;
             this.musicIndex = (this.musicIndex < 0) ? 0 : this.musicIndex;
-            if (this.elementTrackNumber) {
-                this.elementTrackNumber.innerHTML = this.musicIndex.toString();
-            }
+            this.changeHtmlText(this.elementTrackNumber, this.musicIndex.toString());
             this.gameResources.getMusicPlayer(this.musicIndex)
                 .then((player) => {
                 this.musicPlayer = player;
@@ -6022,43 +6069,63 @@ var Lemmings;
                 this.soundPlayer = null;
             }
         }
-        selectSpeedFactor(newSpeed) {
-            if (this.game == null) {
-                return;
-            }
-            this.gameSpeedFactor = newSpeed;
-            this.game.getGameTimer().speedFactor = newSpeed;
-        }
         playSound(moveInterval) {
             this.stopSound();
             if (moveInterval == null)
                 moveInterval = 0;
             this.soundIndex += moveInterval;
             this.soundIndex = (this.soundIndex < 0) ? 0 : this.soundIndex;
-            if (this.elementSoundNumber) {
-                this.elementSoundNumber.innerHTML = this.soundIndex.toString();
-            }
+            this.changeHtmlText(this.elementSoundNumber, this.soundIndex.toString());
             this.gameResources.getSoundPlayer(this.soundIndex)
                 .then((player) => {
                 this.soundPlayer = player;
                 this.soundPlayer.play();
             });
         }
+        /** add/subtract one to the current levelIndex */
         moveToLevel(moveInterval) {
             if (moveInterval == null)
                 moveInterval = 0;
-            this.levelIndex += moveInterval;
-            this.levelIndex = (this.levelIndex < 0) ? 0 : this.levelIndex;
-            if (this.elementLevelNumber) {
-                this.elementLevelNumber.innerHTML = (this.levelIndex + 1).toString();
-            }
-            this.loadLevel();
+            this.levelIndex = (this.levelIndex + moveInterval) | 0;
+            /// check if the levelIndex is out of bounds
+            this.gameFactory.getConfig(this.gameType).then((config) => {
+                /// jump to next level group?
+                if (this.levelIndex >= config.level.getGroupLength(this.levelGroupIndex)) {
+                    this.levelGroupIndex++;
+                    this.levelIndex = 0;
+                }
+                /// jump to previous level group?
+                if ((this.levelIndex < 0) && (this.levelGroupIndex > 0)) {
+                    this.levelGroupIndex--;
+                    this.levelIndex = config.level.getGroupLength(this.levelGroupIndex) - 1;
+                }
+                /// update and load level
+                this.changeHtmlText(this.elementLevelNumber, (this.levelIndex + 1).toString());
+                this.loadLevel();
+            });
         }
+        /** return the url hash for the pressent game/group/level-index */
+        buildLevelIndexHash() {
+            return (this.gameType - 1) + "," + this.levelGroupIndex + "," + this.levelIndex;
+        }
+        /** convert a string to a number */
+        strToNum(str) {
+            return Number(str) | 0;
+        }
+        /** change the the text of a html element */
+        changeHtmlText(htmlElement, value) {
+            if (htmlElement == null) {
+                return;
+            }
+            htmlElement.innerText = value;
+        }
+        /** remove items of a <select> */
         clearHtmlList(htmlList) {
             while (htmlList.options.length) {
                 htmlList.remove(0);
             }
         }
+        /** add array elements to a <select> */
         arrayToSelect(htmlList, list) {
             this.clearHtmlList(htmlList);
             for (var i = 0; i < list.length; i++) {
@@ -6069,11 +6136,13 @@ var Lemmings;
                 htmlList.appendChild(el);
             }
         }
+        /** switch the selected level group */
         selectLevelGroup(newLevelGroupIndex) {
             this.levelGroupIndex = newLevelGroupIndex;
             this.loadLevel();
         }
-        selectGame(gameTypeName) {
+        /** select a game type */
+        selectGameType(gameTypeName) {
             if (gameTypeName == null)
                 gameTypeName = "LEMMINGS";
             this.gameType = Lemmings.GameTypes.fromString(gameTypeName);
@@ -6085,6 +6154,7 @@ var Lemmings;
                 this.loadLevel();
             });
         }
+        /** load a level and render it to the display */
         loadLevel() {
             if (this.gameResources == null)
                 return;
@@ -6092,14 +6162,12 @@ var Lemmings;
                 this.game.stop();
                 this.game = null;
             }
-            this.updateGameStateText(Lemmings.GameStateTypes.UNKNOWN);
+            this.changeHtmlText(this.elementGameState, Lemmings.GameStateTypes.toString(Lemmings.GameStateTypes.UNKNOWN));
             this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
                 .then((level) => {
                 if (level == null)
                     return;
-                if (this.elementLevelName) {
-                    this.elementLevelName.innerHTML = level.name;
-                }
+                this.changeHtmlText(this.elementLevelName, level.name);
                 if (this.stage != null) {
                     let gameDisplay = this.stage.getGameDisplay();
                     gameDisplay.clear();
@@ -6107,6 +6175,7 @@ var Lemmings;
                     level.render(gameDisplay);
                     gameDisplay.redraw();
                 }
+                window.location.hash = this.buildLevelIndexHash();
                 console.dir(level);
             });
         }

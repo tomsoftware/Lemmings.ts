@@ -18,7 +18,13 @@ module Lemmings {
          */  
         public order: number[][] = [];
 
+        public getGroupLength(groupIndex : number) : number {
+            if ((groupIndex < 0 ) || (groupIndex > this.order.length)) {
+                return 0;
+            }
 
+            return this.order[groupIndex].length;
+        }
     }
 
 }

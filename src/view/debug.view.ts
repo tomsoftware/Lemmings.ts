@@ -1,12 +1,13 @@
 module Lemmings {
 
     export class DebugView {
+        private log : LogHandler = new LogHandler("DebugView");
 
-        private levelIndex = 4;
-        private levelGroupIndex = 0;
+        private levelIndex: number = 0;
+        private levelGroupIndex: number = 0;
         private gameType: GameTypes;
-        private musicIndex = 0;
-        private soundIndex = 0;
+        private musicIndex: number = 0;
+        private soundIndex: number = 0;
         private gameResources: GameResources = null;
         private musicPlayer: AudioPlayer = null;
         private soundPlayer: AudioPlayer = null;
@@ -24,15 +25,25 @@ module Lemmings {
         public elementGameState: HTMLElement = null;
 
         private gameSpeedFactor = 1;
-        private _gameCanvas: HTMLCanvasElement = null;
 
 
+        public constructor() {
+            /// split the hash of the url in parts + reverse + add 0 items
+            let hashParts = window.location.hash.substr(1).split(",", 3).reverse().push(...["0","0","0"]);
+      
+            this.levelIndex = this.strToNum(hashParts[0]);
+            this.levelGroupIndex = this.strToNum(hashParts[1]);
+            this.gameType = this.strToNum(hashParts[2]) + 1;
+
+            this.log.log("selected level: "+ GameTypes.toString(this.gameType) +" : "+ this.levelIndex + " / "+ this.levelGroupIndex);
+        }
+
+  
         public set gameCanvas(el:HTMLCanvasElement){
-            this._gameCanvas = el;
-            
             this.stage = new Stage(el);
         }
-            
+        
+        
         /** start or continue the game */
         public start() {
             if (!this.gameFactory) return;
@@ -55,22 +66,33 @@ module Lemmings {
 
                     game.start();
 
-                    this.updateGameStateText(GameStateTypes.RUNNING);
+                    this.changeHtmlText(this.elementGameState, GameStateTypes.toString(GameStateTypes.RUNNING));
 
-                    game.onGameEnd.on((state) => {
-                        this.updateGameStateText(state);
-                        this.stage.startFadeOut();
-                    })
+                    game.onGameEnd.on((state) => this.onGameEnd(state));
 
                     this.game = game;
                 });
         }
 
-        private updateGameStateText(state:GameStateTypes) {
-            if (this.elementGameState) {
-                this.elementGameState.innerHTML = GameStateTypes[state];
-            }
+
+        private onGameEnd(state : GameStateTypes) {
+            this.changeHtmlText(this.elementGameState, GameStateTypes.toString(state));
+            this.stage.startFadeOut();
+
+            
+            window.setTimeout(() => {
+                if (state == GameStateTypes.SUCCEEDED) {
+                    /// move to next level
+                    this.moveToLevel(1);
+                }
+                else {
+                    /// redo this level
+                    this.moveToLevel(0);
+                }
+                
+            }, 2500);
         }
+
 
         /** pause the game */
         public cheat() {
@@ -107,6 +129,16 @@ module Lemmings {
             this.game.getGameTimer().tick();
         }
 
+        public selectSpeedFactor(newSpeed: number) {
+            if (this.game == null) {
+                return;
+            }
+
+            this.gameSpeedFactor = newSpeed;
+            this.game.getGameTimer().speedFactor = newSpeed;
+        }
+
+
         public playMusic(moveInterval: number) {
 
             this.stopMusic();
@@ -116,9 +148,7 @@ module Lemmings {
             this.musicIndex += moveInterval;
             this.musicIndex = (this.musicIndex < 0) ? 0 : this.musicIndex;
 
-            if (this.elementTrackNumber) {
-                this.elementTrackNumber.innerHTML = this.musicIndex.toString();
-            }
+            this.changeHtmlText(this.elementTrackNumber, this.musicIndex.toString());
 
             this.gameResources.getMusicPlayer(this.musicIndex)
                 .then((player) => {
@@ -143,15 +173,6 @@ module Lemmings {
             }
         }
 
-        public selectSpeedFactor(newSpeed: number) {
-            if (this.game == null) {
-                return;
-            }
-
-            this.gameSpeedFactor = newSpeed;
-            this.game.getGameTimer().speedFactor = newSpeed;
-        }
-
         public playSound(moveInterval: number) {
             this.stopSound();
 
@@ -161,9 +182,7 @@ module Lemmings {
 
             this.soundIndex = (this.soundIndex < 0) ? 0 : this.soundIndex;
 
-            if (this.elementSoundNumber) {
-                this.elementSoundNumber.innerHTML = this.soundIndex.toString();
-            }
+            this.changeHtmlText(this.elementSoundNumber, this.soundIndex.toString());
 
 
             this.gameResources.getSoundPlayer(this.soundIndex)
@@ -174,29 +193,61 @@ module Lemmings {
         }
 
 
-
+        /** add/subtract one to the current levelIndex */
         public moveToLevel(moveInterval: number) {
             if (moveInterval == null) moveInterval = 0;
-            this.levelIndex += moveInterval;
+            this.levelIndex = (this.levelIndex + moveInterval)| 0;
 
-            this.levelIndex = (this.levelIndex < 0) ? 0 : this.levelIndex;
+            /// check if the levelIndex is out of bounds
+            this.gameFactory.getConfig(this.gameType).then((config) => {
 
-            if (this.elementLevelNumber) {
-                this.elementLevelNumber.innerHTML = (this.levelIndex + 1).toString();
-            }
+                /// jump to next level group?
+                if (this.levelIndex >= config.level.getGroupLength(this.levelGroupIndex)) {
+                    this.levelGroupIndex ++;
+                    this.levelIndex = 0;
+                }
 
-            this.loadLevel();
+                /// jump to previous level group?
+                if ((this.levelIndex < 0) && (this.levelGroupIndex > 0)) {
+                    this.levelGroupIndex --;
+                    this.levelIndex = config.level.getGroupLength(this.levelGroupIndex) - 1;
+                }
+
+                /// update and load level
+                this.changeHtmlText(this.elementLevelNumber, (this.levelIndex + 1).toString());
+                this.loadLevel();
+            });
         }
 
 
+        /** return the url hash for the pressent game/group/level-index */
+        private buildLevelIndexHash() : string {
+            return (this.gameType - 1) +","+ this.levelGroupIndex +","+ this.levelIndex;
+        }
+
+        /** convert a string to a number */
+        private strToNum(str:string):number {
+            return Number(str)|0;
+        }
+
+        /** change the the text of a html element */
+        private changeHtmlText(htmlElement:HTMLElement, value:string) {
+            if (htmlElement == null) {
+                return
+            }
+
+            htmlElement.innerText = value;
+        }
+
+        /** remove items of a <select> */
         private clearHtmlList(htmlList: HTMLSelectElement) {
             while (htmlList.options.length) {
                 htmlList.remove(0);
             }
         }
 
-
-        private arrayToSelect(htmlList: HTMLSelectElement, list: string[]) {
+        /** add array elements to a <select> */
+        private arrayToSelect(htmlList: HTMLSelectElement, list: string[]):void {
 
             this.clearHtmlList(htmlList);
 
@@ -210,6 +261,7 @@ module Lemmings {
         }
 
 
+        /** switch the selected level group */
         public selectLevelGroup(newLevelGroupIndex: number) {
             this.levelGroupIndex = newLevelGroupIndex;
 
@@ -217,7 +269,8 @@ module Lemmings {
         }
 
 
-        private selectGame(gameTypeName: string) {
+        /** select a game type */
+        public selectGameType(gameTypeName: string) {
 
             if (gameTypeName == null) gameTypeName = "LEMMINGS";
 
@@ -236,7 +289,7 @@ module Lemmings {
         }
 
 
-
+        /** load a level and render it to the display */
         private loadLevel() {
             if (this.gameResources == null) return;
             if (this.game != null) {
@@ -244,15 +297,14 @@ module Lemmings {
                 this.game = null;
             }
 
-            this.updateGameStateText(GameStateTypes.UNKNOWN);
+
+            this.changeHtmlText(this.elementGameState, GameStateTypes.toString(GameStateTypes.UNKNOWN));
 
             this.gameResources.getLevel(this.levelGroupIndex, this.levelIndex)
                 .then((level) => {
                     if (level == null) return;
 
-                    if (this.elementLevelName) {
-                        this.elementLevelName.innerHTML = level.name;
-                    }
+                    this.changeHtmlText(this.elementLevelName, level.name);
 
                     if (this.stage != null){
                         let gameDisplay = this.stage.getGameDisplay();
@@ -261,6 +313,8 @@ module Lemmings {
                         level.render(gameDisplay);
                         gameDisplay.redraw();
                     }
+
+                    window.location.hash = this.buildLevelIndexHash();
 
                     console.dir(level);
                 });

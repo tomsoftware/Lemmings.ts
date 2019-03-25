@@ -4,7 +4,7 @@
     export class ConfigReader {
 
         private configs: Promise<GameConfig[]>;
-        private error : LogHandler = new LogHandler("ConfigReader");
+        private log : LogHandler = new LogHandler("ConfigReader");
 
 
         constructor(configFile: Promise<string>) {
@@ -30,11 +30,10 @@
 
                 this.configs.then((configs:GameConfig[]) => {
 
-
                     let config:GameConfig = configs.find((type) => type.gametype == gameType)
 
                     if (config == null) {
-                        this.error.log("config for GameTypes:"+ GameTypes.toString(gameType) +" not found!");
+                        this.log.log("config for GameTypes:"+ GameTypes.toString(gameType) +" not found!");
                         reject();
                         return;
                     }
@@ -57,7 +56,7 @@
 
             } catch(e) {
 
-                this.error.log("Unable to parse config", e);
+                this.log.log("Unable to parse config", e);
                 return gameConfigs;
             }
 

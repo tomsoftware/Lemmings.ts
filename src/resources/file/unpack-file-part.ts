@@ -24,7 +24,7 @@ module Lemmings {
 		/** is the unpacking done? */
 		private unpackingDone : boolean;
 
-		private error : LogHandler = new LogHandler("UnpackFilePart");
+		private log : LogHandler = new LogHandler("UnpackFilePart");
 
 		constructor(fileReader : BinaryReader){
 			this.fileReader = fileReader;
@@ -87,10 +87,10 @@ module Lemmings {
 			}
 
 			if (this.checksum == bitReader.getCurrentChecksum()) {
-				this.error.debug("doUnpacking("+ fileReader.filename  +") done! ");
+				this.log.debug("doUnpacking("+ fileReader.filename  +") done! ");
 			}
 			else {
-				this.error.log("doUnpacking("+ fileReader.filename  +") : Checksum mismatch! ");
+				this.log.log("doUnpacking("+ fileReader.filename  +") : Checksum mismatch! ");
 			}
 
 			/// create FileReader from buffer

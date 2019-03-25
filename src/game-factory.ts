@@ -4,7 +4,6 @@ module Lemmings {
     export class GameFactory {
 
         private configReader:ConfigReader;
-        private error : LogHandler = new LogHandler("GameFactory");
         private fileProvider : FileProvider;
 
         constructor(private rootPath: string) {
@@ -27,6 +26,11 @@ module Lemmings {
 
         }
        
+        /** return the config of a game type */
+        public getConfig(gameType : GameTypes) : Promise<GameConfig> {
+            return this.configReader.getConfig(gameType);
+        }
+
         /** return a Game Resources that gaves access to images, maps, sounds  */
         public getGameResources(gameType : GameTypes) : Promise<GameResources> {
 
