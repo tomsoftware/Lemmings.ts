@@ -1,5 +1,5 @@
 # Lemmings.ts
-A Web Lemmings Clone/Remake in TypeScript
+A Web Lemmings Clone/Remake in TypeScript - 🎉 Yes it's only Javascript 🎉
 
 
 ## Feature
