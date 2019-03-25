@@ -1,6 +1,9 @@
 # Lemmings.ts
 A Web Lemmings Clone/Remake in TypeScript - 🎉 Yes it's only Javascript 🎉
 
+<p style="text-align:center" align="center">
+<a href="http://lemmings.hmilch.net/">[play the game]</a>
+</p>
 
 ## Feature
 * Browser Game
