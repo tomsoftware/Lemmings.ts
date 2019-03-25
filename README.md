@@ -6,10 +6,11 @@ A Web Lemmings Clone/Remake in TypeScript
 * Browser Game
 * Support all Versions of Lemmings
 * Read original Lemmings Binarys
-* Support Playing of original Music using a Browser Adlib Emulator
+* Support playing of original music by interpreting the adlib.dat file and using a browser Adlib emulator 
 
 ## ToDo
 * Replace Adlib Emulator by DosBox version
+* fix some game issues
 
 ## How to run
 * download run folder
