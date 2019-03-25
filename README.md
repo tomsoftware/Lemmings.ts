@@ -9,7 +9,6 @@ A Web Lemmings Clone/Remake in TypeScript
 * Support Playing of original Music using a Browser Adlib Emulator
 
 ## ToDo
-* You can not yet play the game. Only viewing the Levels
 * Replace Adlib Emulator by DosBox version
 
 ## How to run
