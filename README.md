@@ -24,6 +24,9 @@ A Web Lemmings Clone/Remake in TypeScript
 ![demo1](docu/examples/demo_01.png "Demo 01")
 ![demo2](docu/examples/demo_02.png "Demo 02")
 
+# Disclaimer
+Disclaimer: This Project does not claim rights to any Lemmings Version. To the best of our/my knowledge, these titles have been discontinued by their publishers. If you know otherwise, please contact us/me and we will remove them accordingly. Thank you for your attention. See the LICENSE for mor information.
+
 ## Standing on the shoulders of giants
 Special thanks goes to:
 - DMA for the original game
