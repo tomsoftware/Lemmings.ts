@@ -251,6 +251,7 @@ var Lemmings;
             this.dispaly = dispaly;
             if (this.gameDispaly != null) {
                 this.gameDispaly.setGuiDisplay(dispaly);
+                this.dispaly.setScreenPosition(this.level.screenPositionX, 0);
             }
         }
         setGuiDisplay(dispaly) {
@@ -395,9 +396,6 @@ var Lemmings;
                 this.gameGui.render();
             }
             this.guiDispaly.redraw();
-        }
-        getScreenPositionX() {
-            return this.level.screenPositionX;
         }
     }
     Lemmings.Game = Game;
@@ -745,7 +743,7 @@ var Lemmings;
             if (this.gameVictoryCondition.GetLeftCount() <= 0)
                 return;
             this.releaseTickIndex++;
-            if (this.releaseTickIndex >= (100 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
+            if (this.releaseTickIndex >= (104 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
                 this.releaseTickIndex = 0;
                 let entrance = this.level.entrances[0];
                 this.addLemming(entrance.x + 24, entrance.y + 14);
@@ -765,7 +763,7 @@ var Lemmings;
                 case Lemmings.TriggerTypes.EXIT_LEVEL:
                     return Lemmings.LemmingStateType.EXITING;
                 case Lemmings.TriggerTypes.KILL:
-                    return Lemmings.LemmingStateType.EXPLODING;
+                    return Lemmings.LemmingStateType.SPLATTING;
                 case Lemmings.TriggerTypes.TRAP:
                     return Lemmings.LemmingStateType.HOISTING;
                 case Lemmings.TriggerTypes.BLOCKER_LEFT:
@@ -788,6 +786,7 @@ var Lemmings;
                 lems[i].render(gameDisplay);
             }
         }
+        /** return a lemming a a geiven position */
         getLemmingAt(x, y) {
             let lems = this.lemmings;
             let minDistance = 99999;
@@ -874,10 +873,10 @@ var Lemmings;
         getClickDistance(x, y) {
             let yCenter = this.y - 5;
             let xCenter = this.x;
-            let x1 = xCenter - 3;
+            let x1 = xCenter - 4;
             let y1 = yCenter - 4;
-            let x2 = xCenter + 3;
-            let y2 = yCenter + 3;
+            let x2 = xCenter + 4;
+            let y2 = yCenter + 4;
             if ((x >= x1) && (x <= x2) && (y >= y1) && (y < y2)) {
                 return ((yCenter - y) * (yCenter - y) + (xCenter - x) * (xCenter - x));
             }
@@ -2068,6 +2067,10 @@ var Lemmings;
         /** draw a palette Image to this frame */
         drawPaletteImage(srcImg, srcWidth, srcHeight, palette, left, top) {
             let pixIndex = 0;
+            srcWidth = srcWidth | 0;
+            srcHeight = srcHeight | 0;
+            left = left | 0;
+            top = top | 0;
             for (let y = 0; y < srcHeight; y++) {
                 for (let x = 0; x < srcWidth; x++) {
                     let colorIndex = srcImg[pixIndex];
@@ -2277,7 +2280,7 @@ var Lemmings;
                     let render = new Lemmings.GroundRenderer();
                     if (fileList.length > 2) {
                         /// use a image for this map background
-                        let vgaspecReader = new Lemmings.VgaspecReader(fileList[2]);
+                        let vgaspecReader = new Lemmings.VgaspecReader(fileList[2], level.width, level.height);
                         render.createVgaspecMap(levelReader, vgaspecReader);
                     }
                     else {
@@ -2307,8 +2310,8 @@ var Lemmings;
             this.entrances = [];
             this.triggers = [];
             this.name = "";
-            this.width = 1600;
-            this.height = 160;
+            this.width = 0;
+            this.height = 0;
             this.releaseRate = 0;
             this.releaseCount = 0;
             this.needCount = 0;
@@ -2573,15 +2576,12 @@ var Lemmings;
      *   that defines the solid points of the level */
     class SolidLayer {
         constructor(width, height, mask = null) {
-            this.width = 1600;
-            this.height = 160;
+            this.width = 0;
+            this.height = 0;
             this.width = width;
             this.height = height;
             if (mask != null) {
                 this.groundMask = mask;
-            }
-            else {
-                //this.groundMask = new Int8Array(width * height);
             }
         }
         /** check if a point is solid */
@@ -3648,10 +3648,14 @@ var Lemmings;
 (function (Lemmings) {
     /** read the VGASPECx.DAT file : it is a image used for the ground */
     class VgaspecReader {
-        constructor(vgaspecFile) {
+        constructor(vgaspecFile, width, height) {
             this.log = new Lemmings.LogHandler("VgaspecReader");
+            this.width = 0;
+            this.height = 0;
             /** the color palette stored in this file */
             this.groundPalette = new Lemmings.ColorPalette();
+            this.width = width;
+            this.height = height;
             this.read(vgaspecFile);
         }
         /** read the file */
@@ -3674,8 +3678,8 @@ var Lemmings;
             fr.setOffset(offset);
             let width = 960;
             let chunkHeight = 40;
-            let chunkCount = 4;
-            this.img = new Lemmings.Frame(width, chunkHeight * chunkCount);
+            let groundImagePositionX = 304;
+            this.img = new Lemmings.Frame(this.width, this.height);
             let startScanLine = 0;
             let pixelCount = width * chunkHeight;
             let bitBuffer = new Uint8Array(pixelCount);
@@ -3689,7 +3693,7 @@ var Lemmings;
                     let bitImage = new Lemmings.PaletteImage(width, chunkHeight);
                     bitImage.processImage(fileReader, 3, 0);
                     bitImage.processTransparentByColorIndex(0);
-                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPalette, 0, startScanLine);
+                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPalette, groundImagePositionX, startScanLine);
                     startScanLine += 40;
                     if (startScanLine >= this.img.height)
                         return;
@@ -5962,8 +5966,8 @@ var Lemmings;
             this.elementLevelName = null;
             this.elementGameState = null;
             this.gameSpeedFactor = 1;
-            /// split the hash of the url in parts + reverse + add 0 items
-            let hashParts = window.location.hash.substr(1).split(",", 3).reverse().push(...["0", "0", "0"]);
+            /// split the hash of the url in parts + reverse
+            let hashParts = window.location.hash.substr(1).split(",", 3).reverse();
             this.levelIndex = this.strToNum(hashParts[0]);
             this.levelGroupIndex = this.strToNum(hashParts[1]);
             this.gameType = this.strToNum(hashParts[2]) + 1;
@@ -6173,6 +6177,7 @@ var Lemmings;
                     gameDisplay.clear();
                     this.stage.resetFade();
                     level.render(gameDisplay);
+                    gameDisplay.setScreenPosition(level.screenPositionX, 0);
                     gameDisplay.redraw();
                 }
                 window.location.hash = this.buildLevelIndexHash();
@@ -6419,6 +6424,9 @@ var Lemmings;
             this.imgData.data[pointIndex + 1] = 0;
             this.imgData.data[pointIndex + 2] = 0;
         }
+        setScreenPosition(x, y) {
+            this.stage.setGameViewPointPosition(x, y);
+        }
         getImageData() {
             return this.imgData;
         }
@@ -6636,7 +6644,7 @@ var Lemmings;
             this.width = 0;
             this.height = 0;
             this.display = null;
-            this.viewPoint = new Lemmings.ViewPoint(0, 0, 1);
+            this.viewPoint = new Lemmings.ViewPoint(0, 0, 2);
         }
         createImage(width, height) {
             this.cav = document.createElement('canvas');
@@ -6657,6 +6665,17 @@ var Lemmings;
             this.fadeTimer = 0;
             this.fadeAlpha = 0;
             this.controller = new Lemmings.UserInputManager(canvasForOutput);
+            this.handleOnMouseClick();
+            this.handleOnMouseMove();
+            this.handelOnZoom();
+            this.stageCav = canvasForOutput;
+            this.gameImgProps = new Lemmings.StageImageProperties();
+            this.guiImgProps = new Lemmings.StageImageProperties();
+            this.guiImgProps.viewPoint = new Lemmings.ViewPoint(0, 0, 2);
+            this.updateStageSize();
+            this.clear();
+        }
+        handleOnMouseClick() {
             this.controller.onMouseClick.on((e) => {
                 let stageImage = this.getStageImageAt(e.x, e.y);
                 if (stageImage == null)
@@ -6667,6 +6686,8 @@ var Lemmings;
                 let y = (stageImage.viewPoint.getSceneY(e.y - stageImage.y));
                 stageImage.display.onMouseClick.trigger(new Lemmings.Position2D(x, y));
             });
+        }
+        handleOnMouseMove() {
             this.controller.onMouseMove.on((e) => {
                 if (e.button) {
                     let stageImage = this.getStageImageAt(e.mouseDownX, e.mouseDownY);
@@ -6687,18 +6708,14 @@ var Lemmings;
                     stageImage.display.onMouseMove.trigger(new Lemmings.Position2D(stageImage.viewPoint.getSceneX(x), stageImage.viewPoint.getSceneY(y)));
                 }
             });
+        }
+        handelOnZoom() {
             this.controller.onZoom.on((e) => {
                 let stageImage = this.getStageImageAt(e.x, e.y);
                 if (stageImage == null)
                     return;
                 this.updateViewPoint(stageImage, 0, 0, e.deltaZoom);
             });
-            this.stageCav = canvasForOutput;
-            this.gameImgProps = new Lemmings.StageImageProperties();
-            this.guiImgProps = new Lemmings.StageImageProperties();
-            this.guiImgProps.viewPoint = new Lemmings.ViewPoint(0, 0, 2);
-            this.updateStageSize();
-            this.clear();
         }
         updateViewPoint(stageImage, deltaX, deltaY, deletaZoom) {
             stageImage.viewPoint.scale += deletaZoom * 0.5;
@@ -6753,6 +6770,12 @@ var Lemmings;
             this.guiImgProps.display = new Lemmings.DisplayImage(this);
             return this.guiImgProps.display;
         }
+        /** set the position of the view point for the game dispaly */
+        setGameViewPointPosition(x, y) {
+            this.gameImgProps.viewPoint.x = x;
+            this.gameImgProps.viewPoint.y = y;
+        }
+        /** redraw everything */
         redraw() {
             if (this.gameImgProps.display != null) {
                 let gameImg = this.gameImgProps.display.getImageData();

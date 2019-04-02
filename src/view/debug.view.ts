@@ -28,8 +28,8 @@ module Lemmings {
 
 
         public constructor() {
-            /// split the hash of the url in parts + reverse + add 0 items
-            let hashParts = window.location.hash.substr(1).split(",", 3).reverse().push(...["0","0","0"]);
+            /// split the hash of the url in parts + reverse
+            let hashParts = window.location.hash.substr(1).split(",", 3).reverse();
       
             this.levelIndex = this.strToNum(hashParts[0]);
             this.levelGroupIndex = this.strToNum(hashParts[1]);
@@ -311,6 +311,8 @@ module Lemmings {
                         gameDisplay.clear();
                         this.stage.resetFade();
                         level.render(gameDisplay);
+                        
+                        gameDisplay.setScreenPosition(level.screenPositionX, 0);
                         gameDisplay.redraw();
                     }
 

@@ -67,6 +67,11 @@ module Lemmings {
 
             let pixIndex = 0;
 
+            srcWidth = srcWidth | 0;
+            srcHeight = srcHeight | 0;
+            left = left | 0;
+            top = top | 0;
+
             for (let y = 0; y < srcHeight; y++) {
                 for (let x = 0; x < srcWidth; x++) {
                     let colorIndex = srcImg[pixIndex];

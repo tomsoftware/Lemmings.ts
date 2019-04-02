@@ -36,6 +36,7 @@ module Lemmings {
 
             if (this.gameDispaly != null) {
                 this.gameDispaly.setGuiDisplay(dispaly);
+                this.dispaly.setScreenPosition(this.level.screenPositionX, 0);
             }
         }
 
@@ -231,11 +232,6 @@ module Lemmings {
             this.guiDispaly.redraw();
         }
 
-
-
-        public getScreenPositionX(): number {
-            return this.level.screenPositionX;
-        }
     }
 
 }

@@ -27,7 +27,7 @@
         debugView.elementGameState = document.getElementById("gameState"); 
         debugView.gameCanvas = document.getElementById("gameCanvas");
         
-        debugView.selectGame();
+        debugView.selectGameType();
     }
 
     </script>
@@ -35,7 +35,7 @@
   </head>
   <body onload="init();">
 
-    <select onChange="debugView.selectGame(this.value)" id="selectgame">
+    <select onChange="debugView.selectGameType(this.value)" id="selectgame">
       <option value="LEMMINGS">Lemming</option>
       <option value="OHNO">Oh no! More Lemmings</option>
       <option value="XMAS91">X-Mas 91</option>
@@ -98,6 +98,8 @@
       Sorry! Your browser does not support HTML5 Canvas and can not run this Application.
     </canvas>
     </div>
+	
+	<a href="https://github.com/tomsoftware/Lemmings.ts">source @ git hub</a>
   </body>
 </html>
 

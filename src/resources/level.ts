@@ -23,8 +23,8 @@ module Lemmings {
         public levelIndex: number;
 
         public name: string = "";
-        public width = 1600;
-        public height = 160;
+        public width = 0;
+        public height = 0;
         public releaseRate = 0;
         public releaseCount = 0;
         public needCount = 0;

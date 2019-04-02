@@ -53,10 +53,10 @@ module Lemmings {
             let yCenter = this.y - 5;
             let xCenter = this.x;
 
-            let x1 = xCenter - 3;
+            let x1 = xCenter - 4;
             let y1 = yCenter - 4;
-            let x2 = xCenter + 3;
-            let y2 = yCenter + 3;
+            let x2 = xCenter + 4;
+            let y2 = yCenter + 4;
 
             if ((x >= x1) && (x <= x2) && (y >= y1) && (y < y2)) {
                 return ((yCenter - y) * (yCenter - y) + (xCenter - x) * (xCenter - x));

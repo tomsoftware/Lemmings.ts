@@ -8,10 +8,15 @@ module Lemmings {
         private log = new LogHandler("VgaspecReader");
         public img:Frame;
 
+        public width:number = 0;
+        public height:number = 0;
+
         /** the color palette stored in this file */
         public groundPalette: ColorPalette = new ColorPalette();
 
-        constructor(vgaspecFile: BinaryReader) {
+        constructor(vgaspecFile: BinaryReader, width:number, height:number) {
+            this.width = width;
+            this.height = height;
             this.read(vgaspecFile);
         }
 
@@ -42,9 +47,9 @@ module Lemmings {
 
             let width = 960;
             let chunkHeight = 40;
-            let chunkCount = 4;
+            let groundImagePositionX = 304;
 
-            this.img = new Frame(width, chunkHeight * chunkCount);
+            this.img = new Frame(this.width, this.height);
 
             let startScanLine = 0;
 
@@ -64,7 +69,7 @@ module Lemmings {
                     bitImage.processImage(fileReader, 3, 0);
                     bitImage.processTransparentByColorIndex(0);
 
-                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPalette, 0, startScanLine);
+                    this.img.drawPaletteImage(bitImage.getImageBuffer(), width, chunkHeight, this.groundPalette, groundImagePositionX, startScanLine);
 
                     startScanLine +=40;
                     if (startScanLine >= this.img.height) return;

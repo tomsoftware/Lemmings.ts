@@ -6,6 +6,7 @@ module Lemmings {
         private imgData: ImageData;
         private groundMask: SolidLayer;
 
+
         public getWidth(): number {
             if (this.imgData == null) return 0;
             return this.imgData.width;
@@ -307,6 +308,11 @@ module Lemmings {
             this.imgData.data[pointIndex] = 255;
             this.imgData.data[pointIndex + 1] = 0;
             this.imgData.data[pointIndex + 2] = 0;
+        }
+
+        
+        public setScreenPosition(x: number, y:number) {
+            this.stage.setGameViewPointPosition(x, y);
         }
 
         public getImageData(): ImageData {

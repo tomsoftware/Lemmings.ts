@@ -12,7 +12,7 @@ module Lemmings {
         public height:number = 0;
 
         public display : DisplayImage = null;
-        public viewPoint: ViewPoint = new ViewPoint(0, 0, 1);
+        public viewPoint: ViewPoint = new ViewPoint(0, 0, 2);
 
         public createImage(width:number, height:number) {
             this.cav = document.createElement('canvas');

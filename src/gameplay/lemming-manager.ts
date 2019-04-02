@@ -108,7 +108,7 @@ module Lemmings {
 
             this.releaseTickIndex++;
 
-            if (this.releaseTickIndex >= (100 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
+            if (this.releaseTickIndex >= (104 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
                 this.releaseTickIndex = 0;
 
                 let entrance = this.level.entrances[0];
@@ -136,7 +136,7 @@ module Lemmings {
                 case TriggerTypes.EXIT_LEVEL:
                     return LemmingStateType.EXITING;
                 case TriggerTypes.KILL:
-                    return LemmingStateType.EXPLODING;
+                    return LemmingStateType.SPLATTING;
                 case TriggerTypes.TRAP:
                     return LemmingStateType.HOISTING;
                 case TriggerTypes.BLOCKER_LEFT:
@@ -162,6 +162,7 @@ module Lemmings {
             }
         }
 
+        /** return a lemming a a geiven position */
         public getLemmingAt(x: number, y: number): Lemming {
             let lems = this.lemmings;
 

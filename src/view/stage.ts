@@ -10,9 +10,28 @@ module Lemmings {
 
         private controller : UserInputManager = null;
 
+
         constructor(canvasForOutput: HTMLCanvasElement) {
             this.controller = new UserInputManager(canvasForOutput);
 
+            this.handleOnMouseClick();
+            this.handleOnMouseMove();
+            this.handelOnZoom();
+
+            this.stageCav = canvasForOutput;
+
+            this.gameImgProps = new StageImageProperties();
+
+            this.guiImgProps = new StageImageProperties();
+            this.guiImgProps.viewPoint = new ViewPoint(0, 0, 2);
+            
+            this.updateStageSize();
+
+            this.clear();
+        }
+
+
+        private handleOnMouseClick():void {
             this.controller.onMouseClick.on((e) => {
                 let stageImage = this.getStageImageAt(e.x, e.y);
                 if (stageImage == null) return;
@@ -23,8 +42,10 @@ module Lemmings {
 
                 stageImage.display.onMouseClick.trigger(new Position2D(x, y));
             });
+        }
 
 
+        private handleOnMouseMove():void {
             this.controller.onMouseMove.on((e) => {
                 if (e.button) {
                     let stageImage = this.getStageImageAt(e.mouseDownX, e.mouseDownY);
@@ -45,24 +66,15 @@ module Lemmings {
                     stageImage.display.onMouseMove.trigger(new Position2D(stageImage.viewPoint.getSceneX(x), stageImage.viewPoint.getSceneY(y)));
                 }
             });
+        }
 
 
+        private handelOnZoom():void {
             this.controller.onZoom.on((e) => {
                 let stageImage = this.getStageImageAt(e.x, e.y);
                 if (stageImage == null) return;
                 this.updateViewPoint(stageImage, 0, 0, e.deltaZoom);
             });
-
-
-            this.stageCav = canvasForOutput;
-
-            this.gameImgProps = new StageImageProperties();
-
-            this.guiImgProps = new StageImageProperties();
-            this.guiImgProps.viewPoint = new ViewPoint(0,0,2);
-            this.updateStageSize();
-
-            this.clear();
         }
 
 
@@ -131,7 +143,15 @@ module Lemmings {
             return this.guiImgProps.display;
         }
 
+        /** set the position of the view point for the game dispaly */
+        public setGameViewPointPosition(x: number, y:number):void {
+            this.gameImgProps.viewPoint.x = x;
+            this.gameImgProps.viewPoint.y = y;
+            
+            
+        }
 
+        /** redraw everything */
         public redraw() {
             if (this.gameImgProps.display != null) {
                 let gameImg = this.gameImgProps.display.getImageData();

@@ -94,7 +94,7 @@
 
                         if (fileList.length > 2){
                             /// use a image for this map background
-                            let vgaspecReader = new VgaspecReader(fileList[2]);
+                            let vgaspecReader = new VgaspecReader(fileList[2], level.width, level.height);
 
                             render.createVgaspecMap(levelReader, vgaspecReader);
                         }

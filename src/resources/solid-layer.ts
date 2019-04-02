@@ -8,8 +8,8 @@ module Lemmings {
         /** the background mask 0=noGround / 1=ground*/
         private groundMask: Int8Array;
 
-        public width = 1600;
-        public height = 160;
+        public width = 0;
+        public height = 0;
 
 
         /** check if a point is solid */
@@ -40,9 +40,6 @@ module Lemmings {
 
             if (mask != null) {
                 this.groundMask = mask;
-            }
-            else {
-                //this.groundMask = new Int8Array(width * height);
             }
 
         }
