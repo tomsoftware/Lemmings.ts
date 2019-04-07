@@ -43,7 +43,8 @@ module Lemmings {
         private mouseButton = -1;
 
         public onMouseMove = new EventHandler<MouseMoveEventArguemnts>();
-        public onMouseClick = new EventHandler<Position2D>();
+        public onMouseUp = new EventHandler<Position2D>();
+        public onMouseDown = new EventHandler<Position2D>();
         public onZoom = new EventHandler<ZoomEventArguemnts>();
 
         constructor(listenElement: HTMLElement) {
@@ -167,6 +168,11 @@ module Lemmings {
             this.mouseDownY = position.y;
             this.lastMouseX = position.x;
             this.lastMouseY = position.y;
+
+            if (this.mouseButton == 0) {
+                /// create new event handler
+                this.onMouseDown.trigger(position);
+            }
         }
 
         private handelMouseClear() {
@@ -180,8 +186,7 @@ module Lemmings {
         private handelMouseUp(position: Position2D) {
             this.handelMouseClear();
 
-            /// raise event
-            this.onMouseClick.trigger(new Position2D(position.x, position.y));
+            this.onMouseUp.trigger(new Position2D(position.x, position.y));
         }
 
         /** Zoom view 

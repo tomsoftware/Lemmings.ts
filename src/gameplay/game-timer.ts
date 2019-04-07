@@ -14,14 +14,26 @@ module Lemmings {
             this.ticksTimeLimit = this.secondsToTicks(level.timeLimit * 60);
         }
 
+        /** return if the game timer is running or not */
+        public isRunning(): boolean {
+            return (this.gameTimerHandler != 0);
+        }
+
         /** define a factor to speed up >1 or slow down <1 the game */
-        public get speedFactor():number {
+        public get speedFactor(): number {
             return this._speedFactor;
         }
 
         /** set a factor to speed up >1 or slow down <1 the game */
-        public set speedFactor(newSpeedFactor:number) {
+        public set speedFactor(newSpeedFactor: number) {
             this._speedFactor = newSpeedFactor;
+
+            if (!this.isRunning()) {
+                return;
+            }
+
+            this.suspend();
+            this.continue();
         }
 
         /** event raising on every tick (one step in time) the game made */
@@ -44,16 +56,19 @@ module Lemmings {
 
         /** toggle between suspend and continue */
         public toggle() {
-            if (this.gameTimerHandler == 0) {
-                this.continue();
-            } else {
+            if (this.isRunning()) {
                 this.suspend();
+            } else {
+                this.continue();
             }
         }
 
         /** Run the game timer */
         public continue() {
-            if (this.gameTimerHandler != 0) return;
+
+            if (this.isRunning()) {
+                return;
+            }
 
             this.gameTimerHandler = setInterval(() => {
                 this.tick();

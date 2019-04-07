@@ -9,6 +9,7 @@ module Lemmings {
         private backgroundChanged: boolean = true;
 
         private dispaly: DisplayImage = null;
+        private deltaReleaseRate: number = 0;
 
         constructor(private skillPanelSprites: SkillPanelSprites,
             private skills: GameSkills,
@@ -17,6 +18,7 @@ module Lemmings {
 
             gameTimer.onGameTick.on(() => {
                 this.gameTimeChanged = true;
+                this.doReleaseRateChanges();
             });
 
             skills.onCountChanged.on(() => {
@@ -30,26 +32,62 @@ module Lemmings {
             })
         }
 
+        private doReleaseRateChanges() {
+            if (this.deltaReleaseRate == 0) {
+                return;
+            }
+
+            this.gameVictoryCondition.changeReleaseRate(this.deltaReleaseRate);
+
+        }
+
+        /// handel click on the skills panel
+        private handleSkillMouseDown(x: number) {
+            let panelIndex = Math.trunc(x / 16);
+
+            if (panelIndex == 0) {
+                this.deltaReleaseRate = -3;
+                this.doReleaseRateChanges();
+                return;
+            }
+            if (panelIndex == 1) {
+
+                this.deltaReleaseRate = 3;
+                this.doReleaseRateChanges();
+                return;
+            }
+
+            if (panelIndex == 10) {
+                this.gameTimer.toggle();
+                return;
+            }
+
+            let newSkill = this.getSkillByPanelIndex(panelIndex);
+            if (newSkill == SkillTypes.UNKNOWN) return;
+
+            this.skills.setSelectedSkill(newSkill);
+            this.skillSelectionChanged = true;
+        }
+
+
+
         /** init the display */
         public setGuiDisplay(dispaly: DisplayImage) {
             this.dispaly = dispaly;
 
             /// handle user input in gui
-            this.dispaly.onMouseClick.on((e) => {
+            this.dispaly.onMouseDown.on((e) => {
+                this.deltaReleaseRate = 0;
+
                 if (e.y > 15) {
-                    let panelIndex = Math.trunc(e.x / 16);
-
-                    if (panelIndex == 10) {
-                        this.gameTimer.toggle();   
-                    }
-
-                    let newSkill = this.getSkillByPanelIndex(panelIndex);
-                    if (newSkill == SkillTypes.UNKNOWN) return;
-
-                    this.skills.setSelectetSkill(newSkill);
-                    this.skillSelectionChanged = true;
+                    this.handleSkillMouseDown(e.x);
                 }
             });
+
+            this.dispaly.onMouseUp.on((e) => {
+                /// clear release rate change
+                this.deltaReleaseRate = 0;
+            })
 
             this.gameTimeChanged = true;
             this.skillsCountChangd = true;
@@ -57,12 +95,13 @@ module Lemmings {
             this.backgroundChanged = true;
         }
 
+
         /** render the gui to the screen display */
         public render() {
             if (this.dispaly == null) return;
             let dispaly = this.dispaly;
 
-            // background
+            /// background
             if (this.backgroundChanged) {
                 this.backgroundChanged = false;
 
@@ -76,9 +115,10 @@ module Lemmings {
                 this.skillSelectionChanged = true;
             }
 
+            /////////
             /// green text
-            this.drawGreenString(dispaly, "Out " + this.gameVictoryCondition.GetOutCount() + "  ", 112, 0);
-            this.drawGreenString(dispaly, "In" + this.stringPad(this.gameVictoryCondition.GetSurvivorPercentage() + "", 3) + "%", 186, 0);
+            this.drawGreenString(dispaly, "Out " + this.gameVictoryCondition.getOutCount() + "  ", 112, 0);
+            this.drawGreenString(dispaly, "In" + this.stringPad(this.gameVictoryCondition.getSurvivorPercentage() + "", 3) + "%", 186, 0);
 
             if (this.gameTimeChanged) {
                 this.gameTimeChanged = false;
@@ -86,9 +126,10 @@ module Lemmings {
                 this.renderGameTime(dispaly, 248, 0);
             }
 
+            /////////
             /// white skill numbers
-            this.drawPanelNumber(dispaly, 88, 0);
-            this.drawPanelNumber(dispaly, 11, 1);
+            this.drawPanelNumber(dispaly, this.gameVictoryCondition.getMinReleaseRate(), 0);
+            this.drawPanelNumber(dispaly, this.gameVictoryCondition.getCurrentReleaseRate(), 1);
 
             if (this.skillsCountChangd) {
                 this.skillsCountChangd = false;
@@ -99,6 +140,7 @@ module Lemmings {
                 }
             }
 
+            ////////
             /// selected skill
             if (this.skillSelectionChanged) {
                 this.skillSelectionChanged = false;
@@ -146,7 +188,6 @@ module Lemmings {
 
         /** draw a white rectangle border to the panel */
         private drawSelection(dispaly: DisplayImage, panelIndex: number) {
-            /// draw selection
             dispaly.drawRect(16 * panelIndex, 16, 16, 23, 255, 255, 255);
         }
 

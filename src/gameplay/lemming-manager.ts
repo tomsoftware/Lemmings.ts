@@ -47,12 +47,12 @@ module Lemmings {
             this.skillActions[SkillTypes.BUILDER] = this.actions[LemmingStateType.BUILDING];
             this.skillActions[SkillTypes.BOMBER] =  new ActionCountdownSystem(masks);
 
-            this.releaseTickIndex = 99;
+            /// wait before first lemming is spawn
+            this.releaseTickIndex = this.gameVictoryCondition.getCurrentReleaseRate() - 30;
         }
 
 
-
-        private ProcessNewAction(lem:Lemming, newAction: LemmingStateType):boolean {
+        private processNewAction(lem:Lemming, newAction: LemmingStateType):boolean {
 
             if (newAction == LemmingStateType.NO_STATE_TYPE) return false;
 
@@ -60,6 +60,7 @@ module Lemmings {
             
             return true;
         }
+
 
         /** process all Lemmings one time-step */
         public tick() {
@@ -75,19 +76,10 @@ module Lemmings {
                 if (lem.removed) continue;
 
                 let newAction = lem.process(this.level);
-                this.ProcessNewAction(lem, newAction);
+                this.processNewAction(lem, newAction);
 
                 let triggerAction = this.runTrigger(lem);
-                this.ProcessNewAction(lem, triggerAction);
-
-                /*
-                let actionName = "[Unknown]";
-                if (lem.action != null) {
-                    actionName = lem.action.getActionName()
-                }
-
-                console.log(lem.id + " :: x:" + lem.x + " y:" + lem.y + " Action: " + actionName);
-                */
+                this.processNewAction(lem, triggerAction);
             }
         }
 
@@ -104,18 +96,18 @@ module Lemmings {
 
         /** let a new lemming be born from a entrance  */
         private addNewLemmings() {
-            if (this.gameVictoryCondition.GetLeftCount() <= 0) return;
+            if (this.gameVictoryCondition.getLeftCount() <= 0) return;
 
             this.releaseTickIndex++;
 
-            if (this.releaseTickIndex >= (104 - this.gameVictoryCondition.GetCurrentReleaseRate())) {
+            if (this.releaseTickIndex >= (104 - this.gameVictoryCondition.getCurrentReleaseRate())) {
                 this.releaseTickIndex = 0;
 
                 let entrance = this.level.entrances[0];
 
                 this.addLemming(entrance.x + 24, entrance.y + 14);
 
-                this.gameVictoryCondition.ReleaseOne();
+                this.gameVictoryCondition.releaseOne();
             }
         }
 
@@ -189,7 +181,7 @@ module Lemmings {
 
             if (stateType == LemmingStateType.OUT_OFF_LEVEL) {
                 lem.remove();
-                this.gameVictoryCondition.RemoveOne();
+                this.gameVictoryCondition.removeOne();
                 return;
             }
 
@@ -206,8 +198,8 @@ module Lemmings {
             }
 
             lem.setAction(actionSystem);
-
         }
+
 
         /** change the action a Lemming is doing */
         public doLemmingAction(lem: Lemming, actionType: SkillTypes): boolean {

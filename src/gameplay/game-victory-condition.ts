@@ -1,7 +1,12 @@
 
 module Lemmings {
+
+    /// Handels the number of lemmings
+    ///  - needed to win or lose the game
+    ///  - release rate
     export class GameVictoryCondition {
 
+        private static readonly maxReleaseRate = 99;
         private needCount: number;
         private releaseCount: number;
         private minReleaseRate: number;
@@ -10,55 +15,63 @@ module Lemmings {
         private leftCount: number;
         private outCount: number;
 
-        public GetNeedCount(): number {
+        public getNeedCount(): number {
             return this.needCount;
         }
 
-        public GetReleaseCount(): number {
+        public getReleaseCount(): number {
             return this.releaseCount;
         }
 
-        public GetMinReleaseRate(): number {
+        public changeReleaseRate(count: number) {
+            this.releaseRate = this.boundToRange(this.minReleaseRate, this.releaseRate + count, GameVictoryCondition.maxReleaseRate);
+        }
+
+        private boundToRange(min: number, value: number, max: number): number {
+            return Math.min(max, Math.max(min, value | 0)) | 0;
+        }
+
+        public getMinReleaseRate(): number {
             return this.minReleaseRate;
         }
 
-        public GetCurrentReleaseRate(): number {
+        public getCurrentReleaseRate(): number {
             return this.releaseRate;
         }
 
         /** one lemming reached the exit */
-        public AddSurvivor(): void {
+        public addSurvivor(): void {
             this.survivorCount++;
         }
 
         /** number of rescued lemmings */
-        public GetSurvivorsCount(): number {
+        public getSurvivorsCount(): number {
             return this.survivorCount;
         }
 
         /** number of rescued lemmings in percentage */
-        public GetSurvivorPercentage(): number {
-            return Math.floor(this.survivorCount / this.releaseCount * 100);
+        public getSurvivorPercentage(): number {
+            return Math.floor(this.survivorCount / this.releaseCount * 100) | 0;
         }
 
         /** number of alive lemmings out in the level */
-        public GetOutCount(): number {
+        public getOutCount(): number {
             return this.outCount;
         }
 
         /** the number of lemmings not yet released */
-        public GetLeftCount(): number {
+        public getLeftCount(): number {
             return this.leftCount;
         }
 
         /** release one new lemming */
-        public ReleaseOne(): void {
+        public releaseOne(): void {
             this.leftCount--;
             this.outCount++;
         }
 
         /** if a lemming die */
-        public RemoveOne(): void {
+        public removeOne(): void {
             this.outCount--;
         }
 

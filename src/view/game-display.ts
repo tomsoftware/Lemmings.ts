@@ -5,11 +5,11 @@ module Lemmings {
         private dispaly: DisplayImage = null;
 
         constructor(
-            private game:Game,
+            private game: Game,
             private gameSkills: GameSkills,
             private level: Level,
             private lemmingManager: LemmingManager,
-            private objectManager: ObjectManager, 
+            private objectManager: ObjectManager,
             private triggerManager: TriggerManager) {
         }
 
@@ -17,7 +17,7 @@ module Lemmings {
         public setGuiDisplay(dispaly: DisplayImage) {
             this.dispaly = dispaly;
 
-            this.dispaly.onMouseClick.on((e) => {
+            this.dispaly.onMouseUp.on((e) => {
                 let lem = this.lemmingManager.getLemmingAt(e.x, e.y);
                 if (lem == null) return;
 
@@ -38,8 +38,6 @@ module Lemmings {
             this.lemmingManager.render(this.dispaly);
 
             this.triggerManager.render(this.dispaly);
-            
-            //this.dispaly.redraw();
         }
 
     }

@@ -167,10 +167,10 @@ module Lemmings {
                 return this.finalGameState;
             }
 
-            let hasWon = this.gameVictoryCondition.GetSurvivorsCount() >= this.gameVictoryCondition.GetNeedCount();
+            let hasWon = this.gameVictoryCondition.getSurvivorsCount() >= this.gameVictoryCondition.getNeedCount();
 
             /// are there any lemmings alive?
-            if ((this.gameVictoryCondition.GetLeftCount() <= 0) && (this.gameVictoryCondition.GetOutCount() <= 0)) {
+            if ((this.gameVictoryCondition.getLeftCount() <= 0) && (this.gameVictoryCondition.getOutCount() <= 0)) {
                 if (hasWon) {
                     return GameStateTypes.SUCCEEDED;
                 }

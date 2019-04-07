@@ -14,7 +14,8 @@ module Lemmings {
         constructor(canvasForOutput: HTMLCanvasElement) {
             this.controller = new UserInputManager(canvasForOutput);
 
-            this.handleOnMouseClick();
+            this.handleOnMouseUp();
+            this.handleOnMouseDown();
             this.handleOnMouseMove();
             this.handelOnZoom();
 
@@ -30,19 +31,39 @@ module Lemmings {
             this.clear();
         }
 
+        private calcPosition2D(stageImage:StageImageProperties, e:Position2D):Position2D {
+            let x = (stageImage.viewPoint.getSceneX(e.x - stageImage.x));
+            let y = (stageImage.viewPoint.getSceneY(e.y - stageImage.y));
+            
+            return new Position2D(x, y);
+        }
 
-        private handleOnMouseClick():void {
-            this.controller.onMouseClick.on((e) => {
+        private handleOnMouseDown(): void {
+
+            this.controller.onMouseDown.on((e) => {
+     
                 let stageImage = this.getStageImageAt(e.x, e.y);
-                if (stageImage == null) return;
-                if (stageImage.display == null) return;
+                if ((stageImage == null) || (stageImage.display == null)) return;
 
-                let x = (stageImage.viewPoint.getSceneX(e.x - stageImage.x));
-                let y = (stageImage.viewPoint.getSceneY(e.y - stageImage.y));
+                stageImage.display.onMouseDown.trigger(this.calcPosition2D(stageImage, e));
 
-                stageImage.display.onMouseClick.trigger(new Position2D(x, y));
             });
         }
+
+
+        private handleOnMouseUp(): void {
+
+            this.controller.onMouseUp.on((e) => {
+     
+                let stageImage = this.getStageImageAt(e.x, e.y);
+                if ((stageImage == null) || (stageImage.display == null)) return;
+
+                let pos = this.calcPosition2D(stageImage, e);
+
+                stageImage.display.onMouseUp.trigger(pos);
+            });
+        }
+
 
 
         private handleOnMouseMove():void {

@@ -12,7 +12,7 @@
           "name": "Launch localhost",
           "type": "chrome",
           "request": "launch",
-          "url": "http://localhost/lemmings.ts/run/lemmings.php",
+          "url": "http://localhost/lemmings.ts/run/lemmings.php#0,0,0",
           "webRoot": "${workspaceRoot}/run/"
       },
       {

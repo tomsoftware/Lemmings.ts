@@ -19,7 +19,8 @@ module Lemmings {
         constructor(private stage: Stage) {
         }
 
-        public onMouseClick = new EventHandler<Position2D>();
+        public onMouseUp = new EventHandler<Position2D>();
+        public onMouseDown = new EventHandler<Position2D>();
         public onMouseMove = new EventHandler<Position2D>();
 
         public initSize(width: number, height: number) {

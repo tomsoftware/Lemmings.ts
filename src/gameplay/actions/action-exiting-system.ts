@@ -32,7 +32,7 @@ module Lemmings {
             lem.frameIndex++;
 
             if (lem.frameIndex >= 8) {
-                this.gameVictoryCondition.AddSurvivor();
+                this.gameVictoryCondition.addSurvivor();
  
                 return LemmingStateType.OUT_OFF_LEVEL;
             }

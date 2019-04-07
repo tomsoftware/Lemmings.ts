@@ -37,7 +37,7 @@ module Lemmings {
 
         public onSelectionChanged = new EventHandler<SkillTypes>();
 
-        public setSelectetSkill(skill: SkillTypes) {
+        public setSelectedSkill(skill: SkillTypes) {
             this.selectedSkill = skill;
             this.onSelectionChanged.trigger();
         }
