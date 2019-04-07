@@ -88,10 +88,12 @@ module Lemmings {
                 return LemmingStateType.OUT_OFF_LEVEL;
             }
 
+            /// run main action
             if (!this.action) {
                 return LemmingStateType.OUT_OFF_LEVEL;
             }
 
+            /// run secondary action
             if (this.countdownAction) {
                 let newAction = this.countdownAction.process(level, this);
                 

@@ -45,6 +45,7 @@ module Lemmings {
         public onMouseMove = new EventHandler<MouseMoveEventArguemnts>();
         public onMouseUp = new EventHandler<Position2D>();
         public onMouseDown = new EventHandler<Position2D>();
+        public onDoubleClick = new EventHandler<Position2D>();
         public onZoom = new EventHandler<ZoomEventArguemnts>();
 
         constructor(listenElement: HTMLElement) {
@@ -114,6 +115,17 @@ module Lemmings {
                 return false;
             });
 
+            
+            listenElement.addEventListener("dblclick", (e: MouseEvent) => {
+                let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
+                this.handleMouseDoubleClick(relativePos);
+
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            });
+
+
 
             listenElement.addEventListener("wheel", (e: WheelEvent) => {
                 let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
@@ -173,6 +185,10 @@ module Lemmings {
                 /// create new event handler
                 this.onMouseDown.trigger(position);
             }
+        }
+
+        private handleMouseDoubleClick(position: Position2D) {
+            this.onDoubleClick.trigger(position);
         }
 
         private handelMouseClear() {

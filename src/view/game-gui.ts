@@ -11,7 +11,8 @@ module Lemmings {
         private dispaly: DisplayImage = null;
         private deltaReleaseRate: number = 0;
 
-        constructor(private skillPanelSprites: SkillPanelSprites,
+        constructor(private game: Game,
+            private skillPanelSprites: SkillPanelSprites,
             private skills: GameSkills,
             private gameTimer: GameTimer,
             private gameVictoryCondition: GameVictoryCondition) {
@@ -70,6 +71,14 @@ module Lemmings {
         }
 
 
+        public handleSkillDoubleClick(x: number) {
+            let panelIndex = Math.trunc(x / 16);
+
+            /// trigger the nuke for all lemmings
+            if (panelIndex == 11) {
+                this.game.triggerNuke();
+            }
+        }
 
         /** init the display */
         public setGuiDisplay(dispaly: DisplayImage) {
@@ -88,6 +97,17 @@ module Lemmings {
                 /// clear release rate change
                 this.deltaReleaseRate = 0;
             })
+
+            this.dispaly.onDoubleClick.on((e) => {
+                /// clear release rate change
+                this.deltaReleaseRate = 0;
+
+                if (e.y > 15) {
+                    this.handleSkillDoubleClick(e.x);
+                }
+                
+            })
+
 
             this.gameTimeChanged = true;
             this.skillsCountChangd = true;

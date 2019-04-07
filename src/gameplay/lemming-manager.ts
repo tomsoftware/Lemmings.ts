@@ -13,6 +13,9 @@ module Lemmings {
 
         private releaseTickIndex: number = 0;
 
+        /** next lemming index need to explode */
+        private nextNukingLemmingsIndex : number = -1;
+
         constructor(private level: Level,
             lemmingsSprite: LemmingsSprite,
             private triggerManager: TriggerManager,
@@ -54,7 +57,9 @@ module Lemmings {
 
         private processNewAction(lem:Lemming, newAction: LemmingStateType):boolean {
 
-            if (newAction == LemmingStateType.NO_STATE_TYPE) return false;
+            if (newAction == LemmingStateType.NO_STATE_TYPE) {
+                return false;
+            }
 
             this.setLemmingState(lem, newAction);
             
@@ -62,13 +67,18 @@ module Lemmings {
         }
 
 
-        /** process all Lemmings one time-step */
+        /** process all Lemmings to the next time-step */
         public tick() {
 
             this.addNewLemmings();
 
             let lems = this.lemmings;
 
+            if (this.isNuking()) {
+                this.doLemmingAction(lems[this.nextNukingLemmingsIndex], SkillTypes.BOMBER);
+                this.nextNukingLemmingsIndex++;
+            }
+            
             for (let i = 0; i < lems.length; i++) {
 
                 let lem = lems[i];
@@ -94,9 +104,15 @@ module Lemmings {
         }
 
 
-        /** let a new lemming be born from a entrance  */
+        /** let a new lemming arise from an entrance */
         private addNewLemmings() {
-            if (this.gameVictoryCondition.getLeftCount() <= 0) return;
+            if (this.isNuking()) {
+                return;
+            }
+
+            if (this.gameVictoryCondition.getLeftCount() <= 0) {
+                return;
+            }
 
             this.releaseTickIndex++;
 
@@ -202,14 +218,30 @@ module Lemmings {
 
 
         /** change the action a Lemming is doing */
-        public doLemmingAction(lem: Lemming, actionType: SkillTypes): boolean {
-            let actionSystem = this.skillActions[actionType];
+        public doLemmingAction(lem: Lemming, skillType: SkillTypes): boolean {
+            if (lem == null){
+                return;
+            }
+
+            let actionSystem = this.skillActions[skillType];
             if (!actionSystem) {
-                console.log(lem.id + " Unknown Action: " + actionType);
+                console.log(lem.id + " Unknown Action: " + skillType);
                 return false;
             }
 
             return actionSystem.triggerLemAction(lem);
+        }
+
+
+        /** return if the game is in nuke state */
+        public isNuking() {
+            return this.nextNukingLemmingsIndex >= 0;
+        }
+
+
+        /** start the nuking of all lemmings */
+        public doNukeAllLemmings() {
+            this.nextNukingLemmingsIndex = 0;
         }
     }
 

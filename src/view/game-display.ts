@@ -17,7 +17,7 @@ module Lemmings {
         public setGuiDisplay(dispaly: DisplayImage) {
             this.dispaly = dispaly;
 
-            this.dispaly.onMouseUp.on((e) => {
+            this.dispaly.onMouseDown.on((e) => {
                 let lem = this.lemmingManager.getLemmingAt(e.x, e.y);
                 if (lem == null) return;
 

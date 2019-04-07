@@ -91,7 +91,7 @@ module Lemmings {
                     })
                     .then(skillPanelSprites => {
                         /// setup gui
-                        this.gameGui = new GameGui(skillPanelSprites, this.skills, this.gameTimer, this.gameVictoryCondition);
+                        this.gameGui = new GameGui(this, skillPanelSprites, this.skills, this.gameTimer, this.gameVictoryCondition);
 
                         if (this.guiDispaly != null) {
                             this.gameGui.setGuiDisplay(this.guiDispaly);
@@ -125,7 +125,6 @@ module Lemmings {
 
             this.onGameEnd.dispose();
             this.onGameEnd = null;
-
         }
 
 
@@ -148,6 +147,11 @@ module Lemmings {
                     this.skills.reduseSkill(selectedSkill)
                 }  
             }
+        }
+
+        /** trigger the nuke for all lemmings & stop creating new */
+        public triggerNuke() {
+            this.lemmingManager.doNukeAllLemmings();
         }
 
         /** run one step in game time and render the result */

@@ -22,7 +22,8 @@ module Lemmings {
         public onMouseUp = new EventHandler<Position2D>();
         public onMouseDown = new EventHandler<Position2D>();
         public onMouseMove = new EventHandler<Position2D>();
-
+        public onDoubleClick = new EventHandler<Position2D>();
+        
         public initSize(width: number, height: number) {
             /// create image data
             if ((this.imgData == null) || (this.imgData.width != width) || (this.imgData.height != height)) {

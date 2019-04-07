@@ -17,6 +17,7 @@ module Lemmings {
             this.handleOnMouseUp();
             this.handleOnMouseDown();
             this.handleOnMouseMove();
+            this.handleOnDoubleClick();
             this.handelOnZoom();
 
             this.stageCav = canvasForOutput;
@@ -38,6 +39,19 @@ module Lemmings {
             return new Position2D(x, y);
         }
 
+
+        private handleOnDoubleClick(): void {
+
+            this.controller.onDoubleClick.on((e) => {
+     
+                let stageImage = this.getStageImageAt(e.x, e.y);
+                if ((stageImage == null) || (stageImage.display == null)) return;
+
+                stageImage.display.onDoubleClick.trigger(this.calcPosition2D(stageImage, e));
+            });
+        }
+        
+
         private handleOnMouseDown(): void {
 
             this.controller.onMouseDown.on((e) => {
@@ -46,7 +60,6 @@ module Lemmings {
                 if ((stageImage == null) || (stageImage.display == null)) return;
 
                 stageImage.display.onMouseDown.trigger(this.calcPosition2D(stageImage, e));
-
             });
         }
 

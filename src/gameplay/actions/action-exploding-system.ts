@@ -31,8 +31,7 @@ module Lemmings {
 
 
         public process(level: Level, lem: Lemming): LemmingStateType {
-            
-            lem.remove();
+            lem.disable();
 
             lem.frameIndex++;
 
