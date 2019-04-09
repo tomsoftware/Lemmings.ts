@@ -1,5 +1,5 @@
 # Lemmings Binary
-Add the Original Lemmings files here
+Add the original Lemmings files here
 
 
 | Filename      | Size         |
