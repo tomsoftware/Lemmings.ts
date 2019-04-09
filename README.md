@@ -16,7 +16,7 @@ A Web Lemmings Clone/Remake in TypeScript - 🎉 Yes it's only Javascript 🎉
 * fix some game issues
 
 ## How to run
-* download run folder
+* download the *Lemmings.ts.zip* from ![releases](https://github.com/tomsoftware/Lemmings.ts/releases)
 * copy the original *Lemmings*, *OhNo* and *Holiday* binarys in to the directory **run/{version}/**
 * start *lemmings.html*
 
