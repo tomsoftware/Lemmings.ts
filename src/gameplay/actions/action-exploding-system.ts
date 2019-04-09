@@ -6,8 +6,8 @@ module Lemmings {
 
         private mask: MaskList;
         private sprite: Animation;
-        
-        constructor(sprites: LemmingsSprite, masks: MaskProvider, private triggerManager: TriggerManager) {
+
+        constructor(sprites: LemmingsSprite, masks: MaskProvider, private triggerManager: TriggerManager, private particleTable:ParticleTable) {
             this.mask = masks.GetMask(MaskTypes.EXPLODING);
             this.sprite = sprites.getAnimation(SpriteTypes.EXPLODING, false);
         }
@@ -23,10 +23,15 @@ module Lemmings {
         /** render Lemming to gamedisply */
         public draw(gameDisplay: DisplayImage, lem: Lemming) {
 
-            if (lem.frameIndex != 0) return;
+            if (lem.frameIndex == 0) {
+                let frame = this.sprite.getFrame(lem.frameIndex);
+                gameDisplay.drawFrame(frame, lem.x, lem.y);
+            }
+            else {
+                this.particleTable.draw(gameDisplay, lem.frameIndex - 1, lem.x, lem.y);
+            }
 
-            let frame = this.sprite.getFrame(lem.frameIndex);
-            gameDisplay.drawFrame(frame, lem.x, lem.y);
+
         }
 
 

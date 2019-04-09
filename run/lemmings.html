@@ -71,7 +71,8 @@
     <span id="gameState"></span>
 
     <input type="button" onclick="debugView.cheat()" value="cheat" />
-
+    <input type="button" onclick="debugView.enableDebug()" value="debug" />
+    
     <br />
 
     <!-- https://stackoverflow.com/questions/22885702/html-for-the-pause-symbol-in-a-video-control -->
@@ -80,8 +81,6 @@
 
     <input type="button" onclick="debugView.playMusic(-1)" value=" &#10073;&#9664;" /><span id="trackno" >0</span>
     <input type="button" onclick="debugView.playMusic(1)" value=" &#9658;&#10073;" />
-
-    <br />
 
     Sound: <input type="button" onclick="debugView.playSound()" value=" &#9658;" />
     <input type="button" onclick="debugView.playSound()" value=" &#9724; " />

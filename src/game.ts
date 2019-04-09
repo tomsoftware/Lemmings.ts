@@ -22,6 +22,7 @@ module Lemmings {
         private gameTimer: GameTimer = null;
 
         private skills: GameSkills;
+        private showDebug : boolean = false;
 
         public onGameEnd = new EventHandler<GameStateTypes>();
 
@@ -83,8 +84,10 @@ module Lemmings {
                         let masks = results[0];
                         let lemSprite = results[1];
 
+                        let particleTable = new ParticleTable(this.level.colorPalette);
+
                         /// setup Lemmings
-                        this.lemmingManager = new LemmingManager(this.level, lemSprite, this.triggerManager, this.gameVictoryCondition, masks);
+                        this.lemmingManager = new LemmingManager(this.level, lemSprite, this.triggerManager, this.gameVictoryCondition, masks, particleTable);
 
                         return this.gameResources.getSkillPanelSprite(this.level.colorPalette);
 
@@ -152,6 +155,11 @@ module Lemmings {
         /** trigger the nuke for all lemmings & stop creating new */
         public triggerNuke() {
             this.lemmingManager.doNukeAllLemmings();
+        }
+
+        /** enables / disables the display of debug information */
+        public setDebugMode(vale:boolean) {
+            this.showDebug = vale;
         }
 
         /** run one step in game time and render the result */
@@ -227,6 +235,10 @@ module Lemmings {
         private render() {
             if (this.gameDispaly) {
                 this.gameDispaly.render();
+
+                if (this.showDebug) {
+                    this.gameDispaly.renderDebug();
+                }
             }
 
             if (this.guiDispaly) {

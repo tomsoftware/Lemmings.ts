@@ -193,6 +193,14 @@ module Lemmings {
         }
 
 
+        public enableDebug() {
+            if (this.game == null) {
+                return;
+            }
+            
+            this.game.setDebugMode(true);
+        }
+
         /** add/subtract one to the current levelIndex */
         public moveToLevel(moveInterval: number) {
             if (moveInterval == null) moveInterval = 0;

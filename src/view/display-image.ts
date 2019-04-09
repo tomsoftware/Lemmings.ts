@@ -157,8 +157,6 @@ module Lemmings {
                     destData[destIndex] = 0xFFFFFFFF;
                 }
             }
-
-            //this.setDebugPixel(posX, posY);
         }
 
         /** copy a frame to the display - transparent color is changed to (r,g,b) */
@@ -204,8 +202,6 @@ module Lemmings {
                     }
                 }
             }
-
-            //this.setDebugPixel(posX, posY);
         }
 
 
@@ -243,8 +239,6 @@ module Lemmings {
                     destData[destIndex] = srcBuffer[srcIndex];
                 }
             }
-
-            //this.setDebugPixel(posX, posY);
         }
 
 
@@ -301,7 +295,6 @@ module Lemmings {
                 }
             }
 
-            //this.setDebugPixel(posX, posY);
         }
 
         public setDebugPixel(x: number, y: number) {
@@ -310,6 +303,15 @@ module Lemmings {
             this.imgData.data[pointIndex] = 255;
             this.imgData.data[pointIndex + 1] = 0;
             this.imgData.data[pointIndex + 2] = 0;
+        }
+
+        
+        public setPixel(x: number, y: number, r:number, g:number, b:number) {
+            let pointIndex = (this.imgData.width * (y) + x) * 4;
+
+            this.imgData.data[pointIndex] = r;
+            this.imgData.data[pointIndex + 1] = g;
+            this.imgData.data[pointIndex + 2] = b;
         }
 
         

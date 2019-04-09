@@ -40,7 +40,7 @@ module Lemmings {
             }
         }
 
-        public render(gameDisplay: DisplayImage) {
+        public renderDebug(gameDisplay: DisplayImage) {
             for (let i = 0; i < this.triggers.length; i++) {
                 this.triggers[i].draw(gameDisplay);
             }

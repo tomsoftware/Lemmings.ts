@@ -76,10 +76,17 @@ module Lemmings {
             }
 
             this.action.draw(gameDisplay, this);
+        }
+
+
+        /** render this lemming debug "information" to the display */
+        public renderDebug(gameDisplay: DisplayImage):void {
+            if (!this.action) {
+                return;
+            }
 
             gameDisplay.setDebugPixel(this.x, this.y)
         }
-
 
         /** process this lemming one tick in time */
         public process(level:Level) : LemmingStateType {

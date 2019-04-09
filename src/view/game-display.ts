@@ -36,8 +36,14 @@ module Lemmings {
             this.objectManager.render(this.dispaly);
 
             this.lemmingManager.render(this.dispaly);
+        }
 
-            this.triggerManager.render(this.dispaly);
+        
+        public renderDebug() {
+            if (this.dispaly == null) return;
+
+            this.lemmingManager.renderDebug(this.dispaly);
+            this.triggerManager.renderDebug(this.dispaly);
         }
 
     }
