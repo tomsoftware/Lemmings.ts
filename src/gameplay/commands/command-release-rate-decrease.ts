@@ -31,9 +31,7 @@ module Lemmings {
         /** execute this command */
         execute(game:Game):boolean{
             let victoryConditions = game.getVictoryCondition();
-            victoryConditions.changeReleaseRate(-this.number);
-
-            return true;
+            return victoryConditions.changeReleaseRate(-this.number);
         }  
     }
 }

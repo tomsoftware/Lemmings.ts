@@ -37,9 +37,19 @@ module Lemmings {
 
         public onSelectionChanged = new EventHandler<SkillTypes>();
 
-        public setSelectedSkill(skill: SkillTypes) {
+        public setSelectedSkill(skill: SkillTypes):boolean {
+            if (this.selectedSkill == skill) {
+                return false;
+            }
+
+            if (!SkillTypes.isValid(skill)) {
+                return false;
+            }
+
             this.selectedSkill = skill;
             this.onSelectionChanged.trigger();
+
+            return true;
         }
 
         /** increase the amount of actions for all skills */

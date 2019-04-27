@@ -33,10 +33,7 @@ module Lemmings {
             
             let gameSkill = game.getGameSkills();
 
-            gameSkill.setSelectedSkill(this.skill);
-
-            return true;
-
+            return gameSkill.setSelectedSkill(this.skill);
         }  
     }
 }

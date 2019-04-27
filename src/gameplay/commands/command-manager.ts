@@ -49,7 +49,7 @@ module Lemmings {
         }
 
         private parseCommand(valuesStr: string): ICommand {
-            if (valuesStr.length == 0) return;
+            if (valuesStr.length < 1) return;
 
             let newCommand = this.commandFactory(valuesStr.substr(0,1));
             let values = valuesStr.substr(1).split(":");
@@ -63,9 +63,13 @@ module Lemmings {
         public queueCommand(newCommand: ICommand) {
             let currentTick = this.gameTimer.getGameTicks();
 
-            this.loggedCommads[currentTick] = newCommand;
+            if (newCommand.execute(this.game)) {
+                // only log commands that are executable
+                this.loggedCommads[currentTick] = newCommand;
+            }
+            
 
-            newCommand.execute(this.game);
+        
         }
 
 

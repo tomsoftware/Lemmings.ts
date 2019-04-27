@@ -23,8 +23,17 @@ module Lemmings {
             return this.releaseCount;
         }
 
-        public changeReleaseRate(count: number) {
-            this.releaseRate = this.boundToRange(this.minReleaseRate, this.releaseRate + count, GameVictoryCondition.maxReleaseRate);
+        public changeReleaseRate(count: number):boolean {
+            let oldReleaseRate = this.releaseRate;
+            let newReleaseRate = this.boundToRange(this.minReleaseRate, this.releaseRate + count, GameVictoryCondition.maxReleaseRate);
+
+            if (newReleaseRate == oldReleaseRate) {
+                return false;
+            }
+
+            this.releaseRate = newReleaseRate;
+
+            return true;
         }
 
         private boundToRange(min: number, value: number, max: number): number {
