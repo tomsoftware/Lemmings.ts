@@ -79,15 +79,14 @@ module Lemmings {
         }
 
 
-        private onGameEnd(state : GameStateTypes) {
-            this.changeHtmlText(this.elementGameState, GameStateTypes.toString(state));
+        private onGameEnd(gameResult : GameResult) {
+            this.changeHtmlText(this.elementGameState, GameStateTypes.toString(gameResult.state));
             this.stage.startFadeOut();
 
-            alert(this.game.getCommandManager().serialize());
-
+            console.dir(gameResult);
 
             window.setTimeout(() => {
-                if (state == GameStateTypes.SUCCEEDED) {
+                if (gameResult.state == GameStateTypes.SUCCEEDED) {
                     /// move to next level
                     this.moveToLevel(1);
                 }

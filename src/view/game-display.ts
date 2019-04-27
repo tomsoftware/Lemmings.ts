@@ -18,7 +18,7 @@ module Lemmings {
             this.dispaly = dispaly;
 
             this.dispaly.onMouseDown.on((e) => {
-                console.log(e.x +" "+ e.y);
+                //console.log(e.x +" "+ e.y);
                 let lem = this.lemmingManager.getLemmingAt(e.x, e.y);
                 if (!lem) return;
 

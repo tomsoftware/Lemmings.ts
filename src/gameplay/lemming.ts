@@ -59,7 +59,7 @@ module Lemmings {
             let x2 = xCenter + 5;
             let y2 = yCenter + 7;
 
-            console.log(this.id + " : "+ x1 +"-"+ x2 +"  "+ y1 +"-"+ y2);
+            //console.log(this.id + " : "+ x1 +"-"+ x2 +"  "+ y1 +"-"+ y2);
 
             if ((x >= x1) && (x <= x2) && (y >= y1) && (y < y2)) {
                 return ((yCenter - y) * (yCenter - y) + (xCenter - x) * (xCenter - x));

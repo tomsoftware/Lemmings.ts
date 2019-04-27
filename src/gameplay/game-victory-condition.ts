@@ -14,6 +14,7 @@ module Lemmings {
         private survivorCount: number;
         private leftCount: number;
         private outCount: number;
+        private isFinalize:boolean = false;
 
         public getNeedCount(): number {
             return this.needCount;
@@ -24,6 +25,10 @@ module Lemmings {
         }
 
         public changeReleaseRate(count: number):boolean {
+            if (this.isFinalize) {
+                return false;
+            }
+
             let oldReleaseRate = this.releaseRate;
             let newReleaseRate = this.boundToRange(this.minReleaseRate, this.releaseRate + count, GameVictoryCondition.maxReleaseRate);
 
@@ -50,6 +55,10 @@ module Lemmings {
 
         /** one lemming reached the exit */
         public addSurvivor(): void {
+            if (this.isFinalize) {
+                return;
+            }
+
             this.survivorCount++;
         }
 
@@ -75,18 +84,39 @@ module Lemmings {
 
         /** release one new lemming */
         public releaseOne(): void {
+            if ((this.isFinalize) || (this.leftCount <= 0 )) {
+                return;
+            }
+
             this.leftCount--;
             this.outCount++;
         }
 
         /** if a lemming die */
         public removeOne(): void {
+            if (this.isFinalize) {
+                return;
+            }
+
             this.outCount--;
         }
 
         /** stop releasing lemmings */
         public doNuke() {
+            if (this.isFinalize) {
+                return;
+            }
+
             this.leftCount = 0;
+        }
+
+        /** stop any changing in the conditions */
+        public doFinalize() {
+            if (this.isFinalize) {
+                return;
+            }
+            
+            this.isFinalize = true;
         }
 
         constructor(level: Level) {

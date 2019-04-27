@@ -25,7 +25,7 @@ module Lemmings {
         private skills: GameSkills;
         private showDebug : boolean = false;
 
-        public onGameEnd = new EventHandler<GameStateTypes>();
+        public onGameEnd = new EventHandler<GameResult>();
 
         private finalGameState:GameStateTypes = GameStateTypes.UNKNOWN;
 
@@ -222,8 +222,10 @@ module Lemmings {
             let state = this.getGameState();
 
             if ((state != GameStateTypes.RUNNING) && (state != GameStateTypes.UNKNOWN)) {
+                this.gameVictoryCondition.doFinalize();
                 this.finalGameState = state;
-                this.onGameEnd.trigger(state);
+
+                this.onGameEnd.trigger(new GameResult(this));
             }
         }
 

@@ -194,7 +194,7 @@ module Lemmings {
                 let lem = lems[i];
 
                 let distance = lem.getClickDistance(x, y);
-                console.log("--> "+ distance);
+                //console.log("--> "+ distance);
 
                 if ((distance < 0) || (distance >= minDistance)) {
                     continue;
@@ -203,7 +203,7 @@ module Lemmings {
                 minDistance = distance;
                 minDistanceLem = lem;
             }
-            console.log("====> "+ (minDistanceLem? minDistanceLem.id : "null"));
+            //console.log("====> "+ (minDistanceLem? minDistanceLem.id : "null"));
             return minDistanceLem;
         }
 
