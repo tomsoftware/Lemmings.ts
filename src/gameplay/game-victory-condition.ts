@@ -75,6 +75,11 @@ module Lemmings {
             this.outCount--;
         }
 
+        /** stop releasing lemmings */
+        public doNuke() {
+            this.leftCount = 0;
+        }
+
         constructor(level: Level) {
             this.needCount = level.needCount;
 

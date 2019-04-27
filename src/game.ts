@@ -20,6 +20,7 @@ module Lemmings {
         private dispaly: DisplayImage = null;
         private gameDispaly: GameDisplay = null;
         private gameTimer: GameTimer = null;
+        private commandManager: CommandManager = null;
 
         private skills: GameSkills;
         private showDebug : boolean = false;
@@ -64,6 +65,8 @@ module Lemmings {
                         this.gameTimer.onGameTick.on(() => {
                             this.onGameTimerTick()
                         });
+
+                        this.commandManager = new CommandManager(this, this.gameTimer);
 
                         this.skills = new GameSkills(level);
 
@@ -141,20 +144,24 @@ module Lemmings {
             this.skills.cheat();
         }
 
-        /** trigger a lemming to do an action */
-        public triggerLemming(lem:Lemming, selectedSkill:SkillTypes) {
-            if (this.skills.canReduseSkill(selectedSkill)) {
-                /// set the skill
-                if (this.lemmingManager.doLemmingAction(lem, selectedSkill)) {
-                    /// reduce the available skill count
-                    this.skills.reduseSkill(selectedSkill)
-                }  
-            }
+        public getGameSkills() : GameSkills {
+            return this.skills;
         }
 
-        /** trigger the nuke for all lemmings & stop creating new */
-        public triggerNuke() {
-            this.lemmingManager.doNukeAllLemmings();
+        public getLemmingManager():LemmingManager {
+            return this.lemmingManager;
+        }
+
+        public getVictoryCondition() : GameVictoryCondition {
+            return this.gameVictoryCondition;
+        }
+
+        public getCommandManager(): CommandManager {
+            return this.commandManager;
+        }
+
+        public queueCmmand(newCommand:ICommand) {
+            this.commandManager.queueCommand(newCommand);
         }
 
         /** enables / disables the display of debug information */

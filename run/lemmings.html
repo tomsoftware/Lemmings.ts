@@ -9,7 +9,7 @@
 
     <style> 
       .PixelatedRendering {
-        border: 5px solid #ddd;
+         border: 0px;
     }
     </style>
 
@@ -72,7 +72,9 @@
 
     <input type="button" onclick="debugView.cheat()" value="cheat" />
     <input type="button" onclick="debugView.enableDebug()" value="debug" />
-    
+    Replay:
+    <input type="text" id="replayString" value="" />
+    <input type="button" onClick="debugView.loadReplay(document.getElementById('replayString').value)" value="run" />
     <br />
 
     <!-- https://stackoverflow.com/questions/22885702/html-for-the-pause-symbol-in-a-video-control -->

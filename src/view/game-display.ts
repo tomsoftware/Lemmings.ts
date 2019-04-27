@@ -18,12 +18,11 @@ module Lemmings {
             this.dispaly = dispaly;
 
             this.dispaly.onMouseDown.on((e) => {
+                console.log(e.x +" "+ e.y);
                 let lem = this.lemmingManager.getLemmingAt(e.x, e.y);
-                if (lem == null) return;
+                if (!lem) return;
 
-                let selectedSkill = this.gameSkills.getSelectedSkill();
-
-                this.game.triggerLemming(lem, selectedSkill);
+                this.game.queueCmmand(new CommandLemmingsAction(lem.id));
             });
         }
 

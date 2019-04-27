@@ -38,7 +38,12 @@ module Lemmings {
                 return;
             }
 
-            this.gameVictoryCondition.changeReleaseRate(this.deltaReleaseRate);
+            if (this.deltaReleaseRate > 0) {
+                this.game.queueCmmand(new CommandReleaseRateIncrease(this.deltaReleaseRate));
+            }
+            else {
+                this.game.queueCmmand(new CommandReleaseRateDecrease(-this.deltaReleaseRate));
+            }
 
         }
 
@@ -66,7 +71,8 @@ module Lemmings {
             let newSkill = this.getSkillByPanelIndex(panelIndex);
             if (newSkill == SkillTypes.UNKNOWN) return;
 
-            this.skills.setSelectedSkill(newSkill);
+            this.game.queueCmmand(new CommandSelectSkill(newSkill));
+
             this.skillSelectionChanged = true;
         }
 
@@ -76,7 +82,7 @@ module Lemmings {
 
             /// trigger the nuke for all lemmings
             if (panelIndex == 11) {
-                this.game.triggerNuke();
+                this.game.queueCmmand(new CommandNuke());
             }
         }
 

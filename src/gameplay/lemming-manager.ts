@@ -109,10 +109,6 @@ module Lemmings {
 
         /** let a new lemming arise from an entrance */
         private addNewLemmings() {
-            if (this.isNuking()) {
-                return;
-            }
-
             if (this.gameVictoryCondition.getLeftCount() <= 0) {
                 return;
             }
@@ -182,6 +178,11 @@ module Lemmings {
             }
         }
 
+        /** return the lemming with a given id */
+        public getLemming(id:number): Lemming {
+            return this.lemmings[id];
+        }
+
         /** return a lemming a a geiven position */
         public getLemmingAt(x: number, y: number): Lemming {
             let lems = this.lemmings;
@@ -193,6 +194,8 @@ module Lemmings {
                 let lem = lems[i];
 
                 let distance = lem.getClickDistance(x, y);
+                console.log("--> "+ distance);
+
                 if ((distance < 0) || (distance >= minDistance)) {
                     continue;
                 }
@@ -200,7 +203,7 @@ module Lemmings {
                 minDistance = distance;
                 minDistanceLem = lem;
             }
-
+            console.log("====> "+ (minDistanceLem? minDistanceLem.id : "null"));
             return minDistanceLem;
         }
 
@@ -232,7 +235,7 @@ module Lemmings {
         /** change the action a Lemming is doing */
         public doLemmingAction(lem: Lemming, skillType: SkillTypes): boolean {
             if (lem == null) {
-                return;
+                return false;
             }
 
             let actionSystem = this.skillActions[skillType];

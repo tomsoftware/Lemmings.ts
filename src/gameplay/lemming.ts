@@ -15,13 +15,13 @@ module Lemmings {
         public action: IActionSystem;
         public countdownAction: IActionSystem;
         public state: number = 0;
-        public id: string;
+        public id: number;
         private disabled:boolean = false;
 
         constructor(x:number, y:number, id:number) {
             this.x = x;
             this.y = y;
-            this.id = "Lem" + id;
+            this.id = id;
         }
 
         /** return the number shown as countdown */
@@ -45,6 +45,7 @@ module Lemmings {
             }
             
             this.countdown = 80;
+
             return true;
         }
 
@@ -53,10 +54,12 @@ module Lemmings {
             let yCenter = this.y - 5;
             let xCenter = this.x;
 
-            let x1 = xCenter - 4;
-            let y1 = yCenter - 4;
-            let x2 = xCenter + 4;
-            let y2 = yCenter + 4;
+            let x1 = xCenter - 5;
+            let y1 = yCenter - 6;
+            let x2 = xCenter + 5;
+            let y2 = yCenter + 7;
+
+            console.log(this.id + " : "+ x1 +"-"+ x2 +"  "+ y1 +"-"+ y2);
 
             if ((x >= x1) && (x <= x2) && (y >= y1) && (y < y2)) {
                 return ((yCenter - y) * (yCenter - y) + (xCenter - x) * (xCenter - x));

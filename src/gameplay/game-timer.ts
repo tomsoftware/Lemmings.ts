@@ -39,6 +39,8 @@ module Lemmings {
         /** event raising on every tick (one step in time) the game made */
         public onGameTick = new EventHandler<void>();
 
+        /** event raising on before every tick (one step in time) the game made */
+        public onBeforeGameTick = new EventHandler<number>();
 
         /** Pause the game */
         public suspend() {
@@ -51,6 +53,7 @@ module Lemmings {
         /** End the game */
         public stop() {
             this.suspend();
+            this.onBeforeGameTick.dispose();
             this.onGameTick.dispose();
         }
 
@@ -78,7 +81,7 @@ module Lemmings {
         /** run the game one step in time */
         public tick() {
             this.tickIndex++;
-
+            if (this.onBeforeGameTick != null) this.onBeforeGameTick.trigger(this.tickIndex);
             if (this.onGameTick != null) this.onGameTick.trigger();
         }
 

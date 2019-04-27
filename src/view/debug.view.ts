@@ -45,7 +45,7 @@ module Lemmings {
         
         
         /** start or continue the game */
-        public start() {
+        public start(replayString?:string) {
             if (!this.gameFactory) return;
 
             /// is the game already running
@@ -58,6 +58,10 @@ module Lemmings {
             this.gameFactory.getGame(this.gameType)
                 .then(game => game.loadLevel(this.levelGroupIndex, this.levelIndex))
                 .then(game => {
+
+                    if (replayString != null) {
+                        game.getCommandManager().loadReplay(replayString);
+                    }
 
                     game.setGameDispaly(this.stage.getGameDisplay());
                     game.setGuiDisplay(this.stage.getGuiDisplay());
@@ -79,7 +83,9 @@ module Lemmings {
             this.changeHtmlText(this.elementGameState, GameStateTypes.toString(state));
             this.stage.startFadeOut();
 
-            
+            alert(this.game.getCommandManager().serialize());
+
+
             window.setTimeout(() => {
                 if (state == GameStateTypes.SUCCEEDED) {
                     /// move to next level
@@ -93,6 +99,10 @@ module Lemmings {
             }, 2500);
         }
 
+        /** load and run a replay */
+        public loadReplay(replayString:string) {
+            this.start(replayString);
+        }
 
         /** pause the game */
         public cheat() {
