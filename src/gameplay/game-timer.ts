@@ -80,8 +80,8 @@ module Lemmings {
 
         /** run the game one step in time */
         public tick() {
-            this.tickIndex++;
             if (this.onBeforeGameTick != null) this.onBeforeGameTick.trigger(this.tickIndex);
+            this.tickIndex++;
             if (this.onGameTick != null) this.onGameTick.trigger();
         }
 

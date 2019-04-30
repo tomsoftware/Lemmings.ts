@@ -106,7 +106,7 @@ module Lemmings {
                         this.objectManager = new ObjectManager(this.gameTimer);
                         this.objectManager.addRange(this.level.objects);
 
-                        this.gameDispaly = new GameDisplay(this, this.skills, this.level, this.lemmingManager, this.objectManager, this.triggerManager);
+                        this.gameDispaly = new GameDisplay(this, this.level, this.lemmingManager, this.objectManager, this.triggerManager);
                         if (this.dispaly != null) {
                             this.gameDispaly.setGuiDisplay(this.dispaly);
                         }

@@ -6,7 +6,6 @@ module Lemmings {
 
         constructor(
             private game: Game,
-            private gameSkills: GameSkills,
             private level: Level,
             private lemmingManager: LemmingManager,
             private objectManager: ObjectManager,
