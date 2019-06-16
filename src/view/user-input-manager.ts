@@ -40,7 +40,7 @@ module Lemmings {
         private lastMouseX = 0;
         private lastMouseY = 0;
 
-        private mouseButton = -1;
+        private mouseButton:boolean = false;
 
         public onMouseMove = new EventHandler<MouseMoveEventArguemnts>();
         public onMouseUp = new EventHandler<Position2D>();
@@ -71,7 +71,7 @@ module Lemmings {
 
             listenElement.addEventListener("touchstart", (e: TouchEvent) => {
                 let relativePos = this.getRelativePosition(listenElement, e.touches[0].clientX, e.touches[0].clientY);
-                this.handelMouseDown(relativePos, 1);
+                this.handelMouseDown(relativePos);
 
                 e.stopPropagation();
                 e.preventDefault();
@@ -80,7 +80,7 @@ module Lemmings {
 
             listenElement.addEventListener("mousedown", (e: MouseEvent) => {
                 let relativePos = this.getRelativePosition(listenElement, e.clientX, e.clientY);
-                this.handelMouseDown(relativePos, e.button);
+                this.handelMouseDown(relativePos);
 
                 e.stopPropagation();
                 e.preventDefault();
@@ -101,7 +101,8 @@ module Lemmings {
             });
 
             listenElement.addEventListener("touchend", (e: TouchEvent) => {
-                this.handelMouseClear();
+                let relativePos = this.getRelativePosition(listenElement, e.touches[0].clientX, e.touches[0].clientY);
+                this.handelMouseUp(relativePos);
                 return false;
             });
 
@@ -151,7 +152,7 @@ module Lemmings {
         private handelMouseMove(position: Position2D) {
 
             //- Move Point of View
-            if (this.mouseButton == 0) {
+            if (this.mouseButton) {
 
                 let deltaX = (this.lastMouseX - position.x);
                 let deltaY = (this.lastMouseY - position.y);
@@ -173,18 +174,16 @@ module Lemmings {
             }
         }
 
-        private handelMouseDown(position: Position2D, button: number) {
+        private handelMouseDown(position: Position2D) {
             //- save start of Mousedown
-            this.mouseButton = button;
+            this.mouseButton = true;
             this.mouseDownX = position.x;
             this.mouseDownY = position.y;
             this.lastMouseX = position.x;
             this.lastMouseY = position.y;
 
-            if (this.mouseButton == 0) {
-                /// create new event handler
-                this.onMouseDown.trigger(position);
-            }
+            /// create new event handler
+            this.onMouseDown.trigger(position);
         }
 
         private handleMouseDoubleClick(position: Position2D) {
@@ -192,7 +191,7 @@ module Lemmings {
         }
 
         private handelMouseClear() {
-            this.mouseButton = -1;
+            this.mouseButton = false;
             this.mouseDownX = 0;
             this.mouseDownY = 0;
             this.lastMouseX = 0;

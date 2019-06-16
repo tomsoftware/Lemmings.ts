@@ -13,7 +13,7 @@ module Lemmings {
             this.replay = game.getCommandManager().serialize();
             this.survivorPercentage = game.getVictoryCondition().getSurvivorPercentage();
             this.survivors = game.getVictoryCondition().getSurvivorsCount();
-            this.duration = game.getGameTimer().getGameTime();
+            this.duration = game.getGameTimer().getGameTicks();
         }
     }
 }
