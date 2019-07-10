@@ -8,8 +8,7 @@ module Lemmings {
 
 
   /**
-   * Player for the SoundImage File for one track that needs to be 
-   * played. 
+   * Player on a Lemmings SoundImage File to playback one track. 
   */
   export class SoundImagePlayer {
     private log = new LogHandler("SoundImagePlayer");
@@ -27,9 +26,9 @@ module Lemmings {
 
     /** variables for the song */
     public songHeaderPosition: number;
-    public unknownWord: number;
+    public sampleRateFactor: number;
 
-    /** cycles to wait between data sending */
+    /** cycles to wait/delay between writing new data to adlib */
     public waitCycles: number;
     public currentCycle: number = 0;
 
@@ -43,13 +42,19 @@ module Lemmings {
       this.fileConfig = audioConfig;
     }
 
+    /** Return the samples to be generated */
+    public getSamplingInterval() {
+      /// this is an empirical value... dont know if this is correct
+      return this.sampleRateFactor / 210;
+    }
 
     /** init for a sound */
     public initSound(soundIndex: number) {
       ///- reset
       this.channels = [];
       this.channelCount = 0;
-
+      this.waitCycles = 0;
+      this.sampleRateFactor = 0x4300;
 
       /// check if valid
       if ((soundIndex < 0) || (soundIndex > 17)) return;
@@ -86,7 +91,7 @@ module Lemmings {
 
       this.reader.setOffset(this.songHeaderPosition);
 
-      this.unknownWord = this.reader.readWordBE();
+      this.sampleRateFactor = this.reader.readWordBE();
       this.instrumentPos = this.reader.readWordBE() + this.fileConfig.instructionsOffset;
       this.waitCycles = this.reader.readByte();
 
@@ -113,7 +118,7 @@ module Lemmings {
 
 
     /** create an SoundImage Channel and init it */
-    private createChannel(chIndex): SoundImageChannels {
+    private createChannel(chIndex:number): SoundImageChannels {
 
       var ch = new SoundImageChannels(this.reader, this.fileConfig);
 
@@ -212,7 +217,7 @@ module Lemmings {
       this.log.debug("channelCount: " + this.channelCount);
 
       this.log.debug("songHeaderPosition: " + this.songHeaderPosition);
-      this.log.debug("unknownWord: " + this.unknownWord);
+      this.log.debug("sampleRateFactor: " + this.sampleRateFactor);
 
       this.log.debug("waitCycles: " + this.waitCycles);
       this.log.debug("currentCycle: " + this.currentCycle);

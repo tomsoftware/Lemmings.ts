@@ -1,52 +1,71 @@
-/// <reference path="opl3.ts"/>
 /// <reference path="./../sound-image-player.ts"/>
 
-
 module Lemmings {
-    export class AudioPlayer  {
+    export class AudioPlayer {
 
-        private error = new LogHandler("AudioPlayer");
+        private log = new LogHandler("AudioPlayer");
 
-        public context:AudioContext;
-        public source:AudioBufferSourceNode;
-        public processor:ScriptProcessorNode;
-        public gain:GainNode;
+        public audioCtx: AudioContext;
+        public source: AudioBufferSourceNode;
+        public processor: ScriptProcessorNode;
 
-        private opl : OPL3;
-        
-        private srcOplPlayer: SoundImagePlayer;
+        private opl: DBOPL.OPL;
 
-        private queue:  Float32Array[] = []; //Float32Array[] = [];
+        private soundImagePlayer: SoundImagePlayer;
 
+        private samplesPerTick: number;
 
-        private silence;
-
-        private PCM_FRAME_SIZE = 64 * 4;
-        private FRAMES_IN_OUTBUFFER = 32;
 
         /** is the sound playing at the moment */
-        private isPlaying : boolean = false;
+        private isPlaying: boolean = false;
 
 
         constructor(src: SoundImagePlayer) {
-            this.opl = new OPL3();
-            this.srcOplPlayer = src;
-
             /// setup audio context
-            this.context = new AudioContext();
+            this.audioCtx = new AudioContext();
+            if (!this.audioCtx) {
+                this.log.debug('Uanbel to create AudioContext!');
+                return;
+            }
 
-            this.source = this.context.createBufferSource();
-            this.processor = this.context.createScriptProcessor(this.FRAMES_IN_OUTBUFFER * this.PCM_FRAME_SIZE, 0, 2);
-            this.gain = this.context.createGain();
+            this.soundImagePlayer = src;
 
-            
-            this.silence = new Float32Array(this.PCM_FRAME_SIZE);
+            this.log.debug("debug: " + this.soundImagePlayer.sampleRateFactor.toString(16));
 
-            this.gain.gain.value = 1;
+            this.log.debug("Sound image sample rate factor: "+ this.soundImagePlayer.sampleRateFactor + " --> "+ this.soundImagePlayer.getSamplingInterval());
+            this.log.debug('Audio sample rate ' + this.audioCtx.sampleRate);
+
+            this.samplesPerTick = Math.round(this.audioCtx.sampleRate / (this.soundImagePlayer.getSamplingInterval()));
+            this.source = this.audioCtx.createBufferSource();
+            this.processor = this.audioCtx.createScriptProcessor(8192, 2, 2);
+
+            // When the buffer source stops playing, disconnect everything
+            this.source.onended = () => {
+                console.log('source.onended()');
+                this.source.disconnect(this.processor);
+                this.processor.disconnect(this.audioCtx.destination);
+                this.processor = null;
+                this.source = null;
+            }
+
+   
+
+            /// create opl interpreter
+            this.opl = new DBOPL.OPL(this.audioCtx.sampleRate, 2);
+     
+
+
+            //this.gain = this.audioCtx.createGain();
+
+
+            //this.silence = new Float32Array(this.PCM_FRAME_SIZE);
+
+            //this.gain.gain.value = 1;
         }
 
 
         /** fill the cache with data */
+        /*
         private readAdlib() {
 
             if (!this.isPlaying) return;
@@ -54,19 +73,29 @@ module Lemmings {
             var startTime = window.performance.now();
 
             /// fill the buffer with 100 PCM blocks
-            while (this.queue.length < 300){
+            while (this.queue.length < 384) {
 
-                /// read on music-bar from source file
-                this.srcOplPlayer.read((reg:number, value: number) => {
+                /// read on music-state from source file
+                this.srcOplPlayer.read((reg: number, value: number) => {
 
                     /// write Adlib-Commands
-                    this.opl.write(0, reg, value);
+                    this.opl.write(reg, value);
                 });
 
-                /// Render the adlib commands to PCM Sound
+                ///  Render the adlib commands to PCM Sound
                 ///  => to get the right speed we need to sampel about (64 * 6) to (64 * 8) values for Lemmings
-                this.queue.push(this.opl.readMonoLemmings(this.PCM_FRAME_SIZE));
-                this.queue.push(this.opl.readMonoLemmings(this.PCM_FRAME_SIZE));
+                const samples = this.opl.generate(this.PCM_FRAME_SIZE);
+                const samplesLen = samples.length;
+
+                /// convert int to float
+                var trans = new Float32Array(samplesLen);
+
+                for (let i = 0; i < samplesLen; i++) {
+                    trans[i] = samples[i * 2] / 32768.0;
+        
+                }
+
+                this.queue.push(trans);
             }
 
             //this.error.debug("Elapsed Time for sampling opl "+ (window.performance.now() - startTime));
@@ -77,45 +106,77 @@ module Lemmings {
             }, 100);
 
         }
-
+*/
         /** Start playback of the song/sound */
         public play() {
-            
-            this.isPlaying = true;
-
-            /// read and buffer PCM block
-            this.readAdlib();
 
             /// setup Web-Audio
             this.processor.onaudioprocess = (e: AudioProcessingEvent) => this.audioScriptProcessor(e);
+            this.processor.connect(this.audioCtx.destination);
             this.source.connect(this.processor);
-            this.processor.connect(this.gain);
-            this.gain.connect(this.context.destination);
+            this.source.start();
+            this.audioCtx.resume();
 
-            /// delay the playback
-            window.setTimeout(() => {
-                /// only start if not stopped so fare
-                if ((this.source) && (this.isPlaying)) {
-                    this.source.start();
+            this.isPlaying = true;
+        }
+
+
+        private lenGen: number = 0;
+        public audioScriptProcessor(e: AudioProcessingEvent) {
+
+            var b = e.outputBuffer;
+
+            var c0 = b.getChannelData(0);
+            var c1 = b.getChannelData(1);
+
+            let lenFill = b.length;
+            let posFill = 0;
+
+            while (posFill < lenFill) {
+                // Fill any leftover delay from the last buffer-fill event first
+                while (this.lenGen > 0) {
+                    if (lenFill - posFill < 2) {
+                        // No more space in buffer
+                        return;
+                    }
+                    let lenNow = Math.max(2, Math.min(512, this.lenGen, lenFill - posFill));
+
+                    const samples = this.opl.generate(lenNow);
+
+                    //const samples = new Int16Array(s);
+                    for (let i = 0; i < lenNow; i++) {
+                        c0[posFill] = samples[i * 2 + 0] / 32768.0;
+                        c1[posFill] = samples[i * 2 + 1] / 32768.0;
+                        posFill++;
+                    }
+                    this.lenGen -= lenNow;
                 }
-            }, 500);
+
+
+                /// read on music-state from source file
+                this.soundImagePlayer.read((reg: number, value: number) => {
+
+                    /// write Adlib-Commands
+                    this.opl.write(reg, value);
+                });
+
+
+                //document.getElementById('progress').firstChild.nodeValue = Math.round(p / imf.length * 100) + '%';
+                this.lenGen += 1 * this.samplesPerTick;
+            }
         }
 
 
         /** stop playing and close */
         public stop() {
- 
+
             if (this.isPlaying) {
                 this.isPlaying = false;
-
-                try{
-                    this.source.stop();
-                } catch (ex) {}
             }
 
             try {
-                this.context.close();
-            } catch (ex) {}
+                this.audioCtx.close();
+            } catch (ex) { }
 
             if (this.processor) {
                 this.processor.onaudioprocess = null;
@@ -123,57 +184,19 @@ module Lemmings {
 
             try {
                 this.source.disconnect(this.processor);
-                this.processor.disconnect(this.gain);
-                this.gain.disconnect(this.context.destination);
-            } catch (ex) {}
-            
-   
-            this.context = null;
+                // this.processor.disconnect(this.gain);
+                //this.gain.disconnect(this.audioCtx.destination);
+            } catch (ex) { }
+
+
+            this.audioCtx = null;
             this.source = null;
             this.processor = null;
-            this.gain = null;
+            //this.gain = null;
 
-            this.opl  = null;
-            this.srcOplPlayer = null;          
-            
-        }
+            this.opl = null;
+            this.soundImagePlayer = null;
 
-
-        
-        public audioScriptProcessor(e: AudioProcessingEvent){
-
-            //this.error.log("queue.length: "+ this.queue.length);
-
-            if (!this.isPlaying) return;
-
-            let outputBuffer = e.outputBuffer;
-            let offset = 0;
-
-            for (let i=0; i < this.FRAMES_IN_OUTBUFFER; i++ ){
-
-                var pcmFrame = null;
-
-                if (this.queue.length > 0) {
-
-                    /// read from FiFo buffer
-                    pcmFrame = this.queue.shift();
-                }
-
-                /// use silence on error
-                if (!pcmFrame) {
-                    /// no data ->
-                    pcmFrame = this.silence;
-
-                    this.error.log("Out of Data!");
-                    return;
-                }
-
-                /// copy PCM bloack to out buffer
-                outputBuffer.copyToChannel(pcmFrame, 0, offset); /// left
-                outputBuffer.copyToChannel(pcmFrame, 1, offset); /// right
-
-                offset += pcmFrame.length;
-            }
         }
 
     }
