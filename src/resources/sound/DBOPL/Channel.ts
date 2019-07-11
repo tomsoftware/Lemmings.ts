@@ -1,9 +1,28 @@
+/*
+ *  Copyright (C) 2002-2015  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+/* 
+* 2019 - Typescript Version: Thomas Zeugner
+*/
+
 namespace DBOPL {
 
     export class Channel {
-        //printDebug() {
-          //  console.log(this.ChannelIndex + ";" + this.chanData + ";" + this.old[0] + ";" + this.old[1] + ";" + this.feedback + ";" + this.regB0 + ";" + this.regC0 + ";" + this.fourMask + ";" + this.maskLeft + ";" + this.maskRight);
-        //}
 
         private channels: Channel[];
         public ChannelIndex: number;
@@ -16,12 +35,10 @@ namespace DBOPL {
         private thisOpIndex: number;
 
         public Op(index: number): Operator {
-            //  return &( ( this + (index >> 1) )->op[ index & 1 ]);
             return this.operators[this.thisOpIndex + index];
         }
 
 
-        //public synthHandler: SynthHandler;
         public synthMode: SynthMode;
         public chanData: number;/** int */
         public old: Int32Array = new Int32Array(2);/** int */
@@ -428,7 +445,6 @@ namespace DBOPL {
             this.feedback = 31 | 0;
             this.fourMask = 0 | 0;
             this.synthMode = SynthMode.sm2FM;
-            //this.synthHandler = this.BlockTemplate(SynthMode.sm2FM);
         }
     }
 

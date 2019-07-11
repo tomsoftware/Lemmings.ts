@@ -1,3 +1,25 @@
+/*
+ *  Copyright (C) 2002-2015  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+/* 
+* 2019 - Typescript Version: Thomas Zeugner
+*/
+
 namespace DBOPL {
 
     export abstract class GlobalMembers {
@@ -9,13 +31,13 @@ namespace DBOPL {
             64, 32, 24, 19,
             16, 12, 11, 10,
             8, 6, 5, 4,
-            3, 2, 1, 0]); /* Bit8u[]*/
+            3, 2, 1, 0]); /* UInt8[]*/
 
 
         public static FreqCreateTable = new Uint8Array([
             (0.5 * 2), (1 * 2), (2 * 2), (3 * 2), (4 * 2), (5 * 2), (6 * 2), (7 * 2),
             (8 * 2), (9 * 2), (10 * 2), (10 * 2), (12 * 2), (12 * 2), (15 * 2), (15 * 2)
-        ]); /** final Bit8u[]  */
+        ]); /** final UInt8[]  */
 
 
         /// We're not including the highest attack rate, that gets a special value
@@ -23,13 +45,13 @@ namespace DBOPL {
             69, 55, 46, 40,
             35, 29, 23, 20,
             19, 15, 11, 10,
-            9]); /** Bit8u */
+            9]); /** UInt8 */
 
         public static EnvelopeIncreaseTable = new Uint8Array([
             4, 5, 6, 7,
             8, 10, 12, 14,
             16, 20, 24, 28,
-            32]); /** Bit8u */
+            32]); /** UInt8 */
 
         /// Layout of the waveform table in 512 entry intervals
         /// With overlapping waves we reduce the table to half it's size
@@ -44,31 +66,31 @@ namespace DBOPL {
 
         public static WaveBaseTable = new Uint16Array([
             0x000, 0x200, 0x200, 0x800,
-            0xa00, 0xc00, 0x100, 0x400]); /** Bit16u */
+            0xa00, 0xc00, 0x100, 0x400]); /** UInt16 */
 
         public static WaveMaskTable = new Uint16Array([
             1023, 1023, 511, 511,
-            1023, 1023, 512, 1023]); /** Bit16u */
+            1023, 1023, 512, 1023]); /** UInt16 */
 
         /// Where to start the counter on at keyon
         public static WaveStartTable = new Uint16Array([
             512, 0, 0, 0,
-            0, 512, 512, 256]); /** Bit16u */
+            0, 512, 512, 256]); /** UInt16 */
 
 
 
-        public static MulTable = new Uint16Array(384); /** Bit16u[] */
+        public static MulTable = new Uint16Array(384); /** UInt16[] */
 
         public static readonly TREMOLO_TABLE = 52;
 
-        public static KslTable = new Uint8Array(8 * 16); /** Bit8u[] */
-        public static TremoloTable = new Uint8Array(GlobalMembers.TREMOLO_TABLE); /** Bit8u[] */
+        public static KslTable = new Uint8Array(8 * 16); /** UInt8[] */
+        public static TremoloTable = new Uint8Array(GlobalMembers.TREMOLO_TABLE); /** UInt8[] */
 
         //Start of a channel behind the chip struct start
-        public static ChanOffsetTable = new Int16Array(32); /** Bit16u[] */
+        public static ChanOffsetTable = new Int16Array(32); /** UInt16[] */
 
         //Start of an operator behind the chip struct start
-        public static OpOffsetTable = new Int16Array(64); /** Bit16u[] */
+        public static OpOffsetTable = new Int16Array(64); /** UInt16[] */
 
 
 
@@ -77,13 +99,13 @@ namespace DBOPL {
         //So taking the highest input value of 7 this gives 3, 7, 3, 0, -3, -7, -3, 0
         public static VibratoTable = new Int8Array([
             1 - 0x00, 0 - 0x00, 1 - 0x00, 30 - 0x00,
-            1 - 0x80, 0 - 0x80, 1 - 0x80, 30 - 0x80]); /** Bit8s */
+            1 - 0x80, 0 - 0x80, 1 - 0x80, 30 - 0x80]); /** Int8 */
 
         //Shift strength for the ksl value determined by ksl strength
-        public static KslShiftTable = new Uint8Array([31, 1, 2, 0]); /** Bit8u */
+        public static KslShiftTable = new Uint8Array([31, 1, 2, 0]); /** UInt8 */
 
 
-        public static EnvelopeSelectShift(val: number /* Bit8u  */) {
+        public static EnvelopeSelectShift(val: number /* UInt8  */) {
             if (val < 13 * 4) {//Rate 0 - 12
                 return 12 - (val >>> 2);
             }
@@ -96,7 +118,7 @@ namespace DBOPL {
         }
 
 
-        public static EnvelopeSelectIndex(val: number /* Bit8u  */) {
+        public static EnvelopeSelectIndex(val: number /* UInt8  */) {
             if (val < 13 * 4) {//Rate 0 - 12
                 return (val & 3);
             }

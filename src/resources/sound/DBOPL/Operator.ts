@@ -1,3 +1,25 @@
+/*
+ *  Copyright (C) 2002-2015  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+/* 
+* 2019 - Typescript Version: Thomas Zeugner
+*/
+
 namespace DBOPL {
 
     enum Operator20Masks {
@@ -17,12 +39,6 @@ namespace DBOPL {
     }
 
     export class Operator {
-
-        /// todo: delete me
-        public OperatorIndex: number;
-
-        //public volHandler: VolumeHandler;
-
 
         public waveBase: number; /** s16*  */
         public waveMask: number; /** u32 */
@@ -65,22 +81,15 @@ namespace DBOPL {
         public ksr: number; /** u8 */
 
 
-        //printDebug() {
-          //  console.log(this.OperatorIndex + ": " + this.waveBase + " " + this.waveMask + " " + this.waveStart + " " + this.waveIndex + " " + this.waveAdd + " " + this.waveCurrent + " " + this.chanData + " " + this.freqMul + " " + this.vibrato + " " + this.sustainLevel + " " + this.totalLevel + " " + this.currentLevel + " " + this.volume + " " + this.attackAdd + " " + this.decayAdd + " " + this.releaseAdd + " " + this.rateIndex + " " + this.rateZero + " " + this.keyOn);
-         //   console.log(this.reg20 + " " + this.reg40 + " " + this.reg60 + " " + this.reg80 + " " + this.regE0 + " " + this.state + " " + this.tremoloMask + " " + this.vibStrength + " " + this.ksr);
-        //}
-
-
-        private SetState(s: State /**u8  */): void {
+        private SetState(s: State /** u8 */): void {
             this.state = s;
-            //this.volHandler = GlobalMembers.VolumeHandlerTable[s];
         }
 
         //We zero out when rate == 0
         private UpdateAttack(chip: Chip): void {
-            let rate = this.reg60 >>> 4; /** Bit8u */
+            let rate = this.reg60 >>> 4; /** UInt8 */
             if (rate != 0) {
-                let val = ((rate << 2) + this.ksr) | 0; /** Bit8u */;
+                let val = ((rate << 2) + this.ksr) | 0; /** UInt8 */;
                 this.attackAdd = chip.attackRates[val];
                 this.rateZero &= ~(1 << State.ATTACK);
             }
@@ -127,7 +136,7 @@ namespace DBOPL {
             let tl = this.reg40 & 0x3f;
 
             let kslShift = GlobalMembers.KslShiftTable[this.reg40 >>> 6];
-            //Make sure the attenuation goes to the right bits
+            //Make sure the attenuation goes to the right Int32
             this.totalLevel = tl << ((9) - 7);
             this.totalLevel += (kslBase << ((9) - 9)) >> kslShift;
         }
@@ -281,8 +290,6 @@ namespace DBOPL {
 
                 this.waveIndex = this.waveStart;
 
-
-
                 this.rateIndex = 0;
                 this.SetState(State.ATTACK);
             }
@@ -371,7 +378,7 @@ namespace DBOPL {
             return this.currentLevel + this.TemplateVolume();
         }
 
-        public GetSample(modulation: number /** Bits */): number /** Bits  */ {
+        public GetSample(modulation: number /** Int32 */): number /** Int32  */ {
             //this.printDebug();
             let vol = this.ForwardVolume();
 
@@ -388,9 +395,7 @@ namespace DBOPL {
         }
 
 
-        public GetWave(index: number /** Bitu */, vol: number /** Bitu */): number /** Bits */ {
-
-            //return ((this.waveBase[index & this.waveMask] * GlobalMembers.MulTable[vol >>> ((9) - 9)]) >> 16);
+        public GetWave(index: number /** Uint32 */, vol: number /** Uint32 */): number /** Int32 */ {
             return ((GlobalMembers.WaveTable[this.waveBase + (index & this.waveMask)] * GlobalMembers.MulTable[vol >>> ((9) - 9)]) >> 16);
         }
 
@@ -416,8 +421,6 @@ namespace DBOPL {
             this.releaseAdd = 0;
         }
     }
-
-
 
 
 }
