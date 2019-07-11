@@ -40,48 +40,48 @@ namespace DBOPL {
 
     export class Operator {
 
-        public waveBase: number; /** s16*  */
-        public waveMask: number; /** u32 */
-        public waveStart: number; /** u32 */
+        public waveBase: number; /** Int16  */
+        public waveMask: number; /** UInt32 */
+        public waveStart: number; /** UInt32 */
 
-        public waveIndex: number; /**u32 */ // WAVE_signed long shifted counter of the frequency index
-        public waveAdd: number; /**u32 */  	//The base frequency without vibrato
-        public waveCurrent: number; /**u32 */  //waveAdd + vibratao
+        public waveIndex: number; /** UInt32 */ // WAVE_signed long shifted counter of the frequency index
+        public waveAdd: number; /** UInt32 */ //The base frequency without vibrato
+        public waveCurrent: number; /** UInt32 */  //waveAdd + vibratao
 
-        public chanData: number; /**u32 *///Frequency/octave and derived data coming from whatever channel controls this
-        public freqMul: number; /**u32 *///Scale channel frequency with this, TODO maybe remove?
-        public vibrato: number; /**u32 */ 	//Scaled up vibrato strength
-        public sustainLevel: number; /** s32*/ //When stopping at sustain level stop here
-        public totalLevel: number; /** s32*/ //totalLevel is added to every generated volume
-        public currentLevel: number; /**u32 */ //totalLevel + tremolo
-        public volume: number; /**s32 *///The currently active volume
+        public chanData: number; /** UInt32 */ //Frequency/octave and derived data coming from whatever channel controls this
+        public freqMul: number; /** UInt32 */ //Scale channel frequency with this, TODO maybe remove?
+        public vibrato: number; /** UInt32 */ //Scaled up vibrato strength
+        public sustainLevel: number; /** Int32 */ //When stopping at sustain level stop here
+        public totalLevel: number; /** Int32 */ //totalLevel is added to every generated volume
+        public currentLevel: number; /** UInt32 */ //totalLevel + tremolo
+        public volume: number; /** Int32 */ //The currently active volume
 
-        public attackAdd: number; /** u32 */ //Timers for the different states of the envelope
-        public decayAdd: number; /** u32 */
-        public releaseAdd: number; /**u32  */
-        public rateIndex: number; /** u32 */ //Current position of the evenlope
+        public attackAdd: number; /** UInt32 */ //Timers for the different states of the envelope
+        public decayAdd: number; /** UInt32 */
+        public releaseAdd: number; /** UInt32  */
+        public rateIndex: number; /** UInt32 */ //Current position of the evenlope
 
-        public rateZero: number; /** u8 */ 	//signed long for the different states of the envelope having no changes
-        public keyOn: number; /** u8 */ //Bitmask of different values that can generate keyon
+        public rateZero: number; /** Int8 */ 	//signed long for the different states of the envelope having no changes
+        public keyOn: number; /** Int8 */ //Bitmask of different values that can generate keyon
 
         //Registers, also used to check for changes
-        public reg20: number; /** u8 */
-        public reg40: number; /** u8 */
-        public reg60: number; /** u8 */
-        public reg80: number; /** u8 */
-        public regE0: number; /** u8 */
+        public reg20: number; /** Int8 */
+        public reg40: number; /** Int8 */
+        public reg60: number; /** Int8 */
+        public reg80: number; /** Int8 */
+        public regE0: number; /** Int8 */
 
         //Active part of the envelope we're in
-        public state: number; /** u8 */
+        public state: number; /** Int8 */
         //0xff when tremolo is enabled
-        public tremoloMask: number; /** u8 */
+        public tremoloMask: number; /** Int8 */
         //Strength of the vibrato
-        public vibStrength: number; /** u8 */
+        public vibStrength: number; /** Int8 */
         //Keep track of the calculated KSR so we can check for changes
-        public ksr: number; /** u8 */
+        public ksr: number; /** Int8 */
 
 
-        private SetState(s: State /** u8 */): void {
+        private SetState(s: State /** Int8 */): void {
             this.state = s;
         }
 
@@ -178,7 +178,7 @@ namespace DBOPL {
             }
         }
 
-        public Write20(chip: Chip, val: number /** u8 */): void {
+        public Write20(chip: Chip, val: number /** Int8 */): void {
             let change = (this.reg20 ^ val);
             if (change == 0) {
                 return;
@@ -205,7 +205,7 @@ namespace DBOPL {
             }
         }
 
-        public Write40(chip: Chip, val: number /** u8 */): void {
+        public Write40(chip: Chip, val: number /** Int8 */): void {
             if ((this.reg40 ^ val) == 0) {
                 return;
             }
@@ -213,7 +213,7 @@ namespace DBOPL {
             this.UpdateAttenuation();
         }
 
-        public Write60(chip: Chip, val: number /** u8 */): void {
+        public Write60(chip: Chip, val: number /** Int8 */): void {
             let change = (this.reg60 ^ val);
             this.reg60 = val;
             if ((change & 0x0f) != 0) {
@@ -224,7 +224,7 @@ namespace DBOPL {
             }
         }
 
-        public Write80(chip: Chip, val: number /** u8 */): void {
+        public Write80(chip: Chip, val: number /** Int8 */): void {
             let change = (this.reg80 ^ val);
             if (change == 0) {
                 return;
@@ -240,7 +240,7 @@ namespace DBOPL {
             }
         }
 
-        public WriteE0(chip: Chip, val: number /** u8 */): void {
+        public WriteE0(chip: Chip, val: number /** Int8 */): void {
             if ((this.regE0 ^ val) == 0) {
                 return;
             }
@@ -284,7 +284,7 @@ namespace DBOPL {
             }
         }
 
-        public KeyOn(mask: number /** u8 */) {
+        public KeyOn(mask: number /** Int8 */) {
             if (this.keyOn == 0) {
                 //Restart the frequency generator
 
@@ -296,7 +296,7 @@ namespace DBOPL {
             this.keyOn |= mask;
         }
 
-        public KeyOff(mask: number /** u8 */) {
+        public KeyOff(mask: number /** Int8 */) {
             this.keyOn &= ~mask;
             if (this.keyOn == 0) {
                 if (this.state != State.OFF) {
@@ -361,7 +361,7 @@ namespace DBOPL {
             return vol | 0;
         }
 
-        public RateForward(add: number /* u32 */): number /** s32 */ {
+        public RateForward(add: number /* UInt32 */): number /** Int32 */ {
             this.rateIndex += add | 0;
 
             let ret = this.rateIndex >>> 24;

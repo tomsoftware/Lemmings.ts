@@ -70,9 +70,9 @@ namespace DBOPL {
                 }
             }
 
-
             return;
         }
+
 
         public AddSamples_s32(samples: number, buffer: Int32Array) {
             // Volume amplication (0 == none, 1 == 2x, 2 == 4x)
@@ -93,7 +93,6 @@ namespace DBOPL {
                     v = buffer[i * 2 + 1] << VOL_AMP;
                     out[outIndex] = this.CLIP(v);
                     outIndex++;
-
                 }
             }
             else {

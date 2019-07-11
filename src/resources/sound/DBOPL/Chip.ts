@@ -24,46 +24,46 @@ namespace DBOPL {
 
     export class Chip {
         //This is used as the base counter for vibrato and tremolo
-        public lfoCounter: number; //UInt32
-        public lfoAdd: number; //UInt32
+        public lfoCounter: number; // UInt32
+        public lfoAdd: number; // UInt32
 
 
-        public noiseCounter: number; //UInt32
-        public noiseAdd: number; //UInt32
-        public noiseValue: number; //UInt32
+        public noiseCounter: number; // UInt32
+        public noiseAdd: number; // UInt32
+        public noiseValue: number; // UInt32
 
         /// Frequency scales for the different multiplications
-        public freqMul: Uint32Array = new Uint32Array(16) //UInt32[16];
+        public freqMul: Uint32Array = new Uint32Array(16)
         /// Rates for decay and release for rate of this chip
-        public linearRates: Int32Array = new Int32Array(76); //new int[76];
+        public linearRates: Int32Array = new Int32Array(76);
         /// Best match attack rates for the rate of this chip
-        public attackRates: Int32Array = new Int32Array(76); //new int[76];
+        public attackRates: Int32Array = new Int32Array(76);
 
         /// 18 channels with 2 operators each
         public chan: Channel[];
-        
-        /// this is a linked table to all used operators replacing the original DosBox OpOffsetTable[]
-        private OpTable:Operator[];
-        /// this is the list of all availibel operators
-        private op:Operator[];
-        /// this is a linked table to all used Channels replacing the original DosBox ChanOffsetTable[]
-        private ChanTable:Channel[];
 
-        public reg104: number; //UInt8
-        public reg08: number; //UInt8
-        public reg04: number; //UInt8
-        public regBD: number; //UInt8
-        public vibratoIndex: number; //UInt8
-        public tremoloIndex: number; //UInt8
-        public vibratoSign: number; //Int8
-        public vibratoShift: number; //UInt8
-        public tremoloValue: number; //UInt8
-        public vibratoStrength: number; //UInt8
-        public tremoloStrength: number; //UInt8
+        /// this is a linked table to all used operators replacing the original DosBox OpOffsetTable[]
+        private OpTable: Operator[];
+        /// this is the list of all availibel operators
+        private op: Operator[];
+        /// this is a linked table to all used Channels replacing the original DosBox ChanOffsetTable[]
+        private ChanTable: Channel[];
+
+        public reg104: number; // UInt8
+        public reg08: number; // UInt8
+        public reg04: number; // UInt8
+        public regBD: number; // UInt8
+        public vibratoIndex: number; // UInt8
+        public tremoloIndex: number; // UInt8
+        public vibratoSign: number; // Int8
+        public vibratoShift: number; // UInt8
+        public tremoloValue: number; // UInt8
+        public vibratoStrength: number; // UInt8
+        public tremoloStrength: number; // UInt8
         /// Mask for allowed wave forms
-        public waveFormMask: number; //UInt8
+        public waveFormMask: number; // UInt8
         //0 or -1 when enabled
-        public opl3Active: number; //Int8
+        public opl3Active: number; // Int8
 
 
         public ForwardLFO(samples: number /* UInt32 */): number /* UInt32 */ {
@@ -263,7 +263,7 @@ namespace DBOPL {
 
                     index = (((reg >>> 4) & 0x10) | (reg & 0xf));
                     if (this.ChanTable[index]) {
-                       this.ChanTable[index].WriteA0(this, val);
+                        this.ChanTable[index].WriteA0(this, val);
                     };
                     break;
 
@@ -299,7 +299,7 @@ namespace DBOPL {
             }
         }
 
-        public WriteAddr(port: number /* UInt32 */, val:number /* byte */): number/* UInt8 */ {
+        public WriteAddr(port: number /* UInt32 */, val: number /* byte */): number/* UInt8 */ {
             switch (port & 3) {
                 case 0:
                     return val;
@@ -314,7 +314,7 @@ namespace DBOPL {
             return 0;
         }
 
-        public GenerateBlock2(total: number /* Bitu */, output: Int32Array /*  Bit32s* */): void {
+        public GenerateBlock2(total: number /* UInt32 */, output: Int32Array /*  Int32 */): void {
             let outputIndex = 0;
 
             while (total > 0) {
@@ -335,11 +335,11 @@ namespace DBOPL {
         }
 
 
-        public GenerateBlock3(total: number /* Bitu */, output: Int32Array /* Bit32s* */): void {
+        public GenerateBlock3(total: number /* UInt32 */, output: Int32Array /* Int32 */): void {
             let outputIndex = 0;
-            
+
             while (total > 0) {
-                let samples = this.ForwardLFO(total); /** UInt32 */
+                let samples = this.ForwardLFO(total);
 
                 output.fill(0, outputIndex, outputIndex + samples * 2);
 
@@ -487,13 +487,13 @@ namespace DBOPL {
 
         private InitTables() {
             this.OpTable = new Array(GlobalMembers.OpOffsetTable.length);
-            
-            for(let i=0; i< GlobalMembers.OpOffsetTable.length; i++) {
+
+            for (let i = 0; i < GlobalMembers.OpOffsetTable.length; i++) {
                 this.OpTable[i] = this.op[GlobalMembers.OpOffsetTable[i]];
             }
 
             this.ChanTable = new Array(GlobalMembers.ChanOffsetTable.length);
-            for(let i=0; i< GlobalMembers.ChanOffsetTable.length; i++) {
+            for (let i = 0; i < GlobalMembers.ChanOffsetTable.length; i++) {
                 this.ChanTable[i] = this.chan[GlobalMembers.ChanOffsetTable[i]];
             }
         }
@@ -506,8 +506,8 @@ namespace DBOPL {
             this.opl3Active = 0;
 
             const ChannelCount = 18;
-            this.chan = new Array<Channel>(ChannelCount); // new Channel[18];
-            this.op = new Array<Operator>(2 * ChannelCount); // new Operator[18 * 2]
+            this.chan = new Array<Channel>(ChannelCount);
+            this.op = new Array<Operator>(2 * ChannelCount);
 
             for (let i = 0; i < this.op.length; i++) {
                 this.op[i] = new Operator();

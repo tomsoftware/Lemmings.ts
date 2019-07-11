@@ -9,10 +9,9 @@ A Web Lemmings Clone/Remake in TypeScript - 🎉 Yes it's 100% JavaScript 🎉
 * Browser Game
 * Support all variants of Lemmings Game
 * Read original Lemmings binaries on the fly
-* Support playing of original music by interpreting the adlib.dat file and using an Adlib emulator 
+* Support playing of original music by interpreting the adlib.dat file and using an Adlib emulator(s) (DosBox or Robson Cozendey )
 
 ## ToDo
-* Replace Adlib emulator by the DosBox version
 * fix some game issues
 * touch support
 
@@ -36,4 +35,5 @@ Disclaimer: This Project does not claim rights to any Lemmings Version. To the b
 Special thanks goes to:
 - DMA for the original game
 - Volker Oth, ccexplore and Mindless for their work on reverse engineering the Lemmings Level and Grafic Formats
+- DosBox for there OPL emulator
 - Robson Cozendey for his Java OPL3 emulator

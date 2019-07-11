@@ -40,15 +40,15 @@ namespace DBOPL {
 
 
         public synthMode: SynthMode;
-        public chanData: number;/** int */
-        public old: Int32Array = new Int32Array(2);/** int */
+        public chanData: number; /** int */
+        public old: Int32Array = new Int32Array(2);
 
-        public feedback: number;/** byte */
-        public regB0: number;/** byte */
-        public regC0: number;/** byte */
+        public feedback: number; /** byte */
+        public regB0: number; /** byte */
+        public regC0: number; /** byte */
 
-        public fourMask: number;/** byte */
-        public maskLeft: number;/** char */
+        public fourMask: number; /** byte */
+        public maskLeft: number; /** char */
         public maskRight: number; /** char */
 
 
@@ -70,7 +70,7 @@ namespace DBOPL {
             }
         }
 
-        public UpdateFrequency(chip: Chip, fourOp: number /** Bit8u */): void {
+        public UpdateFrequency(chip: Chip, fourOp: number /** UInt8 */): void {
             //Extrace the frequency signed long
             let data = this.chanData & 0xffff;
 
@@ -93,7 +93,7 @@ namespace DBOPL {
             }
         }
 
-        public WriteA0(chip: Chip, val: number /* Bit8u */): void {
+        public WriteA0(chip: Chip, val: number /* UInt8 */): void {
             let fourOp = (chip.reg104 & chip.opl3Active & this.fourMask);
             //Don't handle writes to silent fourop channels
             if (fourOp > 0x80) {
@@ -106,7 +106,7 @@ namespace DBOPL {
             }
         }
 
-        public WriteB0(chip: Chip, val: number /* Bit8u */): void {
+        public WriteB0(chip: Chip, val: number /* UInt8 */): void {
             let fourOp = (chip.reg104 & chip.opl3Active & this.fourMask);
             //Don't handle writes to silent fourop channels
             if (fourOp > 0x80) {
@@ -140,7 +140,7 @@ namespace DBOPL {
             }
         }
 
-        public WriteC0(chip: Chip, val: number /* Bit8u */): void {
+        public WriteC0(chip: Chip, val: number /* UInt8 */): void {
             let change = (val ^ this.regC0);
             if (change == 0) {
                 return;
@@ -233,9 +233,8 @@ namespace DBOPL {
 
 
         // template< bool opl3Mode> void Channel::GeneratePercussion( Chip* chip, Bit32s* output ) {
-        public GeneratePercussion(opl3Mode: boolean, chip: Chip, output: Int32Array /** Bit32s* */, outputOffset: number): void {
+        public GeneratePercussion(opl3Mode: boolean, chip: Chip, output: Int32Array /* Bit32s */, outputOffset: number): void {
             let chan: Channel = this;
-
 
             //BassDrum
             let mod = ((this.old[0] + this.old[1])) >>> this.feedback;
@@ -295,7 +294,7 @@ namespace DBOPL {
 
         /// template<SynthMode mode> Channel* Channel::BlockTemplate( Chip* chip, Bit32u samples, Bit32s* output ) 
         //public BlockTemplate(mode: SynthMode, chip: Chip, samples: number, output: Int32Array /** Bit32s* */): Channel {
-        public synthHandler(chip: Chip, samples: number, output: Int32Array, outputIndex:number /** Bit32s* */): Channel {
+        public synthHandler(chip: Chip, samples: number, output: Int32Array, outputIndex: number /** Bit32s* */): Channel {
             var mode = this.synthMode;
             switch (mode) {
                 case SynthMode.sm2AM:
@@ -365,7 +364,7 @@ namespace DBOPL {
                 let mod = ((this.old[0] + this.old[1])) >>> this.feedback;
                 this.old[0] = this.old[1];
                 this.old[1] = this.Op(0).GetSample(mod);
-                let sample:number;
+                let sample: number;
                 let out0 = this.old[0];
                 if (mode == SynthMode.sm2AM || mode == SynthMode.sm3AM) {
                     sample = out0 + this.Op(1).GetSample(0);

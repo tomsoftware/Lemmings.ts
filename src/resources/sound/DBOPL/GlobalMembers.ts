@@ -130,8 +130,8 @@ namespace DBOPL {
             }
         }
 
-     
-     
+
+
         public static doneTables: boolean = false;
 
         public static InitTables() {
@@ -207,7 +207,7 @@ namespace DBOPL {
                 }
                 /// Make sure the four op channels follow eachother
                 if (index < 6) {
-                    index = ((index % 3) * 2 + ((index / 3)|0)) | 0;
+                    index = ((index % 3) * 2 + ((index / 3) | 0)) | 0;
                 }
                 /// Add back the bits for highest ones
                 if (i >= 16) {
@@ -219,11 +219,11 @@ namespace DBOPL {
 
             /// Same for operators
             for (let i = 0; i < 64; i++) {
-                if (i % 8 >= 6 || (((i / 8)|0) % 4 == 3)) {
+                if (i % 8 >= 6 || (((i / 8) | 0) % 4 == 3)) {
                     GlobalMembers.OpOffsetTable[i] = null;
                     continue;
                 }
-                let chNum = (((i / 8)|0) * 3 + (i % 8) % 3) | 0;
+                let chNum = (((i / 8) | 0) * 3 + (i % 8) % 3) | 0;
                 //Make sure we use 16 and up for the 2nd range to match the chanoffset gap
                 if (chNum >= 12) {
                     chNum += 16 - 12;
@@ -234,10 +234,10 @@ namespace DBOPL {
                     GlobalMembers.OpOffsetTable[i] = -1;
                 }
                 else {
-                    let c = GlobalMembers.ChanOffsetTable[chNum] ;
+                    let c = GlobalMembers.ChanOffsetTable[chNum];
                     GlobalMembers.OpOffsetTable[i] = c * 2 + opNum;
                 }
-          
+
             }
         }
     }
