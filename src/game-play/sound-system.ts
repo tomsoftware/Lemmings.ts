@@ -1,6 +1,4 @@
-/// <reference path="../resources/lemmings-sprite.ts"/>
-
-module Lemmings {
+import { Lemming } from './lemming';
 
     export class SoundSystem {
 
@@ -14,4 +12,4 @@ module Lemmings {
 
     }
 
-}
+

@@ -1,4 +1,3 @@
-module Lemmings {
 
     /** the skills/behaviors a Lemming could have */
     export enum SkillTypes {
@@ -29,4 +28,3 @@ module Lemmings {
             return ((type > SkillTypes.UNKNOWN) && (type < SkillTypes.length()))
         }
     }
-}

@@ -1,82 +1,89 @@
-module Lemmings {
+import { LemmingsSprite } from '@/game/resources/lemmings-sprite';
+import { Level } from '@/game/resources/level';
+import { SpriteTypes } from '@/game/resources/sprite-types';
+import { DisplayImage } from '@/game/view/display-image';
+import { IActionSystem } from '../action-system';
+import { Lemming } from '../lemming';
+import { LemmingStateType } from '../lemming-state-type';
+import { SoundSystem } from '../sound-system';
+import { Animation } from './../../resources/animation';
 
-    export class ActionBuildSystem implements IActionSystem {
+export class ActionBuildSystem implements IActionSystem {
 
-        public soundSystem = new SoundSystem();
+    public soundSystem = new SoundSystem();
 
-        private sprite: Animation[] = [];
+    private sprite: Animation[] = [];
 
-        constructor(sprites: LemmingsSprite) {
+    constructor(sprites: LemmingsSprite) {
 
-            this.sprite.push(sprites.getAnimation(SpriteTypes.BUILDING, false));
-            this.sprite.push(sprites.getAnimation(SpriteTypes.BUILDING, true));
-        }
+        this.sprite.push(sprites.getAnimation(SpriteTypes.BUILDING, false));
+        this.sprite.push(sprites.getAnimation(SpriteTypes.BUILDING, true));
+    }
 
-        public getActionName(): string {
-            return "building";
-        }
-
-
-        public triggerLemAction(lem: Lemming): boolean {
-            lem.setAction(this);
-
-            return true;
-        }
-
-        /** render Lemming to gamedisply */
-        public draw(gameDisplay: DisplayImage, lem: Lemming) {
-            let ani = this.sprite[(lem.lookRight ? 1 : 0)];
-
-            let frame = ani.getFrame(lem.frameIndex);
-
-            gameDisplay.drawFrame(frame, lem.x, lem.y);
-        }
+    public getActionName(): string {
+        return "building";
+    }
 
 
+    public triggerLemAction(lem: Lemming): boolean {
+        lem.setAction(this);
 
-        public process(level: Level, lem: Lemming): LemmingStateType {
+        return true;
+    }
 
-            lem.frameIndex = (lem.frameIndex + 1) % 16;
+    /** render Lemming to game display */
+    public draw(gameDisplay: DisplayImage, lem: Lemming) {
 
-            if (lem.frameIndex == 9) {
+        const ani = this.sprite[(lem.lookRight ? 1 : 0)];
+        const frame = ani.getFrame(lem.frameIndex);
 
-                /// lay brick
-                var x = lem.x + (lem.lookRight ? 0 : -4);
-                for (var i = 0; i < 6; i++) {
-                    level.setGroundAt(x + i, lem.y - 1, 7);
-                }
+        gameDisplay.drawFrame(frame, lem.x, lem.y);
+    }
 
-                return LemmingStateType.NO_STATE_TYPE;
+
+
+    public process(level: Level, lem: Lemming): LemmingStateType {
+
+        lem.frameIndex = (lem.frameIndex + 1) % 16;
+
+        if (lem.frameIndex == 9) {
+
+            /// lay brick
+            const x = lem.x + (lem.lookRight ? 0 : -4);
+            for (let i = 0; i < 6; i++) {
+                level.setGroundAt(x + i, lem.y - 1, 7);
             }
 
-            if (lem.frameIndex == 0) {
-                /// walk 
+            return LemmingStateType.NO_STATE_TYPE;
+        }
 
-                lem.y--;
+        if (lem.frameIndex == 0) {
+            /// walk 
 
-                for (let i = 0; i < 2; i++) {
-                    lem.x += (lem.lookRight ? 1 : -1);
-                    if (level.hasGroundAt(lem.x, lem.y - 1)) {
-                        lem.lookRight = !lem.lookRight;
-                        return LemmingStateType.WALKING;
-                    }
-                }
+            lem.y--;
 
-                lem.state++;
-                if (lem.state >= 12) {
-                    return LemmingStateType.SHRUG;
-                }
-
-                if (level.hasGroundAt(lem.x + (lem.lookRight ? 2 : -2), lem.y - 9)) {
+            for (let i = 0; i < 2; i++) {
+                lem.x += (lem.lookRight ? 1 : -1);
+                if (level.hasGroundAt(lem.x, lem.y - 1)) {
                     lem.lookRight = !lem.lookRight;
                     return LemmingStateType.WALKING;
                 }
             }
-            return LemmingStateType.NO_STATE_TYPE;
 
+            lem.state++;
+            if (lem.state >= 12) {
+                return LemmingStateType.SHRUG;
+            }
+
+            if (level.hasGroundAt(lem.x + (lem.lookRight ? 2 : -2), lem.y - 9)) {
+                lem.lookRight = !lem.lookRight;
+                return LemmingStateType.WALKING;
+            }
         }
-
+        return LemmingStateType.NO_STATE_TYPE;
 
     }
 
+
 }
+

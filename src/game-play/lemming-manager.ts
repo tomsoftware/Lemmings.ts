@@ -1,6 +1,34 @@
-/// <reference path="./lemming-state-type.ts"/>
-
-module Lemmings {
+import { LemmingsSprite } from '../resources/lemmings-sprite';
+import { TriggerTypes } from '../resources/lemmings/trigger-types';
+import { Level } from '../resources/level';
+import { MaskProvider } from '../resources/mask-provider';
+import { ParticleTable } from '../resources/particle-table';
+import { LogHandler } from '../utilities/log-handler';
+import { DisplayImage } from '../view/display-image';
+import { IActionSystem } from './action-system';
+import { ActionBashSystem } from './actions/action-bash-system';
+import { ActionBlockerSystem } from './actions/action-blocker-system';
+import { ActionBuildSystem } from './actions/action-build-system';
+import { ActionClimbSystem } from './actions/action-climb-system';
+import { ActionCountdownSystem } from './actions/action-countdown-system';
+import { ActionDiggSystem } from './actions/action-digg-system';
+import { ActionDrowningSystem } from './actions/action-drowning-system';
+import { ActionExitingSystem } from './actions/action-exiting-system';
+import { ActionExplodingSystem } from './actions/action-exploding-system';
+import { ActionFallSystem } from './actions/action-fall-system';
+import { ActionFloatingSystem } from './actions/action-floating-system';
+import { ActionHoistSystem } from './actions/action-hoist-system';
+import { ActionJumpSystem } from './actions/action-jump-system';
+import { ActionMineSystem } from './actions/action-mine-system';
+import { ActionOhNoSystem } from './actions/action-ohno-system';
+import { ActionShrugSystem } from './actions/action-shrug-system';
+import { ActionSplatterSystem } from './actions/action-splatter-system';
+import { ActionWalkSystem } from './actions/action-walk-system';
+import { GameVictoryCondition } from './game-victory-condition';
+import { Lemming } from './lemming';
+import { LemmingStateType } from './lemming-state-type';
+import { SkillTypes } from './skill-types';
+import { TriggerManager } from './trigger-manager';
 
     export class LemmingManager {
 
@@ -183,8 +211,8 @@ module Lemmings {
             return this.lemmings[id];
         }
 
-        /** return a lemming a a geiven position */
-        public getLemmingAt(x: number, y: number): Lemming {
+        /** return a lemming at a given position */
+        public getLemmingAt(x: number, y: number): Lemming | null {
             let lems = this.lemmings;
 
             let minDistance = 99999;
@@ -260,4 +288,3 @@ module Lemmings {
         }
     }
 
-}

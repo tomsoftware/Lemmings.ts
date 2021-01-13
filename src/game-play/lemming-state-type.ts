@@ -1,6 +1,4 @@
 
-module Lemmings {
-
     export enum LemmingStateType {
         NO_STATE_TYPE,
         WALKING,
@@ -23,4 +21,3 @@ module Lemmings {
         SHRUG, // builder finished buildung
         OUT_OFF_LEVEL
     }
-}
