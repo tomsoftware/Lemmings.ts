@@ -40,9 +40,9 @@
 /* $Id: dbopl.cpp,v 1.10 2009-06-10 19:54:51 harekiet Exp $ */
 
 
-import { IOpl3 } from '../IOpl3';
-import { Handler } from './Handler';
-import { MixerChannel } from './MixerChannel';
+import { IOpl3 } from '../opl3';
+import { Handler } from './handler';
+import { MixerChannel } from './mixer-channel';
 
 
 export enum SynthMode {

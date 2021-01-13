@@ -1,6 +1,6 @@
 import { LogHandler } from '@/game/utilities/log-handler';
-import { OPL } from './DBOPL/Opl3';
-import { IOpl3 } from './IOpl3';
+import { OPL } from './dbopl/db-opl3';
+import { IOpl3 } from './opl3';
 import { SoundImagePlayer } from './sound-image-player';
 
 export class AudioPlayer {

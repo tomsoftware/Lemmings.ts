@@ -21,9 +21,9 @@
 */
 
 
-import { Chip } from './Chip';
-import { GlobalMembers } from './GlobalMembers';
-import { MixerChannel } from './MixerChannel';
+import { Chip } from './chip';
+import { GlobalMembers } from './global-members';
+import { MixerChannel } from './mixer-channel';
 
 
 export class Handler {

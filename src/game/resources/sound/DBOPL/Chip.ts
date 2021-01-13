@@ -16,10 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-import { Channel } from './Channel';
-import { GlobalMembers } from './GlobalMembers';
-import { Operator } from './Operator';
-import { SynthMode } from './Opl3';
+import { Channel } from './channel';
+import { GlobalMembers } from './global-members';
+import { Operator } from './operator';
+import { SynthMode } from './db-opl3';
 
 /* 
 * 2019 - Typescript Version: Thomas Zeugner
@@ -27,13 +27,13 @@ import { SynthMode } from './Opl3';
 
 export class Chip {
     //This is used as the base counter for vibrato and tremolo
-    public lfoCounter: number = 0; // UInt32
-    public lfoAdd: number = 0; // UInt32
+    public lfoCounter = 0; // UInt32
+    public lfoAdd = 0; // UInt32
 
 
-    public noiseCounter: number = 0; // UInt32
-    public noiseAdd: number = 0; // UInt32
-    public noiseValue: number = 0; // UInt32
+    public noiseCounter = 0; // UInt32
+    public noiseAdd = 0; // UInt32
+    public noiseValue = 0; // UInt32
 
     /// Frequency scales for the different multiplications
     public freqMul: Uint32Array = new Uint32Array(16)
@@ -56,15 +56,15 @@ export class Chip {
     public reg08: number; // UInt8
     public reg04: number; // UInt8
     public regBD: number; // UInt8
-    public vibratoIndex: number = 0; // UInt8
-    public tremoloIndex: number = 0; // UInt8
-    public vibratoSign: number = 0; // Int8
-    public vibratoShift: number = 0; // UInt8
-    public tremoloValue: number = 0; // UInt8
-    public vibratoStrength: number = 0; // UInt8
-    public tremoloStrength: number = 0; // UInt8
+    public vibratoIndex = 0; // UInt8
+    public tremoloIndex = 0; // UInt8
+    public vibratoSign = 0; // Int8
+    public vibratoShift = 0; // UInt8
+    public tremoloValue = 0; // UInt8
+    public vibratoStrength = 0; // UInt8
+    public tremoloStrength = 0; // UInt8
     /// Mask for allowed wave forms
-    public waveFormMask: number = 0; // UInt8
+    public waveFormMask = 0; // UInt8
     //0 or -1 when enabled
     public opl3Active: number; // Int8
 
@@ -77,7 +77,7 @@ export class Chip {
         this.tremoloValue = (GlobalMembers.TremoloTable[this.tremoloIndex] >>> this.tremoloStrength) | 0;
 
         //Check hom many samples there can be done before the value changes
-        let todo = ((256 << (((32 - 10) - 10))) - this.lfoCounter) | 0;
+        const todo = ((256 << (((32 - 10) - 10))) - this.lfoCounter) | 0;
         let count = ((todo + this.lfoAdd - 1) / this.lfoAdd) | 0;
 
         if (count > samples) {
@@ -115,7 +115,7 @@ export class Chip {
     }
 
     public WriteBD(val: number /* UInt8 */): void {
-        let change = this.regBD ^ val;
+        const change = this.regBD ^ val;
         if (change == 0) {
             return;
         }
@@ -219,47 +219,45 @@ export class Chip {
                     this.reg08 = val;
                 }
 
+                break;
+
             case 0x10 >> 4:
                 break;
 
             case 0x20 >> 4:
-
             case 0x30 >> 4:
 
                 index = (((reg >>> 3) & 0x20) | (reg & 0x1f));
                 if (this.OpTable[index]) {
                     this.OpTable[index].Write20(this, val);
-                };
+                }
                 break;
 
             case 0x40 >> 4:
-
             case 0x50 >> 4:
 
                 index = (((reg >>> 3) & 0x20) | (reg & 0x1f));
                 if (this.OpTable[index]) {
                     this.OpTable[index].Write40(this, val);
-                };
+                }
                 break;
 
             case 0x60 >> 4:
-
             case 0x70 >> 4:
 
                 index = (((reg >>> 3) & 0x20) | (reg & 0x1f));
                 if (this.OpTable[index]) {
                     this.OpTable[index].Write60(this, val);
-                };
+                }
                 break;
 
             case 0x80 >> 4:
-
             case 0x90 >> 4:
 
                 index = (((reg >>> 3) & 0x20) | (reg & 0x1f));
                 if (this.OpTable[index]) {
                     this.OpTable[index].Write80(this, val);
-                };
+                }
                 break;
 
             case 0xa0 >> 4:
@@ -267,7 +265,7 @@ export class Chip {
                 index = (((reg >>> 4) & 0x10) | (reg & 0xf));
                 if (this.ChanTable[index]) {
                     this.ChanTable[index].WriteA0(this, val);
-                };
+                }
                 break;
 
             case 0xb0 >> 4:
@@ -279,7 +277,7 @@ export class Chip {
                     index = (((reg >>> 4) & 0x10) | (reg & 0xf));
                     if (this.ChanTable[index]) {
                         this.ChanTable[index].WriteB0(this, val);
-                    };
+                    }
                 }
                 break;
 
@@ -288,16 +286,18 @@ export class Chip {
                 index = (((reg >>> 4) & 0x10) | (reg & 0xf));
                 if (this.ChanTable[index]) {
                     this.ChanTable[index].WriteC0(this, val);
-                };
+                }
+                break;
 
             case 0xd0 >> 4:
                 break;
+                
             case 0xe0 >> 4:
             case 0xf0 >> 4:
                 index = (((reg >>> 3) & 0x20) | (reg & 0x1f));
                 if (this.OpTable[index]) {
                     this.OpTable[index].WriteE0(this, val);
-                };
+                }
                 break;
         }
     }
@@ -321,7 +321,7 @@ export class Chip {
         let outputIndex = 0;
 
         while (total > 0) {
-            let samples = this.ForwardLFO(total);
+            const samples = this.ForwardLFO(total);
 
             //todo ?? do we need this
             //output.fill(0, outputIndex, outputIndex + samples);
@@ -329,7 +329,7 @@ export class Chip {
             let ch = this.chan[0];
             while (ch.ChannelIndex < 9) {
                 //ch.printDebug();
-                let nextCh = ch.synthHandler(this, samples, output, outputIndex);
+                const nextCh = ch.synthHandler(this, samples, output, outputIndex);
 
                 if (!nextCh) {
                     break;
@@ -348,7 +348,7 @@ export class Chip {
         let outputIndex = 0;
 
         while (total > 0) {
-            let samples = this.ForwardLFO(total);
+            const samples = this.ForwardLFO(total);
 
             output.fill(0, outputIndex, outputIndex + samples * 2);
 
@@ -366,14 +366,14 @@ export class Chip {
     public Setup(rate: number /* UInt32 */): void {
         this.InitTables();
 
-        let scale = GlobalMembers.OPLRATE / rate;
+        const scale = GlobalMembers.OPLRATE / rate;
 
         //Noise counter is run at the same precision as general waves
         this.noiseAdd = (0.5 + scale * (1 << ((32 - 10) - 10))) | 0;
         this.noiseCounter = 0 | 0;
         this.noiseValue = 1 | 0;//Make sure it triggers the noise xor the first time
         //The low frequency oscillation counter
-        //Every time his overflows vibrato and tremoloindex are increased
+        //Every time his overflows vibrato and tremolo index are increased
 
         this.lfoAdd = (0.5 + scale * (1 << ((32 - 10) - 10))) | 0;
         this.lfoCounter = 0 | 0;
@@ -382,7 +382,7 @@ export class Chip {
 
         //With higher octave this gets shifted up
         //-1 since the freqCreateTable = *2
-        let freqScale = (0.5 + scale * (1 << ((32 - 10) - 1 - 10))) | 0;
+        const freqScale = (0.5 + scale * (1 << ((32 - 10) - 1 - 10))) | 0;
         for (let i = 0; i < 16; i++) {
             this.freqMul[i] = (freqScale * GlobalMembers.FreqCreateTable[i]) | 0;
         }
@@ -390,8 +390,8 @@ export class Chip {
         //-3 since the real envelope takes 8 steps to reach the single value we supply
         for (let i = 0; i < 76; i++) {
 
-            let index = GlobalMembers.EnvelopeSelectIndex(i);
-            let shift = GlobalMembers.EnvelopeSelectShift(i);
+            const index = GlobalMembers.EnvelopeSelectIndex(i);
+            const shift = GlobalMembers.EnvelopeSelectShift(i);
 
             this.linearRates[i] = (scale * (GlobalMembers.EnvelopeIncreaseTable[index] << (24 + ((9) - 9) - shift - 3))) | 0;
         }
@@ -399,11 +399,11 @@ export class Chip {
         //Generate the best matching attack rate
         for (let i = 0; i < 62; i++) {
 
-            let index = GlobalMembers.EnvelopeSelectIndex(i);
-            let shift = GlobalMembers.EnvelopeSelectShift(i);
+            const index = GlobalMembers.EnvelopeSelectIndex(i);
+            const shift = GlobalMembers.EnvelopeSelectShift(i);
 
             //Original amount of samples the attack would take
-            let original = ((GlobalMembers.AttackSamplesTable[index] << shift) / scale) | 0;
+            const original = ((GlobalMembers.AttackSamplesTable[index] << shift) / scale) | 0;
 
             let guessAdd = (scale * (GlobalMembers.EnvelopeIncreaseTable[index] << (24 - shift - 3))) | 0;
             let bestAdd = guessAdd;
@@ -416,7 +416,7 @@ export class Chip {
                 while (volume > 0 && samples < original * 2) {
                     count += guessAdd;
 
-                    let change = count >>> 24;
+                    const change = count >>> 24;
                     count &= ((1 << 24) - 1);
                     if ((change) != 0) { // less than 1 % 
                         volume += (~volume * change) >> 3;
@@ -424,8 +424,8 @@ export class Chip {
                     samples++;
 
                 }
-                let diff = original - samples;
-                let lDiff = Math.abs(diff) | 0;
+                const diff = original - samples;
+                const lDiff = Math.abs(diff) | 0;
                 //Init last on first pass
                 if (lDiff < bestDiff) {
                     bestDiff = lDiff;
@@ -437,13 +437,13 @@ export class Chip {
                 //Below our target
                 if (diff < 0) {
                     //Better than the last time
-                    let mul = (((original - diff) << 12) / original) | 0;
+                    const mul = (((original - diff) << 12) / original) | 0;
 
                     guessAdd = ((guessAdd * mul) >> 12);
                     guessAdd++;
                 }
                 else if (diff > 0) {
-                    let mul = (((original - diff) << 12) / original) | 0;
+                    const mul = (((original - diff) << 12) / original) | 0;
 
                     guessAdd = (guessAdd * mul) >> 12;
                     guessAdd--;

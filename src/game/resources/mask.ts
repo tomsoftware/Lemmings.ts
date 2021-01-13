@@ -30,8 +30,8 @@ export class Mask {
     /** load a mask from a file stream */
     public static fromFile(fr: BinaryReader, width: number, height: number, offsetX: number, offsetY: number) {
 
-        let pixCount = width * height;
-        let pixBuf = new Int8Array(pixCount);
+        const pixCount = width * height;
+        const pixBuf = new Int8Array(pixCount);
 
         let bitBuffer = 0;
         let bitBufferLen = 0;
@@ -48,7 +48,7 @@ export class Mask {
             bitBufferLen--;
         }
 
-        return new Mask(width, height, offsetX,offsetY, pixBuf);
+        return new Mask(width, height, offsetX, offsetY, pixBuf);
     }
 
 }

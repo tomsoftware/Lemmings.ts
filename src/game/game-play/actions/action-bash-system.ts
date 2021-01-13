@@ -41,9 +41,9 @@ export class ActionBashSystem implements IActionSystem {
 
     /** render Lemming to game display */
     public draw(gameDisplay: DisplayImage, lem: Lemming) {
-        let ani = this.sprite[(lem.lookRight ? 1 : 0)];
+        const ani = this.sprite[(lem.lookRight ? 1 : 0)];
 
-        let frame = ani.getFrame(lem.frameIndex);
+        const frame = ani.getFrame(lem.frameIndex);
 
         gameDisplay.drawFrame(frame, lem.x, lem.y);
     }
@@ -52,17 +52,17 @@ export class ActionBashSystem implements IActionSystem {
 
     public process(level: Level, lem: Lemming): LemmingStateType {
 
-        let groundMask = level.getGroundMaskLayer();
+        const groundMask = level.getGroundMaskLayer();
 
         lem.frameIndex++;
 
-        let state = lem.frameIndex % 16;
+        const state = lem.frameIndex % 16;
 
         /// move lemming
         if (state > 10) {
             lem.x += (lem.lookRight ? 1 : -1);
 
-            let yDelta = this.findGapDelta(groundMask, lem.x, lem.y);
+            const yDelta = this.findGapDelta(groundMask, lem.x, lem.y);
             lem.y += yDelta;
 
             if (yDelta == 3) {
@@ -73,8 +73,8 @@ export class ActionBashSystem implements IActionSystem {
         /// apply mask
         if ((state > 1) && (state < 6)) {
 
-            let mask = this.masks[(lem.lookRight ? 1 : 0)];
-            let maskIndex = state - 2;
+            const mask = this.masks[(lem.lookRight ? 1 : 0)];
+            const maskIndex = state - 2;
 
             level.clearGroundWithMask(mask.getMask(maskIndex), lem.x, lem.y);
         }

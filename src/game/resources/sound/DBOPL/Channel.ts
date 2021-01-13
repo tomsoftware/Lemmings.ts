@@ -16,10 +16,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-import { Chip } from './Chip';
-import { GlobalMembers } from './GlobalMembers';
-import { Operator } from './Operator';
-import { Shifts, SynthMode } from './Opl3';
+import { Chip } from './chip';
+import { GlobalMembers } from './global-members';
+import { Operator } from './operator';
+import { Shifts, SynthMode } from './db-opl3';
 
 /* 
 * 2019 - Typescript Version: Thomas Zeugner

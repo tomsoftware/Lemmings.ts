@@ -20,9 +20,9 @@
 * 2019 - Typescript Version: Thomas Zeugner
 */
 
-import { Chip } from './Chip';
-import { GlobalMembers } from './GlobalMembers';
-import { Shifts } from './Opl3';
+import { Chip } from './chip';
+import { GlobalMembers } from './global-members';
+import { Shifts } from './db-opl3';
 
 
 enum Operator20Masks {
