@@ -1,0 +1,19 @@
+{
+  "files.exclude": {
+      "**/.git": true,
+      "dist": true,
+      "node_modules": true
+  },
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
+  },
+  "vetur.format.defaultFormatterOptions": {
+    "prettier": {
+        "singleQuote": true
+    }
+},
+"cSpell.words": [
+  "Adlib"
+],
+}
