@@ -1,9 +1,4 @@
-/// <reference path="../file/binary-reader.ts"/>
-/// <reference path="./color-palette.ts"/>
-
-
-
-module Lemmings {
+import { ColorPalette } from './color-palette';
 
     /** base image information of objects */
     export class BaseImageInfo {
@@ -11,7 +6,7 @@ module Lemmings {
         public width: number = 0;
         public height: number = 0;
 
-        /// normale case
+        /// normal case
         ///           +------------+
         /// imageLoc: |            | 1st Bits
         ///           |            | 2th Bits
@@ -32,13 +27,17 @@ module Lemmings {
         public frameDataSize: number = 0;
 
         /** the images */
-        public frames: Uint8Array[];
+        public frames: Uint8Array[] = [];
 
         /** number of frames used by this image */
         public frameCount: number = 0;
 
         /** the color palette to be used for this image */
-        public palette:ColorPalette = null;
+        public palette: ColorPalette;
+
+        public constructor(palette: ColorPalette) {
+            this.palette = palette;
+        }
 
     }
-}
+

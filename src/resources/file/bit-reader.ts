@@ -1,61 +1,62 @@
-/// <reference path="binary-reader.ts"/>
+import { BinaryReader } from './binary-reader';
 
-module Lemmings {
-  //------------------------
-  // reads the bits on a BinaryReader
-  export class BitReader {
+/* reads the bits on a BinaryReader */
+export class BitReader {
 
-    private binReader : BinaryReader;
-    private buffer : number;
-    private bufferLen : number;
-    private checksum : number;
-    private pos = 0;
+  private binReader: BinaryReader;
+  private buffer: number;
+  private bufferLen: number;
+  private checksum: number;
+  private pos = 0;
 
-    constructor(fileReader : BinaryReader, offset : number, length : number, initBufferLength : number) {
-      //- create a copy of the reader
-      this.binReader = new BinaryReader(fileReader, offset, length, fileReader.filename); 
-      
-      this.pos = length;
+  constructor(fileReader: BinaryReader, offset: number, length: number, initBufferLength: number) {
+    //- create a copy of the reader
+    this.binReader = new BinaryReader(fileReader, offset, length, fileReader.fileName);
 
-      this.pos--;
-      this.buffer = this.binReader.readByte(this.pos);
+    this.pos = length;
 
-      this.bufferLen = initBufferLength;
-      this.checksum = this.buffer;
-    }
+    this.pos--;
+    this.buffer = this.binReader.readByte(this.pos);
 
-    public getCurrentChecksum() : number {
-      return this.checksum;
-    }
+    this.bufferLen = initBufferLength;
+    this.checksum = this.buffer;
+  }
 
 
-    
-    /** read and return [bitCount] bits from the stream */
-    public read(bitCount : number) : number {
+  /** return the checksum of the data have been read */
+  public getCurrentChecksum(): number {
+    return this.checksum;
+  }
 
-      let result = 0;
 
-      for (var i=bitCount; i > 0; i--) {
+  /** read and return [bitCount] bits from the stream */
+  public read(bitCount: number): number {
 
-        if (this.bufferLen <= 0) {
-          this.pos--;
-          var b = this.binReader.readByte(this.pos);
-          this.buffer = b;
-          this.checksum ^= b;
-          this.bufferLen = 8;
-        }
+    let result = 0;
 
-        this.bufferLen--;
+    for (let i = bitCount; i > 0; i--) {
 
-        result = (result << 1) | (this.buffer & 1);
-        this.buffer >>= 1;
+      if (this.bufferLen <= 0) {
+        this.pos--;
+
+        const b = this.binReader.readByte(this.pos);
+
+        this.buffer = b;
+        this.checksum ^= b;
+        this.bufferLen = 8;
       }
 
-      return result;
+      this.bufferLen--;
+
+      result = (result << 1) | (this.buffer & 1);
+      this.buffer >>= 1;
     }
 
-    public eof() : boolean {
-      return ((this.bufferLen <= 0) && (this.pos < 0))
-    }
+    return result;
+  }
+
+  /** end of data? */
+  public eof(): boolean {
+    return ((this.bufferLen <= 0) && (this.pos < 0))
   }
 }

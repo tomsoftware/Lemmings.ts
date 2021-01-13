@@ -1,6 +1,4 @@
 
-module Lemmings {
-
     /** Define Types a triggers */
     export enum TriggerTypes {
         NO_TRIGGER = 0,
@@ -17,6 +15,5 @@ module Lemmings {
         BLOCKER_LEFT,
         BLOCKER_RIGHT,
     }
-    
-}    
+   
 

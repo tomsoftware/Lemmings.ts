@@ -1,53 +1,54 @@
-module Lemmings {
+import { GameConfig } from './config/game-config';
+import { Game } from './game';
+import { GameResources } from './game-resources';
+import { GameTypes } from './game-types';
+import { FileProvider } from './resources/file/file-provider';
+import { ConfigReader } from './utilities/config-reader';
 
-    /** loads the config and provides an game-resources object */
-    export class GameFactory {
+/** loads the config and provides an game-resources object */
+export class GameFactory {
 
-        private configReader:ConfigReader;
-        private fileProvider : FileProvider;
+    private configReader: ConfigReader;
+    private fileProvider: FileProvider;
 
-        constructor(private rootPath: string) {
-            this.fileProvider = new FileProvider(rootPath);
-            
-            let configFileReader = this.fileProvider.loadString("config.json");
-            this.configReader = new ConfigReader(configFileReader);
-        }
+    constructor(private rootPath: string) {
+        this.fileProvider = new FileProvider(rootPath);
 
-
-        /** return a game object to controle/run the game */
-        public getGame(gameType : GameTypes) : Promise<Game> {
-
-            return new Promise<Game>((resolve, reject)=> {
-
-                /// load resources
-                this.getGameResources(gameType)
-                    .then(res => resolve(new Game(res)));
-            });
-
-        }
-       
-        /** return the config of a game type */
-        public getConfig(gameType : GameTypes) : Promise<GameConfig> {
-            return this.configReader.getConfig(gameType);
-        }
-
-        /** return a Game Resources that gaves access to images, maps, sounds  */
-        public getGameResources(gameType : GameTypes) : Promise<GameResources> {
-
-            return new Promise<GameResources>((resolve, reject)=> {
-
-                this.configReader.getConfig(gameType).then(config => {
-
-                    if (config == null) {
-                        reject();
-                        return;
-                    }
-
-                    resolve(new GameResources(this.fileProvider, config));
-                });
-
-            });
-        }
+        const configFileReader = this.fileProvider.loadString('config.json');
+        this.configReader = new ConfigReader(configFileReader);
     }
 
+
+    /** return a game object to control/run the game */
+    public async getGame(gameType: GameTypes, levelGroupIndex: number, levelIndex: number): Promise<Game | undefined> {
+
+        /// load resources
+        const res = await this.getGameResources(gameType);
+        if (!res) {
+            return;
+        }
+
+        return Game.loadLevel(res, levelGroupIndex, levelIndex);
+
+    }
+
+    /** return the config of a game type */
+    public getConfig(gameType: GameTypes): Promise<GameConfig | undefined> {
+        return this.configReader.getConfig(gameType);
+    }
+
+    /** return a Game Resources that gave access to images, maps, sounds  */
+    public async getGameResources(gameType: GameTypes): Promise<GameResources | undefined> {
+
+        const config = await this.configReader.getConfig(gameType);
+
+        if (!config) {
+            return;
+        }
+
+        return new GameResources(this.fileProvider, config);
+
+
+
+    }
 }

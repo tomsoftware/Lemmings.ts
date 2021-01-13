@@ -1,21 +1,17 @@
+export class AudioConfig {
 
-module Lemmings {
-    export class AudioConfig {
+    public soundIndexTablePosition: number = 0;
 
-        public soundIndexTablePosition: number;
+    public adlibChannelConfigPosition: number = 0;
 
-        public adlibChannelConfigPosition: number;
+    public version: number = 0;
+    public dataOffset: number = 0;
+    public frequenciesOffset: number = 0;
+    public octavesOffset: number = 0;
+    public frequenciesCountOffset: number = 0;
+    public instructionsOffset: number = 0;
+    public soundDataOffset: number = 0;
 
-        public version: number;
-        public dataOffset: number;
-        public frequenciesOffset: number;
-        public octavesOffset: number;
-        public frequenciesCountOffset: number;
-        public instructionsOffset: number;
-        public soundDataOffset: number;
-
-        public numberOfTracks: number;
-
-    }
-
+    public numberOfTracks: number = 0;
 }
+

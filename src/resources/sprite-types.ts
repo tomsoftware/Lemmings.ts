@@ -1,34 +1,31 @@
 
-module Lemmings {
-    
-        export enum SpriteTypes {
-            WALKING,
- 
-            EXPLODING, // fire ball and explosion particles
-            
-            JUMPING,
-            DIGGING,
+export enum SpriteTypes {
+    WALKING,
 
-            CLIMBING,
-            POSTCLIMBING, // end of climbing
+    EXPLODING, // fire ball and explosion particles
 
-            BUILDING,
-            BLOCKING,
-            BASHING,
+    JUMPING,
+    DIGGING,
 
-            FALLING,
-            UMBRELLA,  // 8 frames opening + 8 frames floating
-            SPLATTING, // after falling down from too high
+    CLIMBING,
+    POSTCLIMBING, // end of climbing
 
-            MINEING,
-            DROWNING, // in water
-            EXITING,
-            FRYING, // killed by flameblower etc.
-            OHNO,
-            LEMACTION_SHRUG, // builder finished buildung
-            
-            SHRUGGING,
+    BUILDING,
+    BLOCKING,
+    BASHING,
 
-            OUT_OFF_LEVEL
-        }
-    }
+    FALLING,
+    UMBRELLA,  // 8 frames opening + 8 frames floating
+    SPLATTING, // after falling down from too high
+
+    MINEING,
+    DROWNING, // in water
+    EXITING,
+    FRYING, // killed by flameblower etc.
+    OHNO,
+    LEMACTION_SHRUG, // builder finished buildung
+
+    SHRUGGING,
+
+    OUT_OFF_LEVEL
+}

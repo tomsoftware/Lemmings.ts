@@ -1,59 +1,65 @@
+import { GameConfig } from '../config/game-config';
 
-module Lemmings {
 
- 
-  export class LevelIndexType {
-    /** Number of the file */
-    public fileId:number;
+export class LevelIndexType {
+  /** Number of the file */
+  public fileId: number = 0;
 
-    /** container index in the file */
-    public partIndex:number;
+  /** container index in the file */
+  public partIndex: number = 0;
 
-    /** use the odd table information for this entry */
-    public useOddTable:boolean=false;
+  /** use the odd table information for this entry */
+  public useOddTable: boolean = false;
 
-    /** the numer of this level - starting with 0 and counting every level */
-    public levelNumber:number
+  /** the number of this level - starting with 0 and counting every level */
+  public levelNumber: number = 0;
+}
+
+
+/** matches the Level-Mode + Level-Index to a level-file and level-file-index */
+export class LevelIndexResolve {
+
+  constructor(private config: GameConfig) {
+
   }
 
 
-  /** matches the Level-Mode + Level-Index to a level-file and level-file-index */
-  export class LevelIndexResolve {
+  public resolve(levelMode: number, levelIndex: number): LevelIndexType | null {
 
-
-    constructor(private config: GameConfig) {
-
+    let levelOrderList = this.config.level.order;
+    if (levelOrderList.length <= levelMode) {
+      return null;
+    }
+    if (levelMode < 0) {
+      return null;
     }
 
-
-    public resolve(levelMode: number, levelIndex: number): LevelIndexType {
-
-      let levelOrderList = this.config.level.order;
-      if (levelOrderList.length <= levelMode) return null;
-      if (levelMode < 0) return null;
-
-      let levelOrder = levelOrderList[levelMode];
-      if (levelOrder.length <= levelIndex) return null;
-      if (levelIndex < 0) return null;
-
-      let levelOrderConfig = levelOrder[levelIndex];
-
-      let liType = new LevelIndexType();
-
-      liType.fileId = Math.abs((levelOrderConfig / 10)| 0);
-      liType.partIndex = Math.abs((levelOrderConfig % 10)| 0);
-      liType.useOddTable = (levelOrderConfig < 0);
-
-      /// the level number is the sum-index of the level
-      let levelNo = 0;
-      for(let i=0; i<(levelMode-1);i++){
-        levelNo += levelOrderList[i].length;
-      }
-      liType.levelNumber = levelNo + levelIndex;
-
-
-      return liType;
+    let levelOrder = levelOrderList[levelMode];
+    if (levelOrder.length <= levelIndex) {
+      return null;
     }
+    if (levelIndex < 0) {
+      return null;
+    }
+
+    let levelOrderConfig = levelOrder[levelIndex];
+
+    let liType = new LevelIndexType();
+
+    liType.fileId = Math.abs((levelOrderConfig / 10) | 0);
+    liType.partIndex = Math.abs((levelOrderConfig % 10) | 0);
+    liType.useOddTable = (levelOrderConfig < 0);
+
+    /// the level number is the sum-index of the level
+    let levelNo = 0;
+    for (let i = 0; i < (levelMode - 1); i++) {
+      levelNo += levelOrderList[i].length;
+    }
+
+    liType.levelNumber = levelNo + levelIndex;
+
+
+    return liType;
   }
 }
 

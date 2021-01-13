@@ -1,14 +1,24 @@
-module Lemmings {
+import { Game } from '../game';
+import { CommandNuke } from '../game-play/commands/command-nuke';
+import { CommandReleaseRateDecrease } from '../game-play/commands/command-release-rate-decrease';
+import { CommandReleaseRateIncrease } from '../game-play/commands/command-release-rate-increase';
+import { CommandSelectSkill } from '../game-play/commands/command-select-skill';
+import { GameSkills } from '../game-play/game-skills';
+import { GameTimer } from '../game-play/game-timer';
+import { GameVictoryCondition } from '../game-play/game-victory-condition';
+import { SkillTypes } from '../game-play/skill-types';
+import { SkillPanelSprites } from '../resources/skill-panel-sprites';
+import { DisplayImage } from './display-image';
 
     /** handles the in-game-gui. e.g. the panel on the bottom of the game */
     export class GameGui {
 
         private gameTimeChanged: boolean = true;
-        private skillsCountChangd: boolean = true;
+        private skillsCountChanged: boolean = true;
         private skillSelectionChanged: boolean = true;
         private backgroundChanged: boolean = true;
 
-        private dispaly: DisplayImage = null;
+        private display?: DisplayImage;
         private deltaReleaseRate: number = 0;
 
         constructor(private game: Game,
@@ -23,7 +33,7 @@ module Lemmings {
             });
 
             skills.onCountChanged.on(() => {
-                this.skillsCountChangd = true;
+                this.skillsCountChanged = true;
                 this.backgroundChanged = true;
             });
 
@@ -39,10 +49,10 @@ module Lemmings {
             }
 
             if (this.deltaReleaseRate > 0) {
-                this.game.queueCmmand(new CommandReleaseRateIncrease(this.deltaReleaseRate));
+                this.game.queueCommand(new CommandReleaseRateIncrease(this.deltaReleaseRate));
             }
             else {
-                this.game.queueCmmand(new CommandReleaseRateDecrease(-this.deltaReleaseRate));
+                this.game.queueCommand(new CommandReleaseRateDecrease(-this.deltaReleaseRate));
             }
 
         }
@@ -71,7 +81,7 @@ module Lemmings {
             let newSkill = this.getSkillByPanelIndex(panelIndex);
             if (newSkill == SkillTypes.UNKNOWN) return;
 
-            this.game.queueCmmand(new CommandSelectSkill(newSkill));
+            this.game.queueCommand(new CommandSelectSkill(newSkill));
 
             this.skillSelectionChanged = true;
         }
@@ -82,31 +92,39 @@ module Lemmings {
 
             /// trigger the nuke for all lemmings
             if (panelIndex == 11) {
-                this.game.queueCmmand(new CommandNuke());
+                this.game.queueCommand(new CommandNuke());
             }
         }
 
         /** init the display */
-        public setGuiDisplay(dispaly: DisplayImage) {
-            this.dispaly = dispaly;
+        public setGuiDisplay(display: DisplayImage) {
+            this.display = display;
 
             /// handle user input in gui
-            this.dispaly.onMouseDown.on((e) => {
+            this.display.onMouseDown.on((e) => {
                 this.deltaReleaseRate = 0;
+
+                if (!e) {
+                    return;
+                }
 
                 if (e.y > 15) {
                     this.handleSkillMouseDown(e.x);
                 }
             });
 
-            this.dispaly.onMouseUp.on((e) => {
+            this.display.onMouseUp.on((e) => {
                 /// clear release rate change
                 this.deltaReleaseRate = 0;
             })
 
-            this.dispaly.onDoubleClick.on((e) => {
+            this.display.onDoubleClick.on((e) => {
                 /// clear release rate change
                 this.deltaReleaseRate = 0;
+
+                if (!e) {
+                    return;
+                }
 
                 if (e.y > 15) {
                     this.handleSkillDoubleClick(e.x);
@@ -116,7 +134,7 @@ module Lemmings {
 
 
             this.gameTimeChanged = true;
-            this.skillsCountChangd = true;
+            this.skillsCountChanged = true;
             this.skillSelectionChanged = true;
             this.backgroundChanged = true;
         }
@@ -124,45 +142,45 @@ module Lemmings {
 
         /** render the gui to the screen display */
         public render() {
-            if (this.dispaly == null) return;
-            let dispaly = this.dispaly;
+            if (this.display == null) return;
+            let display = this.display;
 
             /// background
             if (this.backgroundChanged) {
                 this.backgroundChanged = false;
 
                 let panelImage = this.skillPanelSprites.getPanelSprite();
-                dispaly.initSize(panelImage.width, panelImage.height);
-                dispaly.setBackground(panelImage.getData());
+                display.initSize(panelImage.width, panelImage.height);
+                display.setBackground(panelImage.getData());
 
                 /// redraw everything
                 this.gameTimeChanged = true;
-                this.skillsCountChangd = true;
+                this.skillsCountChanged = true;
                 this.skillSelectionChanged = true;
             }
 
             /////////
             /// green text
-            this.drawGreenString(dispaly, "Out " + this.gameVictoryCondition.getOutCount() + "  ", 112, 0);
-            this.drawGreenString(dispaly, "In" + this.stringPad(this.gameVictoryCondition.getSurvivorPercentage() + "", 3) + "%", 186, 0);
+            this.drawGreenString(display, 'Out ' + this.gameVictoryCondition.getOutCount() + '  ', 112, 0);
+            this.drawGreenString(display, 'In' + this.stringPad(this.gameVictoryCondition.getSurvivorPercentage() + '', 3) + '%', 186, 0);
 
             if (this.gameTimeChanged) {
                 this.gameTimeChanged = false;
 
-                this.renderGameTime(dispaly, 248, 0);
+                this.renderGameTime(display, 248, 0);
             }
 
             /////////
             /// white skill numbers
-            this.drawPanelNumber(dispaly, this.gameVictoryCondition.getMinReleaseRate(), 0);
-            this.drawPanelNumber(dispaly, this.gameVictoryCondition.getCurrentReleaseRate(), 1);
+            this.drawPanelNumber(display, this.gameVictoryCondition.getMinReleaseRate(), 0);
+            this.drawPanelNumber(display, this.gameVictoryCondition.getCurrentReleaseRate(), 1);
 
-            if (this.skillsCountChangd) {
-                this.skillsCountChangd = false;
+            if (this.skillsCountChanged) {
+                this.skillsCountChanged = false;
 
                 for (let i = 1 /* jump over unknown */; i < SkillTypes.length(); i++) {
                     let count = this.skills.getSkill(i);
-                    this.drawPanelNumber(dispaly, count, this.getPanelIndexBySkill(i));
+                    this.drawPanelNumber(display, count, this.getPanelIndexBySkill(i));
                 }
             }
 
@@ -170,7 +188,7 @@ module Lemmings {
             /// selected skill
             if (this.skillSelectionChanged) {
                 this.skillSelectionChanged = false;
-                this.drawSelection(dispaly, this.getPanelIndexBySkill(this.skills.getSelectedSkill()));
+                this.drawSelection(display, this.getPanelIndexBySkill(this.skills.getSelectedSkill()));
             }
 
         }
@@ -179,7 +197,7 @@ module Lemmings {
         private stringPad(str: string, length: number): string {
             if (str.length >= length) return str;
 
-            return " ".repeat(length - str.length) + str;
+            return ' '.repeat(length - str.length) + str;
         }
 
         /** return the skillType for an index */
@@ -221,7 +239,7 @@ module Lemmings {
         private renderGameTime(dispaly: DisplayImage, x: number, y: number) {
             let gameTime = this.gameTimer.getGameLeftTimeString();
 
-            this.drawGreenString(dispaly, "Time " + gameTime + "-00", x, y);
+            this.drawGreenString(dispaly, 'Time ' + gameTime + '-00', x, y);
         }
 
         /** draw a white number to the skill-panel */
@@ -265,5 +283,3 @@ module Lemmings {
             return x;
         }
     }
-
-}

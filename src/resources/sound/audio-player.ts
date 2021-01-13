@@ -1,166 +1,183 @@
-module Lemmings {
-    export class AudioPlayer {
+import { LogHandler } from '@/game/utilities/log-handler';
+import { OPL } from './DBOPL/Opl3';
+import { IOpl3 } from './IOpl3';
+import { SoundImagePlayer } from './sound-image-player';
 
-        private log = new LogHandler("AudioPlayer");
+export class AudioPlayer {
 
-        public audioCtx: AudioContext;
-        public source: AudioBufferSourceNode;
-        public processor: ScriptProcessorNode;
+    private log = new LogHandler('AudioPlayer');
 
-        private opl: IOpl3;
-        
-        private soundImagePlayer: SoundImagePlayer;
+    public audioCtx: AudioContext | null = null;
+    public source: AudioBufferSourceNode | null = null;
+    public processor: ScriptProcessorNode | null = null
 
-        private samplesPerTick: number;
+    private opl: IOpl3 | null = null;
 
+    private soundImagePlayer: SoundImagePlayer | null = null
 
-        /** is the sound playing at the moment */
-        private isPlaying: boolean = false;
+    private samplesPerTick = 1;
 
 
-        public setEmulatorType(emulatorType: OplEmulatorType) {
-            /// create opl interpreter
-            if (emulatorType == OplEmulatorType.Dosbox) {
-                this.opl = new DBOPL.OPL(this.audioCtx.sampleRate, 2);
-            } 
-            else {
-                /// emulator only supports 49700 Hz
-                this.opl = new Cozendey.OPL3();
-            }
+    /** is the sound playing at the moment */
+    private isPlaying = false;
+
+
+    constructor(src: SoundImagePlayer) {
+        /// setup audio context
+        this.audioCtx = new AudioContext();
+        if (!this.audioCtx) {
+            this.log.debug('Uanbel to create AudioContext!');
+            return;
         }
 
-        constructor(src: SoundImagePlayer, emulatorType: OplEmulatorType) {
-            /// setup audio context
-            this.audioCtx = new AudioContext();
-            if (!this.audioCtx) {
-                this.log.debug('Uanbel to create AudioContext!');
+        this.soundImagePlayer = src;
+
+        this.log.debug('debug: ' + this.soundImagePlayer.sampleRateFactor.toString(16));
+
+        this.log.debug('Sound image sample rate factor: ' + this.soundImagePlayer.sampleRateFactor + ' --> ' + this.soundImagePlayer.getSamplingInterval());
+        this.log.debug('Audio sample rate ' + this.audioCtx.sampleRate);
+
+        this.samplesPerTick = Math.round(this.audioCtx.sampleRate / (this.soundImagePlayer.getSamplingInterval()));
+        this.source = this.audioCtx.createBufferSource();
+        this.processor = this.audioCtx.createScriptProcessor(8192, 2, 2);
+
+        // When the buffer source stops playing, disconnect everything
+        this.source.onended = () => {
+
+            if ((!this.source) || (!this.processor) || (!this.audioCtx)) {
                 return;
             }
 
-            this.soundImagePlayer = src;
-
-            this.log.debug("debug: " + this.soundImagePlayer.sampleRateFactor.toString(16));
-
-            this.log.debug("Sound image sample rate factor: "+ this.soundImagePlayer.sampleRateFactor + " --> "+ this.soundImagePlayer.getSamplingInterval());
-            this.log.debug('Audio sample rate ' + this.audioCtx.sampleRate);
-
-            this.samplesPerTick = Math.round(this.audioCtx.sampleRate / (this.soundImagePlayer.getSamplingInterval()));
-            this.source = this.audioCtx.createBufferSource();
-            this.processor = this.audioCtx.createScriptProcessor(8192, 2, 2);
-
-            // When the buffer source stops playing, disconnect everything
-            this.source.onended = () => {
-                console.log('source.onended()');
-                this.source.disconnect(this.processor);
-                this.processor.disconnect(this.audioCtx.destination);
-                this.processor = null;
-                this.source = null;
-            }
-
-            this.setEmulatorType(emulatorType);
-           
-            
-             /// setup Web-Audio
-             this.processor.onaudioprocess = (e: AudioProcessingEvent) => this.audioScriptProcessor(e);
-             this.processor.connect(this.audioCtx.destination);
-             this.source.connect(this.processor);
-             this.source.start();
-
-             this.play();
+            console.log('source.onended()');
+            this.source.disconnect(this.processor);
+            this.processor.disconnect(this.audioCtx.destination);
+            this.processor = null;
+            this.source = null;
         }
 
+        this.opl = new OPL(this.audioCtx.sampleRate, 2);
 
-        /** Start playback of the song/sound */
-        public play() {
 
-            this.audioCtx.resume();
+        /// setup Web-Audio
+        this.processor.onaudioprocess = (e: AudioProcessingEvent) => this.audioScriptProcessor(e);
+        this.processor.connect(this.audioCtx.destination);
+        this.source.connect(this.processor);
+        this.source.start();
 
-            this.isPlaying = true;
+        this.play();
+    }
+
+
+    /** Start playback of the song/sound */
+    public play() {
+        if (!this.audioCtx) {
+            return;
         }
 
+        this.audioCtx.resume();
 
-        /** processor task for generating sample */
-        private lenGen: number = 0;
-        public audioScriptProcessor(e: AudioProcessingEvent) {
+        this.isPlaying = true;
+    }
 
-            var b = e.outputBuffer;
 
-            var c0 = b.getChannelData(0);
-            var c1 = b.getChannelData(1);
+    /** processor task for generating sample */
+    private lenGen = 0;
+    public audioScriptProcessor(e: AudioProcessingEvent) {
 
-            let lenFill = b.length;
-            let posFill = 0;
+        if ((!this.opl)  || (!this.soundImagePlayer)){
+            return;
+        }
 
-            while (posFill < lenFill) {
-                // Fill any leftover delay from the last buffer-fill event first
-                while (this.lenGen > 0) {
-                    if (lenFill - posFill < 2) {
-                        // No more space in buffer
-                        return;
-                    }
-                    let lenNow = Math.max(2, Math.min(512, this.lenGen, lenFill - posFill));
+        const b = e.outputBuffer;
 
-                    const samples = this.opl.generate(lenNow);
+        const c0 = b.getChannelData(0);
+        const c1 = b.getChannelData(1);
 
-                    for (let i = 0; i < lenNow; i++) {
-                        c0[posFill] = samples[i * 2 + 0] / 32768.0;
-                        c1[posFill] = samples[i * 2 + 1] / 32768.0;
-                        posFill++;
-                    }
+        const lenFill = b.length;
+        let posFill = 0;
 
-                    this.lenGen -= lenNow;
+        while (posFill < lenFill) {
+            // Fill any leftover delay from the last buffer-fill event first
+            while (this.lenGen > 0) {
+                if (lenFill - posFill < 2) {
+                    // No more space in buffer
+                    return;
                 }
 
+                const lenNow = Math.max(2, Math.min(512, this.lenGen, lenFill - posFill));
 
-                /// read on music-state from source file
-                this.soundImagePlayer.read((reg: number, value: number) => {
+                const samples = this.opl.generate(lenNow);
 
-                    /// write Adlib-Commands
-                    this.opl.write(reg, value);
-                });
+                for (let i = 0; i < lenNow; i++) {
+                    c0[posFill] = samples[i * 2 + 0] / 32768.0;
+                    c1[posFill] = samples[i * 2 + 1] / 32768.0;
+                    posFill++;
+                }
 
-
-                this.lenGen += this.samplesPerTick;
+                this.lenGen -= lenNow;
             }
+
+
+            /// read on music-state from source file
+            this.soundImagePlayer.read((reg: number, value: number) => {
+                if (!this.opl) {
+                    return;
+                }
+
+                /// write Adlib-Commands
+                this.opl.write(reg, value);
+            });
+
+
+            this.lenGen += this.samplesPerTick;
+        }
+    }
+
+    /** pause playing */
+    public suspend() {
+        if (!this.audioCtx) {
+            return;
         }
 
-        /** pause palying */
-        public suspend() {
-            if (!this.audioCtx) {
-                return;
-            }
+        this.audioCtx.suspend();
+    }
 
-            this.audioCtx.suspend();
+    /** stop playing and close */
+    public stop() {
+
+        if (this.isPlaying) {
+            this.isPlaying = false;
         }
 
-        /** stop playing and close */
-        public stop() {
-
-            if (this.isPlaying) {
-                this.isPlaying = false;
-            }
-
-            try {
+        try {
+            if (this.audioCtx) {
                 this.audioCtx.close();
-            } catch (ex) { }
-
-            if (this.processor) {
-                this.processor.onaudioprocess = null;
             }
-
-            try {
-                this.source.disconnect(this.processor);
-            } catch (ex) { }
-
-
-            this.audioCtx = null;
-            this.source = null;
-            this.processor = null;
-
-            this.opl = null;
-            this.soundImagePlayer = null;
-
+        } catch (ex) {
+            // nothing to do here
         }
+
+        if (this.processor) {
+            this.processor.onaudioprocess = null;
+        }
+
+        try {
+            if ((this.source) && (this.processor)) {
+                this.source.disconnect(this.processor);
+            }
+            
+        } catch (ex) {
+            // nothing to do here
+         }
+
+
+        this.audioCtx = null;
+        this.source = null;
+        this.processor = null;
+
+        this.opl = null;
+        this.soundImagePlayer = null;
 
     }
+
 }

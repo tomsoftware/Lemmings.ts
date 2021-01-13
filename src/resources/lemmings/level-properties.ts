@@ -1,6 +1,5 @@
+import { SkillTypes } from '@/game/game-play/skill-types';
 
-module Lemmings {
-    
     export class LevelProperties
     {
         public levelName: string = "";
@@ -11,5 +10,3 @@ module Lemmings {
         public timeLimit = 0;
         public skills: SkillTypes[] = new Array(SkillTypes.length());
     }    
-
-}

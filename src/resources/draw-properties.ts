@@ -1,4 +1,3 @@
-module Lemmings {
 
     /** defines the way a image is drawn to the stage */
     export class DrawProperties {
@@ -17,4 +16,3 @@ module Lemmings {
             if (noOverwrite) this.isErase = false;
         }
     }
-}

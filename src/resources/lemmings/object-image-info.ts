@@ -1,22 +1,25 @@
-/// <reference path="./base-image-info.ts"/>
-/// <reference path="./trigger-types.ts"/>
+import { BaseImageInfo } from './base-image-info';
+import { ColorPalette } from './color-palette';
+import { TriggerTypes } from './trigger-types';
 
-module Lemmings {
+/** stores sprite image properties of objects */
+export class ObjectImageInfo extends BaseImageInfo {
+    public animationLoop = false;
+    public firstFrameIndex = 0;
+    public unknown1 = 0;
+    public unknown2 = 0;
+    public triggerLeft = 0;
+    public triggerTop = 0;
+    public triggerWidth = 0;
+    public triggerHeight = 0;
+    public triggerEffectId: TriggerTypes = 0;
+    public previewImageIndex = 0;
+    public unknown = 0;
+    public trapSoundEffectId = 0;
 
-    /** stores sprite image properties of objects */
-    export class ObjectImageInfo extends BaseImageInfo {
-        public animationLoop: boolean = false;
-        public firstFrameIndex: number = 0;
-        public unknown1: number = 0;
-        public unknown2: number = 0;
-        public trigger_left: number = 0;
-        public trigger_top: number = 0;
-        public trigger_width: number = 0;
-        public trigger_height: number = 0;
-        public trigger_effect_id: TriggerTypes = 0;
-        public preview_image_index: number = 0;
-        public unknown: number = 0;
-        public trap_sound_effect_id: number = 0;
+
+    constructor(palette: ColorPalette) {
+        super(palette);
     }
-
 }
+

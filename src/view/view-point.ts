@@ -1,4 +1,3 @@
-module Lemmings {
 
     /** Camera Point to display the game */
     export class ViewPoint {
@@ -12,15 +11,14 @@ module Lemmings {
             this.scale = scale;
         }
 
-        /** transforma a X coordinate from display space to game-world space */
+        /** transform a X coordinate from display space to game-world space */
         public getSceneX(x: number) : number {
             return Math.trunc(x / this.scale) + Math.trunc(this.x);
         }
 
-        /** transforma a Y coordinate from display space to game-world space */
+        /** transform a Y coordinate from display space to game-world space */
         public getSceneY(y: number) : number {
             return Math.trunc(y / this.scale) + Math.trunc(this.y);
         }
 
     }
-}
